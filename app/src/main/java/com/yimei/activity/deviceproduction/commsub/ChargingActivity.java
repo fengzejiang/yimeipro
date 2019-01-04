@@ -223,11 +223,6 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
                 }else{
                     CommonUtils.textViewGetFocus(edtLot);
                 }
-//                commStationZCPresenter.saveMaterialRecord(record,newUpList);
-//                if(record.getState1().equals(CommCL.BATCH_STATUS_IN)){
-//                    record.setState1(CommCL.BATCH_STATUS_CHARGING);
-//                }
-//                newUpList.clear();
                 return true;
             }
         }
