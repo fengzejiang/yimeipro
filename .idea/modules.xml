@@ -3,7 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/app/app.iml" filepath="$PROJECT_DIR$/app/app.iml" />
-      <module fileurl="file://$PROJECT_DIR$/yimei_mvp_databinding.iml" filepath="$PROJECT_DIR$/yimei_mvp_databinding.iml" />
+      <module fileurl="file://$PROJECT_DIR$/yimeipronew.iml" filepath="$PROJECT_DIR$/yimeipronew.iml" />
     </modules>
   </component>
 </project>

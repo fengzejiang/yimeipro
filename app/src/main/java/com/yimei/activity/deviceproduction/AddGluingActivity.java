@@ -34,7 +34,7 @@ import java.util.List;
 
 /**
  * 加胶或者添加锡膏
- * 现在只实现了添加胶
+ * 现在只实现了添加胶，后期需要实现加锡膏
  * @Auther: fengzejiang1987@163.com
  * @Date : 2019/1/3 14:30
  */
