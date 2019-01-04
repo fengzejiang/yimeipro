@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.yimei.tableui.CheckableLinearLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:orientation="horizontal"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:id="@+id/cell_line">
+    <LinearLayout android:layout_width="match_parent"
+                  android:layout_height="wrap_content">
+        <TextView android:layout_width="60dp"
+                  android:layout_height="50dp" android:id="@+id/qc_bm"
+                  android:textAlignment="center"
+        />
+        <TextView android:layout_width="130dp" android:layout_height="50dp"
+                  android:id="@+id/qc_mc" android:textAlignment="center"/>
+        <!--<Switch android:id="@+id/sw_result1"-->
+        <!--android:textOn="@string/ok"-->
+        <!--android:textOff="@string/ng"-->
+        <!--android:showText="true"-->
+        <!--android:checked="true"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:switchMinWidth="20dp"-->
+        <!--android:layout_gravity="start"-->
+        <!--android:thumb="@drawable/thumb"-->
+        <!--android:track="@drawable/track"-->
+        <!--android:gravity="center" android:paddingTop="8dp" android:paddingEnd="2dp"-->
+        <!--/>-->
+        <Button android:layout_width="60dp" android:layout_height="50dp"
+                android:id="@+id/btn_ok" android:text=""
+                android:background="#259b25"
+                android:textColor="@android:color/background_light"/>
+
+        <Button android:layout_width="60dp" android:layout_height="50dp"
+                android:id="@+id/btn_setting" android:text="更多"
+                android:background="#FFFF99"
+                android:textColor="#99111111"/>
+    </LinearLayout>
+</com.yimei.tableui.CheckableLinearLayout>

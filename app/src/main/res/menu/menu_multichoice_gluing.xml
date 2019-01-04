@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <item android:id="@+id/id_menu_cancel"
+        android:title="取消"
+        app:showAsAction="always"/>
+    <item android:id="@+id/id_menu_selectAll"
+          android:title="全选"
+          app:showAsAction="ifRoom"/>
+    <group>
+    <item android:id="@+id/id_menu_charging"
+          android:title="上料"
+          app:showAsAction="never"/></group>
+    <group>
+    <item android:id="@+id/id_menu_start"
+          android:title="开工"
+          app:showAsAction="never"/></group>
+    <group>
+        <item android:id="@+id/id_menu_done"
+              android:title="出站"
+              app:showAsAction="never"
+        />
+    </group>
+    <group>
+        <item android:id="@+id/id_menu_gluing"
+              android:title="加胶"
+              app:showAsAction="never"
+        />
+    </group>
+</menu>

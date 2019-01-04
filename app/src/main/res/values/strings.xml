@@ -1,0 +1,51 @@
+<resources>
+    <string name="app_name">易美系统1.3——mvp+databinding</string>
+    <string name="login_edit_account_text">请输入账号</string>
+    <string name="login_edit_pwd_text">请输入密码</string>
+    <string name="btn_login_lab">登录</string>
+    <string name="loading">加载中...</string>
+    <string name="login_loading">登录中...</string>
+
+    <string name="cancel">取消</string>
+
+    <string name="yimei_op">作业员</string>
+    <string name="yimei_lab_box">料盒号</string>
+    <string name="yimei_lab_box_gj">固晶料盒</string>
+    <string name="yimei_lab_box_hj">焊接料盒</string>
+    <string name="yimei_lab_box_dj">点胶料盒</string>
+    <string name="yimei_lab_sid1">生产批号</string>
+    <string name="app_lab_unbinding">料盒解绑</string>
+    <string name="row_header_color">#CFD8DC</string>
+
+    <string name="font_size">16sp</string>
+
+    <string name="rule_text">0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`¬!"£$%^*()~=#{}[];':,./?/*-_+&#060;&#062;&#064;&#038;</string>
+    <string name="yimei_equipment">设备号</string>
+
+
+    <string name="main_back_color">#F1F1F1</string>
+    <string name="table_header_color">#CFD8DC</string>
+    <string name="yimei_lab_material">材料编码</string>
+    <string name="yimei_lab_lot">材料批号</string>
+    <string name="lab_yf_qty">应发数量</string>
+    <string name="lab_sf_qty">实发数量</string>
+    <string name="yimei_shoujian">首件</string>
+    <string name="yimei_xunjian">巡检</string>
+    <string name="yimei_lab_zc">制程号</string>
+    <string name="yimei_lab_cause">发起原因</string>
+    <string name="yimei_lab_prd_no">产品名称</string>
+    <string name="yimei_lab_result">判定结果</string>
+    <string name="yimei_ok">OK</string>
+    <string name="btn_lab_warn_save">扫描完后点我保存扫描数据</string>
+    <string name="ok">OK</string>
+    <string name="ng">NG</string>
+    <string name="yimei_standard">标准值</string>
+    <string name="yimei_value1">实际值1</string>
+    <string name="yimei_value2">实际值2</string>
+    <string name="yimei_value3">实际值3</string>
+    <string name="yimei_value4">实际值4</string>
+    <string name="yimei_value5">实际值5</string>
+    <string name="yimei_value6">实际值6</string>
+    <string name="yimei_remark">备注</string>
+    <string name="yimei_gluing_no">胶杯号</string>
+</resources>

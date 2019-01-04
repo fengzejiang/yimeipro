@@ -1,0 +1,176 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout
+        xmlns:android="http://schemas.android.com/apk/res/android"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+<ScrollView android:layout_width="match_parent"
+            android:layout_height="wrap_content" android:id="@+id/tab_ui_sc">
+    <TableLayout android:layout_width="match_parent"
+                 android:layout_height="wrap_content" android:padding="10dp" android:id="@+id/tab_ui">
+        <TableRow android:layout_width="348dp">
+            <TextView
+                    android:id="@+id/lab_zcno"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:text="@string/yimei_lab_zc"
+                    android:layout_marginEnd="10dp" android:textSize="16sp"/>
+            <Spinner
+                    android:id="@+id/sp_zc_list"
+                    android:layout_width="120dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="2dp"
+                    android:tag="zcno" android:textAlignment="center"
+                    android:layout_span="2"/>
+        </TableRow>
+        <TableRow android:layout_width="348dp">
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:text="@string/yimei_op"
+                    android:textSize="16sp"
+                    android:paddingBottom="2dp"/>
+
+            <EditText
+                    android:id="@+id/edt_op"
+                    android:layout_width="80dp"
+                    android:layout_height="40dp"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:enabled="true"
+                    android:imeOptions="actionDone"
+                    android:inputType="text"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_color"
+                    android:nextFocusDown="@id/edt_op"
+                    android:hint="@string/yimei_op"
+                    android:tag="@string/yimei_op"/>
+
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="5dp"
+                    android:paddingLeft="5dp"
+                    android:paddingRight="5dp"
+                    android:text="@string/yimei_equipment"
+                    android:textSize="16sp"/>
+
+            <EditText
+                    android:id="@+id/edt_equipment_no"
+                    android:layout_width="120dp"
+                    android:layout_height="40dp"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:enabled="true"
+                    android:imeOptions="actionDone"
+                    android:inputType="text"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_color"
+                    android:nextFocusDown="@id/edt_equipment_no"
+                    android:hint="@string/yimei_equipment"
+                    android:tag="@string/yimei_equipment"/>
+        </TableRow>
+        <TableRow android:layout_width="348dp">
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/yimei_lab_sid1"
+                    android:textSize="16sp"/>
+            <EditText
+                    android:id="@+id/edt_sid1"
+                    android:layout_width="250dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="5dp"
+                    android:layout_marginEnd="5dp"
+                    android:enabled="true"
+                    android:imeOptions="actionDone"
+                    android:inputType="text"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_color"
+                    android:hint="@string/yimei_lab_sid1"
+                    android:tag="@string/yimei_lab_sid1" android:layout_span="3"/>
+        </TableRow>
+        <TableRow android:layout_width="348dp">
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/yimei_lab_cause"
+                    android:textSize="16sp"/>
+            <Spinner
+                    android:id="@+id/sp_cause"
+                    android:layout_width="120dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="2dp"
+                    android:tag="zcno" android:textAlignment="center"
+                    android:layout_span="2"/>
+
+        </TableRow>
+        <TableRow>
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/yimei_lab_result"
+                    android:textSize="16sp" android:layout_marginTop="10dp" android:layout_marginBottom="2dp"/>
+            <Switch android:id="@+id/sw_result"
+                    android:textOn="@string/ok"
+                    android:textOff="@string/ng"
+                    android:showText="true"
+                    android:checked="true"
+                    android:layout_width="20dp"
+                    android:layout_gravity="start"
+                    android:thumb="@drawable/thumb"
+                    android:track="@drawable/track"
+                    android:layout_height="30dp" android:layout_column="3"
+            />
+        </TableRow>
+
+        <TableRow>
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/yimei_lab_prd_no"
+                    android:textSize="16sp" />
+            <EditText
+                    android:id="@+id/edt_prd_no"
+                    android:layout_width="250dp"
+                    android:layout_height="40dp"
+                    android:layout_marginStart="8dp"
+                    android:layout_marginEnd="5dp"
+                    android:enabled="false"
+                    android:imeOptions="actionDone"
+                    android:inputType="text"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_color"
+                    android:nextFocusDown="@id/edt_prd_no"
+                    android:hint="@string/yimei_lab_prd_no" android:layout_span="3"/>
+        </TableRow>
+        <Button android:layout_width="match_parent"
+                android:layout_height="50dp"
+                android:text="@string/btn_lab_warn_save"
+                android:id="@+id/btn_save"
+                android:textColor="@color/z_dialog_bg_color"
+                android:background="#3eade1"
+                android:textSize="18sp"/>
+    </TableLayout>
+</ScrollView>
+    <RelativeLayout android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:layout_below="@id/tab_ui_sc" android:padding="5dp"
+                    android:background="@color/mainBKColor">
+        <com.yimei.tableui.TablePanelView
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:id="@+id/table_view">
+            <ListView
+                    android:id="@+id/data_list_content"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:fastScrollEnabled="false"
+                    android:overScrollMode="never"
+                    android:layout_alignParentStart="true"
+                    android:layout_alignParentTop="true"/>
+        </com.yimei.tableui.TablePanelView>
+    </RelativeLayout>
+
+</RelativeLayout>

@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+
+    <data>
+        <variable name="zcInf" type="com.yimei.data.ZCInfo" />
+        <variable name="commPresenter" type="com.yimei.presenter.CommStationPresenter" />
+    </data>
+    <LinearLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:orientation="vertical"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:background="@color/mainBKColor" android:paddingTop="20dp">
+
+        <ImageView
+                android:id="@+id/main_image"
+                android:layout_width="80dp"
+                android:layout_height="80dp"
+                android:src="@{zcInf.imgIndex}"
+                android:layout_centerInParent="true"
+                android:layout_weight="1"
+                android:baselineAlignBottom="false"
+                android:onClick="@{(imgview) -> commPresenter.menuImgOnClick(zcInf)}"/>
+
+        <!--<TextView-->
+                <!--android:id="@+id/main_text"-->
+                <!--android:layout_width="fill_parent"-->
+                <!--android:layout_height="fill_parent"-->
+                <!--android:layout_marginTop="5dp"-->
+                <!--android:text="@{zcInf.name}"-->
+                <!--android:gravity="center"-->
+                <!--android:textSize="14sp"-->
+                <!--android:textColor="#666666"-->
+                <!--android:onClick="@{() -> commPresenter.menuImgOnClick(zcInf)}"/>-->
+        <RelativeLayout
+                android:layout_width="fill_parent"
+                android:layout_height="15dp"/>
+    </LinearLayout>
+</layout>

@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+              xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+              android:layout_height="match_parent"
+              android:filterTouchesWhenObscured="true"
+              android:fitsSystemWindows="false"
+              android:orientation="horizontal"
+              android:background="@color/mainBKColor">
+
+    <ImageButton android:layout_width="120dp"
+                 android:layout_height="wrap_content"
+                 android:id="@+id/img_sj" android:src="@drawable/shoujian"
+                 android:layout_margin="25dp"
+                 android:background="@color/mainBKColor"
+                 android:layout_gravity="center_horizontal"
+                 android:contentDescription="@string/yimei_shoujian"
+                 android:tooltipText="@string/yimei_shoujian"
+                 tools:targetApi="o" android:paddingTop="20dp"/>
+
+    <ImageButton android:layout_width="120dp"
+                 android:layout_height="wrap_content"
+                 android:id="@+id/img_xj" android:src="@drawable/xunjian"
+                 android:paddingTop="20dp" android:layout_margin="25dp"
+                 android:background="@color/mainBKColor"
+                 android:layout_gravity="center_horizontal"
+                 android:contentDescription="@string/yimei_xunjian"
+                 android:tooltipText="@string/yimei_xunjian"
+                 tools:targetApi="o"/>
+
+</LinearLayout>

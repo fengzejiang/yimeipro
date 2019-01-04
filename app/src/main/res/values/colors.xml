@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#1f67c2</color>
+
+    <color name="mainGridColor">#F1F1F1</color>
+    <color name="mainBKColor">#F1F1F1</color>
+
+    <color name="colorSelected">#e9c364</color>
+    <color name="colorDeselected">#ffffff</color>
+
+    <color name="text_color">#333333</color>
+    <color name="table_header_color">#809aea</color>
+    <color name="white">#99ffffff</color>
+</resources>

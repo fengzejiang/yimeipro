@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          xmlns:tools="http://schemas.android.com/tools" package="com.yimei.activity">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.SET_TIME"
+                     tools:ignore="ProtectedPermissions">
+    </uses-permission>
+    <application
+            android:name=".base.BaseApplication"
+            android:allowBackup="true"
+            android:icon="@mipmap/ic_launcher"
+            android:label="@string/app_name"
+            android:roundIcon="@mipmap/ic_launcher_round"
+            android:supportsRtl="true"
+            android:theme="@style/AppTheme">
+        <activity android:name=".login.LoginActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <activity android:name=".MainActivity" android:label="菜单界面">
+        </activity>
+        <activity android:name=".deviceproduction.UnbindingBoxActivity" android:label="料盒解绑">
+
+        </activity>
+        <activity android:name=".deviceproduction.CommonStationActivity" android:label="器件通用工站">
+        </activity>
+        <activity android:name=".deviceproduction.commsub.CommGJActivity" android:label="器件生产">
+        </activity>
+        <activity android:name=".deviceproduction.commsub.ChargingActivity" android:label="生产上料">
+        </activity>
+        <activity android:name=".qc.QCCommActivity" android:label="品质管理">
+        </activity>
+        <activity android:name=".qc.FirstInspectionActivity" android:label="首件检验">
+        </activity>
+        <activity android:name=".deviceproduction.commsub.GlueAndWeldingActivity" android:label="点胶工序">
+        </activity>
+        <activity android:name=".deviceproduction.AddGluingActivity" android:label="设备加胶"></activity>
+    </application>
+
+</manifest>
