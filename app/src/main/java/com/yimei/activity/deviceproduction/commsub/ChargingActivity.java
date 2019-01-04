@@ -186,19 +186,23 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
             if(checkMaterial(material)){
                 String key = material+"_"+str;
                 if(materLotUp.containsKey(key)){
-                    showMessage("该材料批次已经上，请更换批次");
+                    showMessage("该材料批次已经上过，请更换批次");
                     CommonUtils.textViewGetFocus(edtLot);
                     return false;
                 }
                 //检查批次是否存在
-                if(!materLot.containsKey(key)){
+                if(!(materLot.containsKey(key)||materLot.containsKey(material+"_"))){
                     showMessage("该材料批次【"+str+"】不存在！");
                     CommonUtils.textViewGetFocus(edtLot);
                     return false;
                 }
-                int index = materLot.get(key);
+                boolean bBatch = materLot.containsKey(key);
+                int index = bBatch?materLot.get(key):materLot.get(material+"_");
                 JSONObject jsonstr = materialDataList.get(index);
                 ChargingMaterial data = JSONObject.parseObject(jsonstr.toJSONString(),ChargingMaterial.class);
+                if(!bBatch){
+                    data.setBat_no(str);
+                }
                 data.setSid(record.getSid1());
                 data.setOp(currOP);
                 data.setDcid(CommonUtils.getMacID());
@@ -376,6 +380,7 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
                         materInfo.put(materialInfo.getPrd_no(),new Integer[]{record.getQty(),0});
                     }
                     String lotNo = materialInfo.getBat_no();
+                    lotNo = TextUtils.isEmpty(lotNo)?"":lotNo;
                     String lotMater = prdNo+"_"+lotNo;
                     if(!materLot.containsKey(lotMater)){
                         materLot.put(lotMater,i);

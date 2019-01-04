@@ -263,11 +263,7 @@ public class AddGluingActivity extends AppCompatActivity implements BaseStationB
             mesGluingRecord.setMkdate(gluingInfo.getTprn());
             mesGluingRecord.setSlkid(gluingInfo.getMo_no());
             mesGluingRecord.setState(0);
-
             gluingPresenter.saveGluingRecord(mesGluingRecord);
-
-
-
         }else{
             hideLoading();
             showMessage(error);
