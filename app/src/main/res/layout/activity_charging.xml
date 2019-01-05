@@ -144,7 +144,7 @@ android:background="@color/mainBKColor">
                               android:layout_below="@id/tab1_scan"
                               android:layout_centerHorizontal="true"
                               android:paddingTop="10dp">
-                    <com.yimei.tableui.TablePanelView
+                    <com.yimeinew.tableui.TablePanelView
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:id="@+id/table_view">
@@ -156,7 +156,7 @@ android:background="@color/mainBKColor">
                                 android:overScrollMode="never"
                                 android:layout_alignParentStart="true"
                                 android:layout_alignParentTop="true"/>
-                    </com.yimei.tableui.TablePanelView>
+                    </com.yimeinew.tableui.TablePanelView>
 
                 </LinearLayout>
             </LinearLayout>
@@ -170,7 +170,7 @@ android:background="@color/mainBKColor">
                               android:layout_below="@id/tab1_scan"
                               android:layout_centerHorizontal="true"
                               android:paddingTop="10dp">
-                    <com.yimei.tableui.TablePanelView
+                    <com.yimeinew.tableui.TablePanelView
                             android:layout_width="match_parent"
                             android:layout_height="match_parent"
                             android:id="@+id/table_view_material">
@@ -180,7 +180,7 @@ android:background="@color/mainBKColor">
                                 android:layout_height="match_parent"
                                 android:fastScrollEnabled="false"
                                 android:overScrollMode="never"/>
-                    </com.yimei.tableui.TablePanelView>
+                    </com.yimeinew.tableui.TablePanelView>
                 </LinearLayout>
             </LinearLayout>
         </FrameLayout>

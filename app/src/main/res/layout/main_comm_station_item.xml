@@ -2,8 +2,8 @@
 <layout>
 
     <data>
-        <variable name="zcInf" type="com.yimei.data.ZCInfo" />
-        <variable name="commPresenter" type="com.yimei.presenter.CommStationPresenter" />
+        <variable name="zcInf" type="com.yimeinew.data.ZCInfo" />
+        <variable name="commPresenter" type="com.yimeinew.presenter.CommStationPresenter" />
     </data>
     <LinearLayout
             xmlns:android="http://schemas.android.com/apk/res/android"

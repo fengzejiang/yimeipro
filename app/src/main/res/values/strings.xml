@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">易美系统1.3——mvp+databinding</string>
+    <string name="app_name">易美系统1.3</string>
     <string name="login_edit_account_text">请输入账号</string>
     <string name="login_edit_pwd_text">请输入密码</string>
     <string name="btn_login_lab">登录</string>

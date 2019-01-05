@@ -98,7 +98,7 @@
                     android:layout_below="@+id/jiebang_tab"
                     android:layout_centerHorizontal="true"
     android:paddingLeft="10dp" android:paddingRight="10dp">
-        <com.yimei.tableui.TablePanelView
+        <com.yimeinew.tableui.TablePanelView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:id="@+id/table_view">
@@ -108,7 +108,7 @@
                     android:layout_height="match_parent"
                     android:fastScrollEnabled="false"
                     android:overScrollMode="never"/>
-        </com.yimei.tableui.TablePanelView>
+        </com.yimeinew.tableui.TablePanelView>
     </RelativeLayout>
 
 </RelativeLayout>

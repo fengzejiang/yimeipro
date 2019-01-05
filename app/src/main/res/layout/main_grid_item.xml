@@ -2,8 +2,8 @@
 <layout xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:app="http://schemas.android.com/apk/res-auto">
     <data>
-        <variable name="presenter" type="com.yimei.presenter.MainMenuPresenter" />
-        <variable name="menu" type="com.yimei.data.Menu" />
+        <variable name="presenter" type="com.yimeinew.presenter.MainMenuPresenter" />
+        <variable name="menu" type="com.yimeinew.data.Menu" />
     </data>
 
     <LinearLayout

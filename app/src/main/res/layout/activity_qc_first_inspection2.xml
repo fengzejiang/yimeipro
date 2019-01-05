@@ -162,7 +162,7 @@
     <LinearLayout android:layout_width="match_parent"
                   android:layout_height="match_parent"
                   android:paddingTop="10dp">
-        <com.yimei.tableui.TablePanelView
+        <com.yimeinew.tableui.TablePanelView
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
                 android:id="@+id/table_view">
@@ -174,7 +174,7 @@
                     android:overScrollMode="never"
                     android:layout_alignParentStart="true"
                     android:layout_alignParentTop="true"/>
-        </com.yimei.tableui.TablePanelView>
+        </com.yimeinew.tableui.TablePanelView>
 
     </LinearLayout>
 </LinearLayout>
