@@ -9,11 +9,9 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
-import android.widget.Button;
-import android.widget.EditText;
-import android.widget.ListView;
-import android.widget.TabHost;
+import android.widget.*;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
@@ -43,6 +41,7 @@ import java.util.List;
  * 前段上料Activity
  * 简单逻辑放到Activity，复杂的逻辑放到Controller里面处理，如何服务端交互
  * 在该Activity里面全部都借用了ChargingMaterial这个上料子表对象用于表格数据展示
+ * 如果是固晶上料，则不现实材料编码
  * @Auther: fengzejiang1987@163.com
  * @Date : 2018/12/23 21:27
  */
@@ -72,6 +71,8 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
     EditText edtYfQty;
     @BindView(R.id.edt_qty)
     EditText edtSfQty;
+    @BindView(R.id.row_mater)
+    TableRow tableRow;
 
     ZCInfo zCnoInfo;
     String currOP;
@@ -88,6 +89,9 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
     private HashMap<String, Integer[]> materInfo = new HashMap<>();//材料信息，应发数,已发数
     private HashMap<String, Integer> materLot = new HashMap<>();
     private HashMap<String, String> materLotUp = new HashMap<>();
+    private HashMap<String, String> lotAndMaterialNo = new HashMap<>();
+
+    private boolean isGJ = false;//是否是固晶工站
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -124,10 +128,14 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
         //初始化材料明细查询条件
         cont = "~mo_no='"+record.getSlkid()+"'";
         if(zCnoInfo.getId().equals("11")||zCnoInfo.getId().equals("12")||zCnoInfo.getId().equals("13")){
+            isGJ = true;
             cont+="  and (gzl='M01' OR gzl='M03') and upid>0";
         }
         if("21".equals(zCnoInfo.getId())){
             cont +=" and gzl='M04'";
+        }
+        if(isGJ){
+            tableRow.setVisibility(View.GONE);
         }
         showLoading();
         commStationZCPresenter.loadMaterialInfo(cont,0);
@@ -173,6 +181,9 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
         Log.d("回车事件",editText.getText().toString());
         String str = editText.getText().toString().toUpperCase();
         String material = edtMaterial.getText().toString().toUpperCase();
+        if(isGJ){
+            material = lotAndMaterialNo.get(str);
+        }
         int id = editText.getId();
         if(id == R.id.edt_material){
             //判断材料号是否为空
@@ -250,8 +261,14 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
 
     public boolean checkMaterial(String str) {
         if(TextUtils.isEmpty(str)){
-            showMessage("材料号不能为空");
-            CommonUtils.textViewGetFocus(edtMaterial);
+//            showMessage("材料号不能为空");
+            if(isGJ){
+                showMessage("扫描的批次号不存在");
+                CommonUtils.textViewGetFocus(edtLot);
+            }else{
+                showMessage("材料号不能为空");
+                CommonUtils.textViewGetFocus(edtMaterial);
+            }
             return false;
         }else{
             if(!materInfo.containsKey(str)){
@@ -346,6 +363,7 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
         if(bok){
             newUpList.clear();
             record.setState1(CommCL.BATCH_STATUS_CHARGING);
+            this.finish();
         }else{
             showMessage(error);
         }
@@ -367,6 +385,7 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
             if(bok){
                 materInfo.clear();
                 materLot.clear();
+                lotAndMaterialNo.clear();
                 for(int i=0;i<recordList.size();i++){
                     ChargingMaterial materialInfo = JSONObject.parseObject(recordList.getJSONObject(i).toJSONString(),ChargingMaterial.class);
                     String prdNo = materialInfo.getPrd_no();
@@ -375,6 +394,8 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
                     }
                     String lotNo = materialInfo.getBat_no();
                     lotNo = TextUtils.isEmpty(lotNo)?"":lotNo;
+                    if(isGJ)
+                        lotAndMaterialNo.put(lotNo,prdNo);
                     String lotMater = prdNo+"_"+lotNo;
                     if(!materLot.containsKey(lotMater)){
                         materLot.put(lotMater,i);
@@ -451,6 +472,17 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
     }
 
     @Override
+    public boolean onKeyDown(int keyCode, KeyEvent event) {
+        if (keyCode == KeyEvent.KEYCODE_BACK) {
+            if(newUpList.size()>0){
+                setBtnSave();
+                return false;
+            }
+        }
+        return super.onKeyDown(keyCode, event);
+    }
+
+    @Override
     public void showMessage(String message) {
         CommonUtils.showError(this,message);
     }
@@ -489,7 +521,7 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
                     return;
                 }
                 String barCodeData = null;
-                if (intent.getStringExtra(CommCL.SCN_CUST_HONEY).equals(null)) {
+                if (TextUtils.isEmpty(intent.getStringExtra(CommCL.SCN_CUST_HONEY))) {
                     barCodeData = intent.getStringExtra(CommCL.SCN_CUST_EX_SCODE);
                 } else {
                     barCodeData = intent.getStringExtra(CommCL.SCN_CUST_HONEY);

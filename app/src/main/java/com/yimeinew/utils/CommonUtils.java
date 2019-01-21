@@ -62,15 +62,6 @@ public class CommonUtils {
 
 
     public static ZLoadingDialog loginLoadingView(Context context) {
-//        ZLoadingDialog zLoadingView = new ZLoadingDialog(context);
-//        zLoadingView.setLoadingBuilder(Z_TYPE.DOUBLE_CIRCLE)
-//                .setLoadingColor(Color.WHITE)//颜色
-////                .setLoadingColor(context.getResources().getColor(R.color.colorAccent))//颜色
-//                .setHintText("登陆中")
-//                .setDurationTime(0.5) // 设置动画时间百分比 - 0.5倍
-//                .setCancelable(false)
-//                .setCanceledOnTouchOutside(false)
-//                .setDialogBackgroundColor(Color.parseColor("#CC111111"));// 设置背景色，默认白色
         return initLoadingView(context,"登陆中",Z_TYPE.DOUBLE_CIRCLE);
     }
 

@@ -11,15 +11,15 @@ public class CheckProjectInfo implements Serializable {
     private int cid;//项次
     private String xmbm;//项目编码
     private String xmmc;//项目名称
-    private String standard="";//标准值
-    private String value1="";//标准值
-    private String value2="";//标准值
-    private String value3="";//标准值
-    private String value4="";//标准值
-    private String value5="";//标准值
-    private String value6="";//标准值
+    private String standard;//标准值
+    private String value1;//标准值
+    private String value2;//标准值
+    private String value3;//标准值
+    private String value4;//标准值
+    private String value5;//标准值
+    private String value6;//标准值
     private String bok = "0";//检验结果
-    private String remark = "";//备注
+    private String remark;//备注
     private int itm;//项次
 
     public int getItm() {

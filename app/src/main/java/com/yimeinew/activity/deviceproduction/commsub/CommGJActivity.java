@@ -1,9 +1,6 @@
 package com.yimeinew.activity.deviceproduction.commsub;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.*;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
@@ -22,6 +19,7 @@ import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fast
 import com.yimeinew.activity.R;
 import com.yimeinew.activity.base.BaseActivity;
 import com.yimeinew.activity.databinding.ActivityCommGjBinding;
+import com.yimeinew.activity.qc.FirstInspectionActivity;
 import com.yimeinew.adapter.tabledataadapter.BaseTableDataAdapter;
 import com.yimeinew.data.*;
 import com.yimeinew.modelInterface.BaseStationBindingView;
@@ -277,7 +275,7 @@ public class CommGJActivity extends BaseActivity implements BaseStationBindingVi
                     return;
                 }
                 String barCodeData = null;
-                if (intent.getStringExtra(CommCL.SCN_CUST_HONEY).equals(null)) {
+                if (TextUtils.isEmpty(intent.getStringExtra(CommCL.SCN_CUST_HONEY))) {
                     barCodeData = intent.getStringExtra(CommCL.SCN_CUST_EX_SCODE);
                 } else {
                     barCodeData = intent.getStringExtra(CommCL.SCN_CUST_HONEY);
@@ -595,6 +593,7 @@ public class CommGJActivity extends BaseActivity implements BaseStationBindingVi
         public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
             int selectNum = 0;
             String currstate = "";
+            String currOP = edtOP.getText().toString().toUpperCase();
             error = "";
             switch (item.getItemId()) {
                 case R.id.id_menu_selectAll:
@@ -608,7 +607,7 @@ public class CommGJActivity extends BaseActivity implements BaseStationBindingVi
                     break;
                 case R.id.id_menu_charging:
                     selectNum = dataListViewContent.getCheckedItemCount();
-                    String currOP = edtOP.getText().toString().toUpperCase();
+
                     if (selectNum == 1) {
                         //上料
                         List<MESPRecord> list = getSelectList();
@@ -651,7 +650,19 @@ public class CommGJActivity extends BaseActivity implements BaseStationBindingVi
                                     commPresenter.changeRecordStateBatch(startList,CommCL.BATCH_STATUS_WORKING);
                                     break;
                                 }else{
-                                    showMessage("设备："+currEquipment.getId()+"没有做首件检验！");
+                                    MESPRecord record = startList.get(0);
+                                    CommonUtils.showOKCancel(CommGJActivity.this, "开工首检", "设备："+currEquipment.getId()+"没有做首件检验,是否打开首检界面", new DialogInterface.OnClickListener() {
+                                        @Override
+                                        public void onClick(DialogInterface dialog, int which) {
+                                            HashMap<String, Serializable> map = new HashMap<>();
+                                            map.put(CommCL.COMM_ZC_INFO_FLD,zCnoInfo);
+                                            map.put(CommCL.COMM_OP_FLD,currOP);
+                                            map.put(CommCL.COMM_RECORD_FLD,record);
+                                            map.put(CommCL.COMM_SBID_FLD,currEquipment);
+                                            unregisterReceiver(barcodeReceiver);
+                                            jumpNextActivity(FirstInspectionActivity.class,map);
+                                        }
+                                    });
                                     break;
                                 }
                             }else {

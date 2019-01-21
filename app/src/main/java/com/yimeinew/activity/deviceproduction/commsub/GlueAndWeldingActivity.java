@@ -753,7 +753,7 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                     return;
                 }
                 String barCodeData = null;
-                if (intent.getStringExtra(CommCL.SCN_CUST_HONEY).equals(null)) {
+                if (TextUtils.isEmpty(intent.getStringExtra(CommCL.SCN_CUST_HONEY))) {
                     barCodeData = intent.getStringExtra(CommCL.SCN_CUST_EX_SCODE);
                 } else {
                     barCodeData = intent.getStringExtra(CommCL.SCN_CUST_HONEY);

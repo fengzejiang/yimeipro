@@ -342,7 +342,7 @@ public class AddGluingActivity extends AppCompatActivity implements BaseStationB
                 View rootView = getCurrentFocus();//获取光标当前所在组件
                 Object tag = rootView.findFocus().getTag();
                 String barCodeData = null;
-                if(intent.getStringExtra(CommCL.SCN_CUST_HONEY).equals(null)){
+                if(TextUtils.isEmpty(intent.getStringExtra(CommCL.SCN_CUST_HONEY))){
                     barCodeData = intent.getStringExtra(CommCL.SCN_CUST_EX_SCODE);
                 }else{
                     barCodeData = intent.getStringExtra(CommCL.SCN_CUST_HONEY);

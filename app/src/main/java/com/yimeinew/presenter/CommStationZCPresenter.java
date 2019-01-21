@@ -14,6 +14,8 @@ import com.yimeinew.network.response.ResponseTransformer;
 import com.yimeinew.network.schedulers.SchedulerProvider;
 import com.yimeinew.utils.CommCL;
 import com.yimeinew.utils.CommonUtils;
+import com.yimeinew.utils.DateUtil;
+import com.yimeinew.utils.ICL;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -319,8 +321,11 @@ public class CommStationZCPresenter {
                     if (jsonValues.getIntValue(CommCL.RTN_ID) == -1) {//更改批次，成功返回id=1
                         baseView.changeMultiRecordStateBack(false, recordList, "获取服务器信息失败" + jsonValues.toString());
                     } else {
-                        for (int i = 0; i < recordList.size(); i++)
+                        for (int i = 0; i < recordList.size(); i++){
                             recordList.get(i).setState1(batchStatusIn);
+                            if(batchStatusIn.equals(CommCL.BATCH_STATUS_WORKING))
+                                recordList.get(i).setHpdate(DateUtil.getCurrDateTime(ICL.DF_YMDT));
+                        }
                         baseView.changeMultiRecordStateBack(true, recordList, batchStatusIn);
                     }
                 },

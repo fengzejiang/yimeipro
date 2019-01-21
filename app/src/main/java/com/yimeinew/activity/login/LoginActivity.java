@@ -40,6 +40,7 @@ public class LoginActivity extends AppCompatActivity implements BaseView {
         ActivityLoginBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_login);
         if(CommCL.isDev){
             user = new User("admin", "11");
+//            user = new User("admin", "shine_admin");
         }else{
             user = new User();
         }

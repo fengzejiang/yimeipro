@@ -11,10 +11,12 @@ import java.util.HashMap;
 
 public class CommCL {
 
-    public static final String URi = "http://192.168.0.179:9999/jd/"; //服务器项目地址
+    public static final String URi = "http://192.168.1.3:9999/jd/"; //服务器项目地址
     public static final String DB_ID = "mes";//数据库连接id
+//    public static final String URi = "http://59.53.182.251:8088/mes/"; //服务器项目地址
+//    public static final String DB_ID = "01";//数据库连接id
 
-    public static final boolean isDev = false;
+    public static final boolean isDev = true;
     public static final String API = "api";//接口名称
 
 

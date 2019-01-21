@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.graphics.Color;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+import android.text.TextUtils;
 import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -233,13 +234,34 @@ public class QCTableDataAdapter extends AbstractTableViewAdapter {
                         new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                cc.setValue1(v1.getText().toString());
-                                cc.setValue2(v2.getText().toString());
-                                cc.setValue3(v3.getText().toString());
-                                cc.setValue4(v4.getText().toString());
-                                cc.setValue5(v5.getText().toString());
-                                cc.setValue6(v6.getText().toString());
-                                cc.setRemark(rm.getText().toString());
+                                String str1 = v1.getText().toString();
+                                if(!TextUtils.isEmpty(str1)){
+                                    cc.setValue1(str1);
+                                }
+                                str1 = v2.getText().toString();
+                                if(!TextUtils.isEmpty(str1)){
+                                    cc.setValue2(str1);
+                                }
+                                str1 = v3.getText().toString();
+                                if(!TextUtils.isEmpty(str1)){
+                                    cc.setValue3(str1);
+                                }
+                                str1 = v4.getText().toString();
+                                if(!TextUtils.isEmpty(str1)){
+                                    cc.setValue4(str1);
+                                }
+                                str1 = v5.getText().toString();
+                                if(!TextUtils.isEmpty(str1)){
+                                    cc.setValue2(str1);
+                                }
+                                str1 = v6.getText().toString();
+                                if(!TextUtils.isEmpty(str1)){
+                                    cc.setValue6(str1);
+                                }
+                                str1 = rm.getText().toString();
+                                if(!TextUtils.isEmpty(str1)){
+                                    cc.setRemark(str1);
+                                }
                                 for(int i=0;i<dataList.size();i++){
                                     CheckProjectInfo c1 = JSONObject.parseObject(dataList.get(i).toJSONString(),CheckProjectInfo.class);
                                     if(c1.getXmbm().equals(cc.getXmbm())){

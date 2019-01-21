@@ -37,6 +37,7 @@ public class MESPRecord implements Serializable {
     private String zcno1;//下一制成
     private String sbid;//设备编码
     private String prtno;//胶杯号
+    private String lotno;//后段批次号
     private String sorg = BaseApplication.currUser.getDeptCode();//胶杯号
 
     public MESPRecord(){}
@@ -246,5 +247,13 @@ public class MESPRecord implements Serializable {
 
     public void setSorg(String sorg) {
         this.sorg = sorg;
+    }
+
+    public String getLotno() {
+        return lotno;
+    }
+
+    public void setLotno(String lotno) {
+        this.lotno = lotno;
     }
 }

@@ -79,6 +79,9 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
     List<JSONObject> dataList;
     QCTableDataAdapter tableAdapter;
 
+    private EquipmentInfo infoOther;
+    private MESPRecord recordOther;
+
     private String currOP;
 
     private MESQCRecord currRecord;
@@ -98,10 +101,33 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
         initCheck(okNg.isChecked());
         commPresenter = new CommStationZCPresenter(this, SchedulerProvider.getInstance());
         initTableView();
+        //从Intent中获取数据
+        ZCInfo zcInfo1 = (ZCInfo) getIntent().getSerializableExtra(CommCL.COMM_ZC_INFO_FLD);//制成信息
+        String op = (String) getIntent().getSerializableExtra(CommCL.COMM_OP_FLD);//操作员
+        infoOther = (EquipmentInfo) getIntent().getSerializableExtra(CommCL.COMM_SBID_FLD);//设备
+        recordOther = (MESPRecord) getIntent().getSerializableExtra(CommCL.COMM_RECORD_FLD);//生产记录
+        if(!TextUtils.isEmpty(op)){
+            edtOP.setText(op);
+        }
         if (zcInfoList != null) {
             showLoading();
-            zcInfo = zcInfoList.get(0);
+            zcInfo = zcInfo1==null?zcInfoList.get(0):zcInfo1;
+            int key = 0;
+            if(zcInfo1!=null){
+                for(int i=0;i<zcInfoList.size();i++){
+                    if(zcInfoList.get(i).getId().equals(zcInfo.getId())){
+                        key = i;
+                        break;
+                    }
+                }
+            }
+            zcSpinner.setSelection(key);
             commPresenter.getLaunchingReasons(zcInfo.getId());
+        }
+
+        if(infoOther!=null){
+            edtSbId.setText(infoOther.getId());
+            currSbInfo = infoOther;
         }
 
     }
@@ -439,13 +465,25 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
             if (dataList == null) {
                 dataList = new ArrayList<>();
             }
+            checkProjectList.clear();
+            dataList.clear();
             for (int i = 0; i < array.size(); i++) {
                 CheckProjectInfo info = JSONObject.parseObject(array.getJSONObject(i).toJSONString(), CheckProjectInfo.class);
-                checkProjectList.add(info);
-                dataList.add(CommonUtils.getJsonObjFromBean(info));
+                if(!checkProjectList.contains(info)){
+                    checkProjectList.add(info);
+                    dataList.add(CommonUtils.getJsonObjFromBean(info));
+                }
             }
 //            tableAdapter.notifyDataSetChanged();
             Log.d(TAG_NAME, array.toJSONString());
+            if(recordOther != null){
+                showLoading();
+                boolean bhd = CommCL.houDuan.containsKey(zcInfo.getId());
+                String sid1 = bhd?recordOther.getLotno():recordOther.getSid1();
+                CommonUtils.textViewGetFocus(edtSid1);
+                edtSid1.setText(sid1);
+                commPresenter.getQCBatchInfo(sid1, zcInfo.getId(), bhd);
+            }
         } else {
             showMessage(error);
             dataList.clear();
@@ -463,6 +501,7 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
     @Override
     public void checkQCBatInfoBack(boolean bok, Object o, String error) {
         hideLoading();
+        recordOther = null;
         if (bok) {
             qcBatchInfo = (QCBatchInfo) o;
             if (qcBatchInfo.getHoldid() == 1) {
@@ -535,9 +574,10 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
                 CommonUtils.textViewGetFocus(edtSid1);
                 currRecord = null;
                 dataList.clear();
+                tableAdapter.notifyDataSetChanged();
                 for(int i=0;i<checkProjectList.size();i++)
                     dataList.add(CommonUtils.getJsonObjFromBean(checkProjectList.get(i)));
-                dataListViewContent.deferNotifyDataSetChanged();
+                tableAdapter.notifyDataSetChanged();
             }
         } else {
             hideLoading();
@@ -595,7 +635,7 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
             if(CommCL.INTENT_ACTION_SCAN_RESULT.equals(intent.getAction())){
                 View rootView = getCurrentFocus();//获取光标当前所在组件
                 String barCodeData = null;
-                if(intent.getStringExtra(CommCL.SCN_CUST_HONEY).equals(null)){
+                if(TextUtils.isEmpty(intent.getStringExtra(CommCL.SCN_CUST_HONEY))){
                     barCodeData = intent.getStringExtra(CommCL.SCN_CUST_EX_SCODE);
                 }else{
                     barCodeData = intent.getStringExtra(CommCL.SCN_CUST_HONEY);
