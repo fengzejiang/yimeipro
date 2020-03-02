@@ -11,6 +11,7 @@ public class CheckReason implements Serializable {
     private String id;
     private String fid;
     private String name;
+    private String qtype;
 
     public CheckReason() {
     }
@@ -42,5 +43,13 @@ public class CheckReason implements Serializable {
     @Override
     public String toString() {
         return name;
+    }
+
+    public String getQtype() {
+        return qtype;
+    }
+
+    public void setQtype(String qtype) {
+        this.qtype = qtype;
     }
 }

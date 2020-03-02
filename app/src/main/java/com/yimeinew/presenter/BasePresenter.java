@@ -5,4 +5,5 @@ package com.yimeinew.presenter;
  * @Date : 2018/12/19 14:53
  */
 public class BasePresenter {
+
 }

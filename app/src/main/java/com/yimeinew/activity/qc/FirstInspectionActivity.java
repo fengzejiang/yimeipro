@@ -91,8 +91,6 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_qc_first_inspection);
         ButterKnife.bind(this);
-        registerReceiver(barcodeReceiver,new IntentFilter(
-                CommCL.INTENT_ACTION_SCAN_RESULT));
         zcAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, zcAdapterData);
         zcSpinner.setAdapter(zcAdapter);
         getZCAdapterData();
@@ -136,14 +134,11 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(barcodeReceiver,new IntentFilter(
-                CommCL.INTENT_ACTION_SCAN_RESULT));
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(barcodeReceiver);
     }
 
     /***
@@ -381,7 +376,10 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
     public String getCurrMO() {
         return null;
     }
-
+    @Override
+    public List<JSONObject> getDataList() {
+        return dataList;
+    }
     /***
      *
      * @param bok  是否成功
@@ -518,7 +516,7 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
                     return;
                 }
                 if (CommCL.BATCH_STATUS_READY.equals(qcBatchInfo.getState()) || CommCL.BATCH_STATUS_IN.equals(qcBatchInfo.getState()) || CommCL.BATCH_STATUS_CHARGING.equals(qcBatchInfo.getState()) || CommCL.BATCH_STATUS_WORKING.equals(qcBatchInfo.getState())
-                        || CommCL.BATCH_STATUS_CHECKING.equals(qcBatchInfo.getState())) {
+                        || CommCL.BATCH_STATUS_CHECKING.equals(qcBatchInfo.getState()) || CommCL.BATCH_STATUS_ABNORMAL.equals(qcBatchInfo.getState()) ) {
 //                    edtSid1.setText(qcBatchInfo.getSid1());
                     CommonUtils.textViewGetFocus(edtPrdName);
                     edtPrdName.setText(qcBatchInfo.getPrd_name());
@@ -539,6 +537,11 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
         } else {
             showMessage(error);
         }
+    }
+
+    @Override
+    public void commonBack(boolean bok, Object recordList, String error, int key) {
+
     }
 
     /***
@@ -586,6 +589,11 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
         }
     }
 
+    @Override
+    public boolean onEditTextKeyDown(EditText editText) {
+        return OnEditorAction(editText);
+    }
+
     public void checkUp(CeaPars ceaPars, CWorkInfo cWorkInfo) {
         if (cWorkInfo.getList() == null) {
             showMessage("没有审批节点!");
@@ -625,41 +633,6 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
     }
 
 
-    /***
-     * 注册广播事件，监听PDA扫描
-     */
-    private BroadcastReceiver barcodeReceiver = new BroadcastReceiver() {
 
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(CommCL.INTENT_ACTION_SCAN_RESULT.equals(intent.getAction())){
-                View rootView = getCurrentFocus();//获取光标当前所在组件
-                String barCodeData = null;
-                if(TextUtils.isEmpty(intent.getStringExtra(CommCL.SCN_CUST_HONEY))){
-                    barCodeData = intent.getStringExtra(CommCL.SCN_CUST_EX_SCODE);
-                }else{
-                    barCodeData = intent.getStringExtra(CommCL.SCN_CUST_HONEY);
-                }
-                barCodeData = barCodeData.toUpperCase();
-                int id = rootView.getId();
-                if(id == R.id.edt_op){
-                    edtOP.setText(barCodeData);
-                    OnEditorAction(edtOP);
-                    return;
-                }
-                if(id == R.id.edt_equipment_no){
-                    edtSbId.setText(barCodeData);
-                    OnEditorAction(edtSbId);
-                    return;
-                }
-                if(id == R.id.edt_sid1){
-                    edtSid1.setText(barCodeData);
-                    OnEditorAction(edtSid1);
-                    return;
-                }
-
-            }
-        }
-    };
 
 }

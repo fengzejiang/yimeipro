@@ -19,7 +19,14 @@ public class DateUtil {
         now+=TIMEDIFF;
         return dateToString(now,true,fmt);
     }
-
+    public static long getCurrDateTimeLong(){
+        long now = System.currentTimeMillis();
+        now+=TIMEDIFF;
+        return now;
+    }
+    public static String getNowCurrDateTime(){
+        return getCurrDateTime(ICL.DF_YMDT);
+    }
     public static String dateToString(long mills, boolean bdiv, int fmt) {
         Calendar calendar = Calendar.getInstance(Locale.CHINESE);
         calendar.setTimeInMillis(mills);
@@ -144,4 +151,8 @@ public class DateUtil {
         }
         return 0;
     }
+    public static int subSecond(String d1, String d2){
+        return subDate(d1,d2,5);
+    }
+
 }

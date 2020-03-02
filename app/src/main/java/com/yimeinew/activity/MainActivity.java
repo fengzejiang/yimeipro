@@ -5,10 +5,14 @@ import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
 import android.view.KeyEvent;
+import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.Toast;
 import com.yimeinew.activity.base.BaseActivity;
+import com.yimeinew.activity.login.LoginActivity;
 import com.yimeinew.adapter.MainAdapter;
+import com.yimeinew.utils.CommonUtils;
+import com.yimeinew.utils.DownloadAPK;
 
 /**
  * @Auther: fengzejiang1987@163.com
@@ -27,6 +31,11 @@ public class MainActivity extends BaseActivity {
     @Override
     public void jumpNextActivity(Class<?> descClass) {
         jumpNextActivity(this,descClass);
+    }
+
+    @Override
+    public boolean onEditTextKeyDown(EditText editText) {
+        return false;
     }
 
     @Override

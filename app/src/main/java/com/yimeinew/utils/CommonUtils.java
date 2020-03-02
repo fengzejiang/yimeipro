@@ -1,22 +1,33 @@
 package com.yimeinew.utils;
 
+import android.app.Activity;
 import android.app.AlertDialog;
-import android.content.Context;
-import android.content.DialogInterface;
-import android.content.SharedPreferences;
+import android.content.*;
 import android.graphics.Color;
+import android.net.wifi.WifiInfo;
+import android.net.wifi.WifiManager;
+import android.os.Handler;
+import android.os.Message;
+import android.speech.tts.TextToSpeech;
 import android.text.Html;
 import android.text.TextUtils;
 import android.util.Base64;
+import android.util.Log;
 import android.view.Gravity;
+import android.view.View;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 import com.sdsmdg.tastytoast.TastyToast;
-import com.yimeinew.activity.R;
+import com.yimeinew.activity.base.BaseActivity;
 import com.yimeinew.activity.base.BaseApplication;
 import com.yimeinew.data.ZCInfo;
+import com.yimeinew.data.util.RepeatValue;
+import com.yimeinew.listener.OnAlertListener;
+import com.yimeinew.listener.OnConfirmListener;
+import com.yimeinew.listener.OnSendMessage;
 import com.yimeinew.network.NetWorkManager;
 import com.yimeinew.network.response.Response;
 import com.yimeinew.tableui.entity.HeaderRowInfo;
@@ -28,10 +39,7 @@ import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.List;
+import java.util.*;
 
 /**
  * @Auther: fengzejiang1987@163.com
@@ -39,8 +47,9 @@ import java.util.List;
  */
 public class CommonUtils {
 
-    public static int T_Time = Toast.LENGTH_LONG;
-
+    public static int T_Time = Toast.LENGTH_SHORT;
+    public static HashMap<String, RepeatValue> repeat=new HashMap<String,RepeatValue>();//用于防止重复扫描，缓存过滤法
+    public static TextToSpeech textSpeech;
     public static String Str2Base64(String pwd) {
         pwd = TextUtils.isEmpty(pwd)?"":pwd;
         return Base64.encodeToString(pwd.getBytes(), Base64.DEFAULT);
@@ -79,7 +88,28 @@ public class CommonUtils {
 //        edt_next.selectAll();
         edt_next.setText("");
     }
+    public static void textViewGetFocusNotClear(EditText edt_next) {
+        edt_next.setFocusable(true);
+        edt_next.requestFocus();
+        edt_next.setFocusableInTouchMode(true);
+        edt_next.requestFocusFromTouch();
+        edt_next.findFocus();
+    }
 
+    /***
+     * 组件获取焦点,组件自身不能申明nextFocusDown或者只能是自己！！
+     * imeOptions="actionNone"
+     * @param edt_next  目标输入框
+     */
+    public static void textViewDorpFocus(EditText edt_next) {
+        if(edt_next.hasFocus()) {
+            edt_next.setFocusable(true);
+            edt_next.clearFocus();
+            //edt_next.setFocusableInTouchMode(true);
+            //edt_next.re;
+            //edt_next.findFocus();
+        }
+    }
 
     public static HashMap<String, String> getBaseReqHashMap() {
         HashMap<String, String> params = new HashMap<>();
@@ -118,7 +148,21 @@ public class CommonUtils {
         httpMapKeyValue.put(CommCL.PARAMS_DATA_TYPE, CommCL.PARAM_VALUE_API_ID_SAVE_DATA_TYPE_JSON);
         return httpMapKeyValue;
     }
-
+    /***
+     * 生成更新数据格式的请求参数
+     * @param values json格式化的数据
+     * @param cellId 平台中的对象的ID
+     * @return
+     */
+    public static HashMap<String, String> updateDataMap(String values, String cellId) {
+        HashMap<String, String> httpMapKeyValue = getBaseReqHashMap();
+        httpMapKeyValue.put(CommCL.PARAMS_APIID, CommCL.PARAM_VALUE_API_ID_SAVE);
+        httpMapKeyValue.put(CommCL.PARAMS_JSON_STR, values);
+        httpMapKeyValue.put(CommCL.PARAMS_P_CELL, cellId);
+        httpMapKeyValue.put(CommCL.PARAMS_DATA_TYPE, CommCL.PARAM_VALUE_API_ID_SAVE_DATA_TYPE_JSON);
+        System.out.println("woshi="+httpMapKeyValue.toString());
+        return httpMapKeyValue;
+    }
     /***
      * 生产批次更改状态Map
      * @param values
@@ -130,9 +174,22 @@ public class CommonUtils {
         httpMapKeyValue.put(CommCL.PARAMS_APIID, CommCL.PARAM_VALUE_API_ID_MES_UDP);
         httpMapKeyValue.put(CommCL.PARAMS_JSON_DATA, values);
         httpMapKeyValue.put(CommCL.PARAMS_MES_UPD_ID_FLD, udpId);
+
         return httpMapKeyValue;
     }
-
+    /***
+     * 生产批次更改状态Map快速过站，一条一条记录提交
+     * @param values
+     * @param udpId
+     * @return
+     */
+    public static HashMap<String, String> commMesUDPDataMap2(HashMap<String, String>  values, String udpId) {
+        HashMap<String, String> httpMapKeyValue = getBaseReqHashMap();
+        httpMapKeyValue.put(CommCL.PARAMS_APIID, CommCL.PARAM_VALUE_API_ID_MES_UDP);
+        httpMapKeyValue.put(CommCL.PARAMS_MES_UPD_ID_FLD, udpId);
+        httpMapKeyValue.putAll(values);
+        return httpMapKeyValue;
+    }
     /***
      * 生产加胶或者添加锡膏的apiMap
      * @param sbId 设备号
@@ -226,7 +283,7 @@ public class CommonUtils {
                     Mac = new String(buffer, 0, byteCount, StandardCharsets.UTF_8);
                 }
             }
-            if (Mac == null || Mac.length() == 0) {
+            if (TextUtils.isEmpty(Mac) || Mac.length() == 0) {
                 path = "sys/class/net/eth0/address";
                 FileInputStream fis_name = new FileInputStream(path);
                 byte[] buffer_name = new byte[8192];
@@ -235,18 +292,31 @@ public class CommonUtils {
                     Mac = new String(buffer_name, 0, byteCount_name, StandardCharsets.UTF_8);
                 }
             }
-            if (Mac.length() == 0 || Mac == null) {
+            if (TextUtils.isEmpty(Mac)||Mac.length() == 0 ) {
                 return "";
             }
         } catch (Exception io) {
-//            Log.d("daming.zou**exception*", "" + io.toString());
+         //  Log.d("daming.zou**exception*", "" + io.toString());
+           //System.out.println(io.toString());
         }
-
+        System.out.println("Mac="+Mac);
+        if(TextUtils.isEmpty(Mac)){
+            Mac=CommCL.WIFIMAC;
+        }
 //        Log.d("xulongheng*Mac", Mac);
         return Mac.trim();
     }
-
-
+    public static String getWifiMac(Context context) {
+        StringBuilder deviceId = new StringBuilder();
+        WifiManager wifi = (WifiManager) context.getSystemService(Context.WIFI_SERVICE);
+        WifiInfo info = wifi.getConnectionInfo();
+        String wifiMac = info.getMacAddress();
+        if (!TextUtils.isEmpty(wifiMac)) {
+            deviceId.append(wifiMac);
+            return deviceId.toString();
+        }
+        return deviceId.toString();
+    }
     /***
      * 本地缓存key和Value
      * @param key 缓存的Key值
@@ -303,24 +373,197 @@ public class CommonUtils {
     }
 
     /***
-     * 初始化表格头数据，所有工站通用
+     * 初始化表格头数据，所有工站通用，配置列表
      * @return 返回通用表格头
      */
     public static List<HeaderRowInfo> getRowDataList() {
         List<HeaderRowInfo> rowList = new ArrayList<>();
         HeaderRowInfo sidColumn = new HeaderRowInfo("sid1", "生产批次", 320);
         rowList.add(sidColumn);
-        sidColumn = new HeaderRowInfo("state1", "生产状态", 180);
+
+        sidColumn = new HeaderRowInfo("state1", "生产状态", 150);
         sidColumn.setAttr(3);
         sidColumn.setContrastMap(CommCL.STATEMap);
         sidColumn.setContrastColors(CommCL.STATEColorMap);
         rowList.add(sidColumn);
+
+        sidColumn = new HeaderRowInfo("mbox", "料盒号", 120);
+        rowList.add(sidColumn);
+
+        sidColumn = new HeaderRowInfo("zcno", "制程", 100);
+        rowList.add(sidColumn);
+
         sidColumn = new HeaderRowInfo("slkid", "制令单号", 210);
         rowList.add(sidColumn);
 
         sidColumn = new HeaderRowInfo("prd_no", "机种名称", 180);
         rowList.add(sidColumn);
         sidColumn = new HeaderRowInfo("qty", "数量");
+        rowList.add(sidColumn);//abnormal
+
+        sidColumn = new HeaderRowInfo("abnormal", "异常标识",180);
+        rowList.add(sidColumn);//
+
+        sidColumn = new HeaderRowInfo("remark", "备注", 400);
+        rowList.add(sidColumn);
+        return rowList;
+    }
+
+    /***
+     * 器件下单颗
+     * @return 返回通用表格头
+     */
+    public static List<HeaderRowInfo> getRowDataListXdk() {
+        List<HeaderRowInfo> rowList = new ArrayList<>();
+        HeaderRowInfo sidColumn = new HeaderRowInfo("sid1", "生产批次", 320);
+        rowList.add(sidColumn);
+
+        sidColumn = new HeaderRowInfo("state1", "生产状态", 150);
+        sidColumn.setAttr(3);
+        sidColumn.setContrastMap(CommCL.STATEMap);
+        sidColumn.setContrastColors(CommCL.STATEColorMap);
+        rowList.add(sidColumn);
+
+//        sidColumn = new HeaderRowInfo("zcno", "制程", 100);
+//        rowList.add(sidColumn);
+
+        sidColumn = new HeaderRowInfo("slkid", "制令单号", 210);
+        rowList.add(sidColumn);
+
+        sidColumn = new HeaderRowInfo("prd_no", "机种名称", 180);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("qty", "数量");
+        rowList.add(sidColumn);//abnormal
+
+        sidColumn = new HeaderRowInfo("remark", "备注", 400);
+        rowList.add(sidColumn);
+        return rowList;
+    }
+    /***
+     * 模组卡板工序
+     * 初始化表格头数据，所有工站通用，配置列表
+     * @return 返回通用表格头
+     */
+    public static List<HeaderRowInfo> getRowDataListMz() {
+        List<HeaderRowInfo> rowList = new ArrayList<>();
+        HeaderRowInfo sidColumn = new HeaderRowInfo("mono", "制令单号", 210);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("allcode", "序列号", 500);
+        rowList.add(sidColumn);
+        //sidColumn = new HeaderRowInfo("prd_no", "机种名称", 180);
+        //rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("prd_name", "机型名称", 180);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("prd_mark", "BinCode", 120);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("totalqty", "投产数量", 150);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("apqty", "已卡板数量", 150);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("upqty", "未卡板数量", 150);
+        rowList.add(sidColumn);
+        return rowList;
+    }
+    /***
+     * 维修确认
+     * 初始化表格头数据，所有工站通用，配置列表
+     * @return 返回通用表格头
+     */
+    public static List<HeaderRowInfo> getRowDataListWxqr() {
+        List<HeaderRowInfo> rowList = new ArrayList<>();
+        HeaderRowInfo sidColumn = new HeaderRowInfo("slkid", "工单号", 200);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("prtno", "序列号", 350);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("prd_no", "货品代号", 150);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("prd_name", "货品名称", 150);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("prd_mark", "BinCode", 120);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("bokName", "判定结果", 120);
+        rowList.add(sidColumn);
+        return rowList;
+    }
+
+
+
+    /***
+     * 初始化表格头数据，编带看带，配置列表
+     * @return 返回通用表格头
+     */
+    public static List<HeaderRowInfo> getRowDataListBD() {
+        List<HeaderRowInfo> rowList = new ArrayList<>();
+        HeaderRowInfo sidColumn = new HeaderRowInfo("lotno", "测试号", 320);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("state1", "生产状态", 150);
+        sidColumn.setAttr(3);
+        sidColumn.setContrastMap(CommCL.STATEMap);
+        sidColumn.setContrastColors(CommCL.STATEColorMap);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("qty", "数量");
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("bincode", "binCode",180);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("slkid", "制令单号", 210);
+        rowList.add(sidColumn);
+
+        sidColumn = new HeaderRowInfo("sid1", "批次号", 210);
+        rowList.add(sidColumn);
+        //sidColumn = new HeaderRowInfo("zcno", "制程", 100);
+       // rowList.add(sidColumn);
+
+        sidColumn = new HeaderRowInfo("prd_no", "机种名称", 180);
+        rowList.add(sidColumn);
+
+
+        sidColumn = new HeaderRowInfo("remark", "备注", 400);
+        rowList.add(sidColumn);
+        return rowList;
+    }
+    /***
+     * 初始化表格头数据，所有工站通用，配置列表
+     * @return 返回通用表格头
+     */
+    public static List<HeaderRowInfo> getRowDataListforMboxBind() {
+        List<HeaderRowInfo> rowList = new ArrayList<>();
+        HeaderRowInfo sidColumn = new HeaderRowInfo("mbox", "料盒号", 100);
+        rowList.add(sidColumn);
+
+
+        sidColumn = new HeaderRowInfo("prd_no", "货品代号", 100);
+        rowList.add(sidColumn);
+
+        sidColumn = new HeaderRowInfo("name", "货品名称", 320);
+        rowList.add(sidColumn);
+
+        sidColumn = new HeaderRowInfo("spc", "规格", 320);
+        rowList.add(sidColumn);
+
+        return rowList;
+    }
+
+    /***
+     * 初始化表格头数据，所有工站通用，配置列表
+     * @return 返回通用表格头
+     */
+    public static List<HeaderRowInfo> getRowDataList_Pack() {
+        List<HeaderRowInfo> rowList = new ArrayList<>();
+        HeaderRowInfo sidColumn = new HeaderRowInfo("sid1", "喷码", 350);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("slkid", "制令单号", 210);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("prd_name", "机种名称", 240);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("prd_mark", "BinCode", 180);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("totalqty", "投产数量", 180);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("minqty", "单盘数量", 180);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("tray", "Tray盘号", 180);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("qty", "数量",180);
         rowList.add(sidColumn);
 
         sidColumn = new HeaderRowInfo("remark", "备注", 400);
@@ -328,42 +571,145 @@ public class CommonUtils {
         return rowList;
     }
 
-    public static void showOK(Context context, String title, String msg) {
-        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(
-                context);
-        normalDialog.setTitle(title);
-        normalDialog.setMessage(Html.fromHtml("<font color='red'>" + msg
-                + "</font>"));
-        normalDialog.setCancelable(false); // 设置不可点击界面之外的区域让对话框消失
-        normalDialog.setPositiveButton("确定",
-                new DialogInterface.OnClickListener() {
-                    @Override
-                    public void onClick(DialogInterface dialog, int which) {
 
-                    }
-                });
+    /**
+     *
+     * @param context
+     * @param title
+     * @param msg
+     */
+    public static void showOK(Context context, String title, String msg) {
+        final AlertDialog.Builder normalDialog = new AlertDialog.Builder(context);
+        normalDialog.setTitle(title);
+        normalDialog.setMessage(Html.fromHtml("<font color='red'>" + msg+ "</font>"));
+        normalDialog.setCancelable(false); // 设置不可点击界面之外的区域让对话框消失
+        normalDialog.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+
+            }
+        });
         // 显示
         normalDialog.show();
     }
 
     public static void showOKCancel(Context context, String title, String msg, DialogInterface.OnClickListener listener) {
-        final AlertDialog.Builder dialog = new AlertDialog.Builder(
-                context);
+        final AlertDialog.Builder dialog = new AlertDialog.Builder(context);
         dialog.setTitle(title);
-        dialog.setMessage(Html.fromHtml("<font color='red'>" + msg
-                + "</font>"));
+        dialog.setMessage(Html.fromHtml("<font color='red'>" + msg + "</font>"));
         dialog.setCancelable(false); // 设置不可点击界面之外的区域让对话框消失
         dialog.setPositiveButton("确定", listener);
         //设置反面按钮
         dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialog, int which) {
-                dialog.dismiss();
+
             }
         });
         // 显示
         dialog.show();
     }
+
+    public static void confirm(Context context, String title, String msg,View view, OnConfirmListener confirmListener) {
+        final AlertDialog.Builder dialog = new AlertDialog.Builder(context);
+        dialog.setTitle(title);
+        if(!TextUtils.isEmpty(msg)) {
+            dialog.setMessage(Html.fromHtml("<font color='red'>" + msg + "</font>"));
+        }
+        if(view!=null){
+            dialog.setView(view);
+        }
+        dialog.setCancelable(false); // 设置不可点击界面之外的区域让对话框消失
+        dialog.setPositiveButton("确定", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if(confirmListener!=null) {
+                    confirmListener.OnConfirm(dialog);
+                }
+            }
+        });
+        //设置按钮
+        dialog.setNegativeButton("取消", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if(confirmListener!=null) {
+                    confirmListener.OnCancel(dialog);
+                }
+            }
+        });
+        // 显示
+        dialog.show();
+    }
+
+
+
+    /**
+     * 就一个确定
+     * 可以返回确定按钮事件
+     * @param context
+     * @param title 标题
+     * @param msg   内容
+     */
+    public static void alert(Context context, String title, String msg,View view, OnAlertListener alertListener) {
+        final AlertDialog.Builder dialog = new AlertDialog.Builder(context);
+        dialog.setTitle(title);
+        if(!TextUtils.isEmpty(msg)) {
+            dialog.setMessage(Html.fromHtml("<font color='red'>" + msg + "</font>"));
+        }
+        if(view!=null){
+            dialog.setView(view);
+        }
+        dialog.setCancelable(false); // 设置不可点击界面之外的区域让对话框消失
+        dialog.setPositiveButton("确定",new  DialogInterface.OnClickListener(){
+            @Override
+            public void onClick(DialogInterface dialog, int which) {
+                if(alertListener!=null) {
+                    alertListener.OnConfirm(dialog);
+                }
+            }
+        });
+        // 显示
+        dialog.show();
+    }
+
+    /**
+     * 文本框提示然后自动复原【time不要太长】
+     * @param textView 提示控件
+     * @param text     提示文本
+     * @param restore  恢复文本
+     * @param time     提示时长(毫秒)
+     */
+    public static void showTextAuto(TextView textView, String text, String restore,int time){
+        if(TextUtils.equals(text,textView.getText())){//如果刚刚提示和当前一样就不再提示
+            return;
+        }
+        textView.setText(text);
+        textView.setTextColor(Color.rgb(228,10,10));
+        Handler mHandler = new Handler() { //使用handler刷新
+            public void handleMessage(Message msg) {
+                if(msg.what==2019001){
+                    textView.setText(msg.obj.toString());
+                    textView.setTextColor(Color.rgb(0,0,0));
+                }
+            }
+        };
+        Thread thread=new Thread(new Runnable(){//启用线程
+            @Override
+            public void run() {
+                try {
+                    Thread.sleep(time);
+                    Message msg = Message.obtain();
+                    msg.what=2019001;
+                    msg.obj=restore;
+                    mHandler.sendMessage(msg);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        });
+        thread.start();
+    }
+
 
     public static String traceException0(Throwable err) {
         StringWriter sw0 = new StringWriter();
@@ -374,4 +720,193 @@ public class CommonUtils {
         out.close();
         return sw0.toString();
     }
+
+
+    /**
+     * 防止重复扫描
+     * @param key
+     * @param value
+     * @return
+     */
+    public static boolean isRepeat(String key,String value){
+        boolean b=true;
+        long now=DateUtil.getCurrDateTimeLong();
+        if(repeat.containsKey(key)){
+            RepeatValue rv=repeat.get(key);
+            long oldtime=rv.getTime();
+            String v=rv.getValue();
+            if(Math.abs(oldtime-now)<=CommCL.ALLOW_REPEAT_TIME&&TextUtils.equals(v,value)){
+                b=true;
+            }else{
+                b=false;
+                repeat.put(key,new RepeatValue(now,value));
+            }
+        }else {
+            b=false;
+            repeat.put(key,new RepeatValue(now,value));
+        }
+
+        return b;
+    }
+    public static boolean isRepeat(String key,String value,long time){
+        boolean b=true;
+        long now=DateUtil.getCurrDateTimeLong();
+        if(repeat.containsKey(key)){
+            RepeatValue rv=repeat.get(key);
+            long oldtime=rv.getTime();
+            String v=rv.getValue();
+            if(Math.abs(oldtime-now)<=time&&TextUtils.equals(v,value)){
+                b=true;
+            }else{
+                b=false;
+                repeat.put(key,new RepeatValue(now,value));
+            }
+        }else {
+            b=false;
+            repeat.put(key,new RepeatValue(now,value));
+        }
+
+        return b;
+    }
+    /**
+     * 防止操作过快控制8秒
+     * @param key
+     * @return
+     */
+    public static boolean isCanDo(String key){
+        String value="no";
+        boolean b=true;
+        long now=DateUtil.getCurrDateTimeLong();
+        if(repeat.containsKey(key)){
+            RepeatValue rv=repeat.get(key);
+            long oldtime=rv.getTime();
+            String v=rv.getValue();
+            if(Math.abs(oldtime-now)<=CommCL.ALLOW_CANDO_TIME&&TextUtils.equals(v,value)){
+                b=true;
+            }else{
+                b=false;
+                //repeat.put(key,new RepeatValue(now,value));
+            }
+        }else {
+            b=false;
+            //repeat.put(key,new RepeatValue(now,value));
+        }
+        return !b;
+    }
+
+    /**
+     * 禁止执行
+     * @param key
+     * @return
+     */
+    public static void banDo(String key){
+        long now=DateUtil.getCurrDateTimeLong();
+        String value="no";
+        repeat.put(key,new RepeatValue(now,value));
+    }
+    /**
+     * 禁止执行
+     * @param key
+     * @return
+     */
+    public static void canDo(String key){
+        long now=DateUtil.getCurrDateTimeLong();
+        String value="yes";
+        repeat.put(key,new RepeatValue(now,value));
+    }
+
+
+    /**
+     * 用于保存或更新数据时非空的判断。有任何一个不允许为空的值就无法保存
+     * @param values
+     * @return
+     */
+    public static boolean isEmpty(String[] values){
+        for(int i=0;i<values.length;i++) {
+            if(TextUtils.isEmpty(values[i])){
+                return true;
+            }
+        }
+        return false;
+    }
+    public static int parseInt(String str){
+        if(TextUtils.isEmpty(str)){
+            return 0;
+        }
+        return  Integer.parseInt(str);
+    }
+    public static HashMap<String,String> JSONArrayToMap(JSONArray jsonArray,String key,String value){
+        HashMap<String,String> hm=new HashMap<>();
+        for(int i=0;i<jsonArray.size();i++){
+            hm.put(jsonArray.getJSONObject(i).getString(key),jsonArray.getJSONObject(i).getString(value));
+        }
+        return hm;
+    }
+    /**
+     * 判断 分隔 字符串是否内容相等。用于烘烤判断胶水
+     * @param s1
+     * @param s2
+     * @param split
+     * @return
+     */
+    public static boolean contentEquals(String s1,String s2,String split) {
+        String[] str1=s1.split(split);
+        String[] str2=s2.split(split);
+        for(String st1:str1) {
+            for(String st2:str2) {
+                if(st1.contentEquals(st2)) {
+                    return true;
+                }else if(st2.contentEquals(st1)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * 初始化语言包，必须安装讯飞语言。才能使用中文
+     * 在登录页面调用
+     * @param context
+     */
+    public static void initTextSpeech(Context context){
+        if(textSpeech==null) {
+            textSpeech = new TextToSpeech(context, new TextToSpeech.OnInitListener() {
+                @Override
+                public void onInit(int status) {
+                    /**
+                     * 如果装载TTS成功
+                     * */
+                    if (status == TextToSpeech.SUCCESS) {
+                        /**
+                         * 有Locale.CHINESE,但是不支持中文
+                         * */
+                        int result = textSpeech.setLanguage(Locale.ENGLISH);
+                        /**
+                         * LANG_MISSING_DATA-->语言的数据丢失
+                         * LANG_NOT_SUPPORTED-->语言不支持
+                         * */
+                        //下面是初始化完毕调试用的
+                        if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
+                            textSpeech.speak("Chinese is not supported, voice package needs to be installed", TextToSpeech.QUEUE_FLUSH, null);
+                        } else {
+                           //textSpeech.speak("中文语音初始化成功", TextToSpeech.QUEUE_FLUSH, null);
+                        }
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * 直接输入文本
+     * @param text
+     */
+    public static void speak(String text){
+        textSpeech.speak(text,TextToSpeech.QUEUE_FLUSH,null);
+    }
+
+
+
+
 }

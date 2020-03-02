@@ -1,0 +1,254 @@
+<?xml version="1.0" encoding="utf-8"?>
+    <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+                    xmlns:tools="http://schemas.android.com/tools"
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:paddingBottom="@dimen/activity_vertical_margin"
+                    android:paddingLeft="@dimen/activity_horizontal_margin"
+                    android:paddingRight="@dimen/activity_horizontal_margin"
+                    tools:context=".sb.WxsqActivity">
+
+
+        <TableLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:paddingStart="20dp"
+                android:paddingEnd="10dp">
+
+            <TableRow android:paddingTop="8dp">
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingBottom="2dp"
+                        android:text="@string/yimei_pjname1"
+                        android:textSize="16sp"/>
+                <EditText
+                        android:id="@+id/edt_pjname1"
+                        android:layout_width="150dp"
+                        android:paddingStart="10dp"
+                        android:enabled="true"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_color"
+                        android:nextFocusDown="@id/edt_pjname1"
+                        android:hint="@string/yimei_pjname1"
+                        android:tag="@string/yimei_pjname1"/>
+
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/yimei_pjnum1"
+                        android:textSize="16sp"/>
+
+                <EditText
+                        android:id="@+id/edt_pjnum1"
+                        android:layout_width="wrap_content"
+                        android:paddingStart="7dp"
+                        android:enabled="true"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_color"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:nextFocusForward="@id/edt_pjnum1"
+                        android:hint="@string/yimei_pjnum1"
+                        android:tag="@string/yimei_pjnum1"/>
+
+            </TableRow>
+            <TableRow android:paddingTop="8dp">
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingBottom="2dp"
+                        android:text="@string/yimei_pjname2"
+                        android:textSize="16sp"/>
+                <EditText
+                        android:id="@+id/edt_pjname2"
+                        android:layout_width="wrap_content"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="5dp"
+                        android:enabled="true"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:textSize="16sp"
+                        android:text=""
+                        android:textColor="@color/text_color"
+                        android:nextFocusDown="@id/edt_pjname2"
+                        android:hint="@string/yimei_pjname2"
+                        android:tag="@string/yimei_pjname2"/>
+
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/yimei_pjnum2"
+                        android:textSize="16sp"/>
+
+                <EditText
+                        android:id="@+id/edt_pjnum2"
+                        android:layout_width="wrap_content"
+                        android:paddingStart="7dp"
+                        android:paddingEnd="5dp"
+                        android:ems="10"
+                        android:enabled="true"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_color"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:text=""
+                        android:nextFocusForward="@id/edt_pjnum2"
+                        android:hint="@string/yimei_pjnum2"
+                        android:tag="@string/yimei_pjnum2"/>
+
+            </TableRow>
+
+            <TableRow android:paddingTop="8dp">
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingBottom="2dp"
+                        android:text="@string/yimei_pjname3"
+                        android:textSize="16sp"/>
+                <EditText
+                        android:id="@+id/edt_pjname3"
+                        android:layout_width="wrap_content"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="5dp"
+                        android:enabled="true"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:textSize="16sp"
+                        android:text=""
+                        android:textColor="@color/text_color"
+                        android:nextFocusDown="@id/edt_pjname3"
+                        android:hint="@string/yimei_pjname3"
+                        android:tag="@string/yimei_pjname3"/>
+
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/yimei_pjnum3"
+                        android:textSize="16sp"/>
+
+                <EditText
+                        android:id="@+id/edt_pjnum3"
+                        android:layout_width="wrap_content"
+                        android:paddingStart="7dp"
+                        android:paddingEnd="5dp"
+                        android:ems="10"
+                        android:enabled="true"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_color"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:text=""
+                        android:nextFocusForward="@id/edt_pjnum2"
+                        android:hint="@string/yimei_pjnum3"
+                        android:tag="@string/yimei_pjnum3"/>
+
+            </TableRow>
+            <TableRow android:paddingTop="8dp">
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingBottom="2dp"
+                        android:text="@string/yimei_pjname4"
+                        android:textSize="16sp"/>
+                <EditText
+                        android:id="@+id/edt_pjname4"
+                        android:layout_width="wrap_content"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="5dp"
+                        android:enabled="true"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:textSize="16sp"
+                        android:text=""
+                        android:textColor="@color/text_color"
+                        android:nextFocusDown="@id/edt_pjname4"
+                        android:hint="@string/yimei_pjname4"
+                        android:tag="@string/yimei_pjname4"/>
+
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/yimei_pjnum4"
+                        android:textSize="16sp"/>
+
+                <EditText
+                        android:id="@+id/edt_pjnum4"
+                        android:layout_width="wrap_content"
+                        android:paddingStart="7dp"
+                        android:paddingEnd="5dp"
+                        android:ems="10"
+                        android:enabled="true"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_color"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:text=""
+                        android:nextFocusForward="@id/edt_pjnum4"
+                        android:hint="@string/yimei_pjnum4"
+                        android:tag="@string/yimei_pjnum4"/>
+
+            </TableRow>
+            <TableRow android:paddingTop="8dp">
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:paddingBottom="2dp"
+                        android:text="@string/yimei_pjname5"
+                        android:textSize="16sp"/>
+                <EditText
+                        android:id="@+id/edt_pjname5"
+                        android:layout_width="wrap_content"
+                        android:paddingStart="10dp"
+                        android:paddingEnd="5dp"
+                        android:enabled="true"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:textSize="16sp"
+                        android:text=""
+                        android:textColor="@color/text_color"
+                        android:nextFocusDown="@id/edt_pjname2"
+                        android:hint="@string/yimei_pjname5"
+                        android:tag="@string/yimei_pjname5"/>
+
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/yimei_pjnum5"
+                        android:textSize="16sp"/>
+
+                <EditText
+                        android:id="@+id/edt_pjnum5"
+                        android:layout_width="wrap_content"
+                        android:paddingStart="7dp"
+                        android:paddingEnd="5dp"
+                        android:ems="10"
+                        android:enabled="true"
+                        android:textSize="16sp"
+                        android:textColor="@color/text_color"
+                        android:imeOptions="actionDone"
+                        android:inputType="text"
+                        android:text=""
+                        android:nextFocusForward="@id/edt_pjnum2"
+                        android:hint="@string/yimei_pjnum5"
+                        android:tag="@string/yimei_pjnum5"/>
+
+            </TableRow>
+            <TableRow
+                    android:paddingTop="8dp"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content">
+                <Button
+                        android:id="@+id/bn_save_back"
+                        android:layout_width="0dip"
+                        android:layout_height="40dp"
+                        android:layout_margin="5dip"
+                        android:layout_weight="1"
+                        android:background="@drawable/btn_shape_check_border"
+                        android:text="保存并返回" />
+            </TableRow>
+        </TableLayout>
+    </RelativeLayout>
+

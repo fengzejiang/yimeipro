@@ -70,6 +70,13 @@ public class BaseTableDataAdapter extends AbstractTableViewAdapter {
         notifyDataSetChanged();
     }
 
+    public void clear(){
+        if(this.contentList==null)
+            contentList = new ArrayList<>();
+        this.contentList.clear();
+        notifyDataSetChanged();
+    }
+
     /**
      * 给该方法添加实现，返回Content部分的适配器
      *

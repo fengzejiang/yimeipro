@@ -73,6 +73,8 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
     EditText edtSfQty;
     @BindView(R.id.row_mater)
     TableRow tableRow;
+    @BindView(R.id.row_lot)
+    TableRow tableRow_lot;
 
     ZCInfo zCnoInfo;
     String currOP;
@@ -80,7 +82,7 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
     MESPRecord record;
     private ZLoadingDialog zLoadingView;
     private String cont;
-
+    private int maxid=-1;
     private boolean mainRecordExit = false;
 
     @BindView(R.id.btn_save)
@@ -93,6 +95,8 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
 
     private boolean isGJ = false;//是否是固晶工站
 
+    String KEY_SID_ZCNO="";
+
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -101,6 +105,7 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
         record = (MESPRecord) getIntent().getSerializableExtra(CommCL.COMM_RECORD_FLD);
         currOP =  getIntent().getStringExtra(CommCL.COMM_OP_FLD);
         currSbId =  getIntent().getStringExtra(CommCL.COMM_SBID_FLD);
+        KEY_SID_ZCNO=record.getSid1()+record.getZcno();
         TabHost tabHost = this.getTabHost();
         TabHost.TabSpec tab1 = tabHost.newTabSpec("tab1").setIndicator("扫描区")
                 .setContent(R.id.tab1);
@@ -127,7 +132,7 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
         commStationZCPresenter = new CommStationZCPresenter(this, SchedulerProvider.getInstance());
         //初始化材料明细查询条件
         cont = "~mo_no='"+record.getSlkid()+"'";
-        if(zCnoInfo.getId().equals("11")||zCnoInfo.getId().equals("12")||zCnoInfo.getId().equals("13")){
+        if(zCnoInfo.getId().equals("11")||zCnoInfo.getId().equals("12")||zCnoInfo.getId().equals("13")||zCnoInfo.getId().equals("14")){
             isGJ = true;
             cont+="  and (gzl='M01' OR gzl='M03') and upid>0";
         }
@@ -136,6 +141,8 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
         }
         if(isGJ){
             tableRow.setVisibility(View.GONE);
+        }else{
+            tableRow_lot.setVisibility(View.GONE);
         }
         showLoading();
         commStationZCPresenter.loadMaterialInfo(cont,0);
@@ -165,6 +172,10 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
     public void setBtnSave(){
         if(newUpList.size()>0){
             showLoading();
+            if(TextUtils.isEmpty(record.getZcno())){
+                record.setZcno(zCnoInfo.getId());
+            }
+
             commStationZCPresenter.saveMaterialRecord(record,newUpList,!mainRecordExit);
         }
 
@@ -188,14 +199,19 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
         if(id == R.id.edt_material){
             //判断材料号是否为空
             if(checkMaterial(str)){
-                CommonUtils.textViewGetFocus(edtLot);
+                if(isGJ) {
+                    CommonUtils.textViewGetFocus(edtLot);
+                }else{
+                        OnEditorAction(edtLot);
+                }
                 return true;
             }
         }
         if(id == R.id.edt_lot){
+            //showMessage("zdz="+getMaxCid());
             if(checkMaterial(material)){
                 String key = material+"_"+str;
-                if(materLotUp.containsKey(key)){
+                if(materLotUp.containsKey(key)&&isGJ){
                     showMessage("该材料批次已经上过，请更换批次");
                     CommonUtils.textViewGetFocus(edtLot);
                     return false;
@@ -206,32 +222,13 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
                     CommonUtils.textViewGetFocus(edtLot);
                     return false;
                 }
-                boolean bBatch = materLot.containsKey(key);
-                int index = bBatch?materLot.get(key):materLot.get(material+"_");
-                JSONObject jsonstr = materialDataList.get(index);
-                ChargingMaterial data = JSONObject.parseObject(jsonstr.toJSONString(),ChargingMaterial.class);
-                if(!bBatch){
-                    data.setBat_no(str);
+                if(CommonUtils.isRepeat("edt_lot_shangliao",edtLot.getText().toString().toUpperCase())){
+                    return false;
                 }
-                data.setSid(record.getSid1());
-                data.setOp(currOP);
-                data.setDcid(CommonUtils.getMacID());
-                data.setHpdate(DateUtil.getCurrDateTime(ICL.DF_YMDT));
-                data.setSbid(currSbId);
-                data.setCid(getMaxCid());
-                data.setSys_stated(3);
-                jsonstr = CommonUtils.getJsonObjFromBean(data);
-                newUpList.add(jsonstr);
-                adapter.addRecord(jsonstr);
-                Integer[] vv = materInfo.get(material);
-                vv[1] = vv[1]+data.getQty();
-                materInfo.put(material,vv);
-                initText(material);
-                materLotUp.put(key,key);
-                if(checkMaterialFull(material)){
-                    CommonUtils.textViewGetFocus(edtMaterial);
+                if(isGJ){
+                    commStationZCPresenter.getCheckWaferBatNoNum(key,str,material,1);
                 }else{
-                    CommonUtils.textViewGetFocus(edtLot);
+                    addCaiLiao(key,str,material);
                 }
                 return true;
             }
@@ -239,24 +236,70 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
         return false;
     }
 
+    public void addCaiLiao(String key,String str,String material){
+        boolean bBatch = materLot.containsKey(key);
+        int index = bBatch?materLot.get(key):materLot.get(material+"_");
+        JSONObject jsonstr = materialDataList.get(index);
+        ChargingMaterial data = JSONObject.parseObject(jsonstr.toJSONString(),ChargingMaterial.class);
+        if(!bBatch){
+            data.setBat_no(str);
+        }
+        data.setSid(record.getSid1());
+        data.setZcno(TextUtils.isEmpty(record.getZcno())?zCnoInfo.getId():record.getZcno());
+        data.setOp(currOP);
+        data.setDcid(CommonUtils.getMacID());
+        data.setHpdate(DateUtil.getCurrDateTime(ICL.DF_YMDT));
+        data.setSbid(currSbId);
+        data.setCid(getMaxCid());
+        data.setSys_stated(3);
+        jsonstr = CommonUtils.getJsonObjFromBean(data);
+        newUpList.add(jsonstr);
+        adapter.addRecord(jsonstr);
+        Integer[] vv = materInfo.get(material);
+        vv[1] = vv[1]+data.getQty();
+        materInfo.put(material,vv);
+        initText(material);
+        materLotUp.put(key,key);
+        if(checkMaterialFull(material)){
+            //CommonUtils.textViewGetFocus(edtMaterial);
+            textViewGetFocus();
+        }else{
+            //CommonUtils.textViewGetFocus(edtLot);
+            textViewGetFocus();
+        }
+    }
+
+
+    public void textViewGetFocus(){
+        if(isGJ){
+            CommonUtils.textViewGetFocus(edtLot);
+        }else{
+            CommonUtils.textViewGetFocus(edtMaterial);
+        }
+    }
+
+
+
     /***
      * 获取上料记录的最大Cid，是子对象的主键之一,int类型
      * @return
      */
     private int getMaxCid() {
-        int key = 1;
-        if(dataList.size()==0){
-            return key;
-        }else{
-            key = 1;
-            for(JSONObject jsonObject : dataList){
-                ChargingMaterial material = JSONObject.parseObject(jsonObject.toJSONString(),ChargingMaterial.class);
-                if(material.getCid()>key){
-                    key = material.getCid();
-                }
-            }
-            return key+1;
-        }
+//        int key = 1;
+//        if(dataList.size()==0){
+//            return key;
+//        }else{
+//            key = 1;
+//            for(JSONObject jsonObject : dataList){
+//                ChargingMaterial material = JSONObject.parseObject(jsonObject.toJSONString(),ChargingMaterial.class);
+//                if(material.getCid()>key){
+//                    key = material.getCid();
+//                }
+//            }
+//            return key+1;
+//        }
+        maxid++;
+        return maxid;
     }
 
     public boolean checkMaterial(String str) {
@@ -304,7 +347,21 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
      */
     private boolean checkMaterialFull(String str){
         Integer[] vv = materInfo.get(str);
-        return !(vv[0]-vv[1]>0);
+        //return false;//!(vv[0]-vv[1]>0);
+        int now=CommCL.sharedPreferences.getInt(KEY_SID_ZCNO,0);
+        if(vv[0]<=vv[1]){
+            return true;
+//            if(now>CommCL.ADDGLUING_EXCEED_NUM) {
+//                return true;
+//            }else{
+//                CommCL.sharedPreferences.edit().putInt(KEY_SID_ZCNO,now+1).commit();
+//                return false;
+//            }
+        }else{
+            return false;
+        }
+
+
     }
 
     //初始化tab2的表格表头
@@ -356,7 +413,10 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
     public String getCurrMO() {
         return null;
     }
-
+    @Override
+    public List<JSONObject> getDataList() {
+        return dataList;
+    }
     @Override
     public void saveRecordBack(boolean bok, Object record1, String error) {
         hideLoading();
@@ -391,6 +451,10 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
                     String prdNo = materialInfo.getPrd_no();
                     if(!materInfo.containsKey(prdNo)){
                         materInfo.put(materialInfo.getPrd_no(),new Integer[]{record.getQty(),0});
+                        if(prdNo.contains("M01")) {
+                            String cont = "~sid1='" + record.getSid1() + "'";
+                            commStationZCPresenter.getAssistInfo(CommCL.AID_GJ_WAFER_QTY, cont, prdNo,2);
+                        }
                     }
                     String lotNo = materialInfo.getBat_no();
                     lotNo = TextUtils.isEmpty(lotNo)?"":lotNo;
@@ -403,8 +467,9 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
                     materialDataList.add(CommonUtils.getJsonObjFromBean(materialInfo));
                 }
                 adapterMaterial.notifyDataSetChanged();
-                String cont = "~sid='"+record.getSid1()+"'";
+                String cont = "~sid='"+record.getSid1()+"' and zcno='"+zCnoInfo.getId()+"'";
                 commStationZCPresenter.loadMaterialInfo(cont,1);
+                commStationZCPresenter.getAssistInfo(CommCL.AID_MATERIAL_RECORD_MAX,"~sid='"+record.getSid1()+"'","",3);
             }else{
                 showMessage("该批次没有材料信息！！！");
                 hideLoading();
@@ -448,6 +513,50 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
     @Override
     public void checkQCBatInfoBack(boolean bok, Object o, String error) {
 
+    }
+
+    @Override
+    public void commonBack(boolean bok, Object recordList, String error, int key) {
+        switch(key){
+            case 1://重复没有超过3次。就可以加晶片
+                if(bok){
+                    HashMap<String,String> hm=(HashMap<String,String>)recordList;
+                    addCaiLiao(hm.get("key"),hm.get("str"),hm.get("material"));
+                }
+                break;
+            case 2://获取实际的应发量数量
+                JSONArray rs=(JSONArray)recordList;
+                if(rs.size()>0){
+                    JSONObject jObj=getInfoByZcno(rs);
+                    String prd_no=error;//晶片料号
+                    int sid1_qty=jObj.getInteger("dw_num");
+                    int mes_num=jObj.getInteger("mes_num");
+                    Integer[] qtys = materInfo.get(prd_no);
+                    qtys[0]=sid1_qty;
+                    materInfo.put(prd_no,qtys);
+                }
+                hideLoading();
+                break;
+            case 3://获取最大值
+                JSONArray rs1=(JSONArray)recordList;
+                if(rs1.size()>0){
+                    maxid=rs1.getJSONObject(0).getInteger("cid");
+                }else{
+                    maxid=1;
+                }
+                hideLoading();
+                break;
+            default:
+                if(!bok){
+                    hideLoading();
+                    showMessage(error);
+                }
+
+        }
+        if(!bok){
+            hideLoading();
+            showMessage(error);
+        }
     }
 
     @Override
@@ -503,6 +612,12 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
     }
 
     @Override
+    public void clear() {
+        adapter.clear();
+        dataList.clear();
+    }
+
+    @Override
     public void checkActionBack(boolean bok, int key, CeaPars ceaPars, CWorkInfo cWorkInfo, String error) {
 
     }
@@ -542,4 +657,17 @@ public class ChargingActivity extends TabActivity implements BaseStationBindingV
             }
         }
     };
+    public JSONObject getInfoByZcno(JSONArray ja){
+        String zcno=zCnoInfo.getId();
+        for(int i=0;i<ja.size();i++){
+            JSONObject obj=ja.getJSONObject(i);
+            if(TextUtils.equals(obj.getString("zcno"),zcno)){
+                return obj;
+            }
+        }
+        return ja.getJSONObject(0);
+    }
+
+
+
 }

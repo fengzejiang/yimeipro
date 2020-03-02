@@ -17,6 +17,7 @@ public class EquipmentInfo implements Serializable {
     private int sbstate; //设备状态 0:正常;1:报修;2:维修中;3:待确认
     private String glue; //胶水料号
     private String stents; //支架类别
+    private String pzcno;//在产的制程
 
     public String getId() {
         return id;
@@ -88,5 +89,13 @@ public class EquipmentInfo implements Serializable {
 
     public void setStents(String stents) {
         this.stents = stents;
+    }
+
+    public String getPzcno() {
+        return pzcno;
+    }
+
+    public void setPzcno(String pzcno) {
+        this.pzcno = pzcno;
     }
 }

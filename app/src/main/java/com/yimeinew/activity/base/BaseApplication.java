@@ -3,6 +3,7 @@ package com.yimeinew.activity.base;
 import android.app.Activity;
 import android.app.Application;
 import android.content.Context;
+import android.text.TextUtils;
 import com.yimeinew.data.Menu;
 import com.yimeinew.data.User;
 import com.yimeinew.data.ZCInfo;
@@ -26,11 +27,18 @@ public class BaseApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+        CommCL.sharedPreferences = getSharedPreferences(CommCL.OPCaCheDir, Context.MODE_PRIVATE);
+        /*其他数据初始化*/
+        String tempURi = CommCL.sharedPreferences.getString(CommCL.URi_KEY, null);
+        if(!TextUtils.isEmpty(tempURi)){
+            CommCL.URi=tempURi;
+            CommCL.IP = "IP:" + CommCL.URi.substring(7, CommCL.URi.lastIndexOf(":"));
+        }
         NetWorkManager.getInstance().init();
-        CommCL.sharedPreferences = getSharedPreferences(CommCL.OPCaCheDir, Context.MODE_WORLD_READABLE);
         ServicesTimeThread thread = new ServicesTimeThread();
         thread.setPriority(Thread.MIN_PRIORITY);
         thread.start();
+
     }
 
     /***

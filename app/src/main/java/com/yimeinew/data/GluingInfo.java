@@ -25,7 +25,7 @@ public class GluingInfo implements Serializable {
     private int mi;//当前时间减去最近到期时间(分钟)
     private int zt;//当前时间减去最近到期时间<=0 =3，0~=30 =2，30>,<60=1 其他0(没有做混胶)
     private int mixtime;//当前时间和混胶时间的差额
-
+    private String zcno;//胶水所属的制程
     public int getFr_mixing_time() {
         return fr_mixing_time;
     }
@@ -160,5 +160,13 @@ public class GluingInfo implements Serializable {
 
     public void setZt(int zt) {
         this.zt = zt;
+    }
+
+    public String getZcno() {
+        return zcno;
+    }
+
+    public void setZcno(String zcno) {
+        this.zcno = zcno;
     }
 }

@@ -35,7 +35,7 @@ public interface BaseView {
     /***
      * 跳转页面
      */
-    void jumpNextActivity( Class<?> descClass);
+    void jumpNextActivity(Class<?> descClass);
     void jumpNextActivity(Context srcContent, Class<?> descClass);
 
     /***
@@ -43,6 +43,8 @@ public interface BaseView {
      * @param unBindInfo 数据对象
      */
     void addRow(Object unBindInfo);
+
+    void clear();
 
     /***执行或者调用审批信息返回
      *

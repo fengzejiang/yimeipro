@@ -20,12 +20,15 @@ public class MESPRecord implements Serializable {
     private String prd_no;//产品编码
     private String prd_name;//产品名称
     private String op;//操作员
+    private String op_b;//开工作业员
+    private String op_o;//出站作业员
     private String remark;//备注
     private String smake = BaseApplication.currUser.getUserCode();//制单人
     private String mkdate = DateUtil.getCurrDateTime(ICL.DF_YMDT);//制单时间
     private String bok="1";//是否可以开工
     private int state = 0;//生产记录表状态
     private String hpdate;//开工时间
+    private String outdate;//出站时间
     private int firstchk = 0;//是否首件检
     private int qty ;//数量
     private String dcid = CommonUtils.getMacID();//设备ID
@@ -37,9 +40,41 @@ public class MESPRecord implements Serializable {
     private String zcno1;//下一制成
     private String sbid;//设备编码
     private String prtno;//胶杯号
-    private String lotno;//后段批次号
-    private String sorg = BaseApplication.currUser.getDeptCode();//胶杯号
+    private String sorg = BaseApplication.currUser.getDeptCode();//部门
+    private String lotno;
+    private int abnormal;
+    //卡板
+    private int fact_apqty;//实际已生产量
+    private int apqty;//已生产量
+    private String code;//喷码
+    private  int totalqty;//投产量
+    private int upqty;//未生产量
+    private String clid="SCRZ";
+    private String hold="1";
+    private String cbstate;
+    private String lotstate;
+    private String prd_mark;//bincode
+    private String sort;//生产确认：A;品质确认是：B;
+    private String bokName;//判定结果名称
+    private String spc_no;//不合格原因
 
+    public String getSpc_no() {
+        return spc_no;
+    }
+
+    public void setSpc_no(String spc_no) {
+        this.spc_no = spc_no;
+    }
+
+    public String getBincode() {
+        return bincode;
+    }
+
+    public void setBincode(String bincode) {
+        this.bincode = bincode;
+    }
+
+    private String bincode;
     public MESPRecord(){}
     public MESPRecord(String sid1, String slkid, String zcno, String sbid) {
         this.sid1 = sid1;
@@ -111,7 +146,21 @@ public class MESPRecord implements Serializable {
     public void setOp(String op) {
         this.op = op;
     }
+    public String getOp_b() {
+        return op_b;
+    }
 
+    public void setOp_b(String op_b) {
+        this.op_b = op_b;
+    }
+
+    public String getOp_o() {
+        return op_o;
+    }
+
+    public void setOp_o(String op_o) {
+        this.op_o = op_o;
+    }
     public String getRemark() {
         return remark;
     }
@@ -160,6 +209,13 @@ public class MESPRecord implements Serializable {
         this.hpdate = hpdate;
     }
 
+    public String getOutdate() {
+        return outdate;
+    }
+
+    public void setOutdate(String outdate) {
+        this.outdate = outdate;
+    }
     public int getFirstchk() {
         return firstchk;
     }
@@ -215,6 +271,7 @@ public class MESPRecord implements Serializable {
 
     public void setFircheck(int fircheck) {
         this.fircheck = fircheck;
+        this.firstchk = fircheck;
     }
 
     public String getZcno() {
@@ -255,5 +312,109 @@ public class MESPRecord implements Serializable {
 
     public void setLotno(String lotno) {
         this.lotno = lotno;
+    }
+    public int getAbnormal() {
+        return abnormal;
+    }
+
+    public void setAbnormal(int abnormal) {
+        this.abnormal = abnormal;
+    }
+
+
+    public int getFact_apqty() {
+        return fact_apqty;
+    }
+
+    public void setFact_apqty(int fact_apqty) {
+        this.fact_apqty = fact_apqty;
+    }
+
+    public int getApqty() {
+        return apqty;
+    }
+
+    public void setApqty(int apqty) {
+        this.apqty = apqty;
+    }
+
+    public String getCode() {
+        return code;
+    }
+
+    public void setCode(String code) {
+        this.code = code;
+    }
+
+    public int getTotalqty() {
+        return totalqty;
+    }
+
+    public void setTotalqty(int totalqty) {
+        this.totalqty = totalqty;
+    }
+
+    public int getUpqty() {
+        return upqty;
+    }
+
+    public void setUpqty(int upqty) {
+        this.upqty = upqty;
+    }
+
+    public String getClid() {
+        return clid;
+    }
+
+    public void setClid(String clid) {
+        this.clid = clid;
+    }
+
+    public String getHold() {
+        return hold;
+    }
+
+    public void setHold(String hold) {
+        this.hold = hold;
+    }
+
+    public String getCbstate() {
+        return cbstate;
+    }
+
+    public void setCbstate(String cbstate) {
+        this.cbstate = cbstate;
+    }
+
+    public String getLotstate() {
+        return lotstate;
+    }
+
+    public void setLotstate(String lotstate) {
+        this.lotstate = lotstate;
+    }
+
+    public String getPrd_mark() {
+        return prd_mark;
+    }
+
+    public void setPrd_mark(String prd_mark) {
+        this.prd_mark = prd_mark;
+    }
+
+    public String getSort() {
+        return sort;
+    }
+
+    public void setSort(String sort) {
+        this.sort = sort;
+    }
+
+    public String getBokName() {
+        return bokName;
+    }
+
+    public void setBokName(String bokName) {
+        this.bokName = bokName;
     }
 }

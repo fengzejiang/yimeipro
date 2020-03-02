@@ -2,6 +2,7 @@ package com.yimeinew.activity.deviceproduction;
 
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.widget.EditText;
 import android.widget.GridView;
 import com.yimeinew.activity.R;
 import com.yimeinew.activity.base.BaseActivity;
@@ -20,5 +21,10 @@ public class CommonStationActivity extends BaseActivity {
         setContentView(R.layout.activity_common_station);
         gridView = findViewById(R.id.comm_grid_view);
         gridView.setAdapter(new CommStationAdapter(this));
+    }
+
+    @Override
+    public boolean onEditTextKeyDown(EditText editText) {
+        return false;
     }
 }

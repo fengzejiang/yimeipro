@@ -15,6 +15,7 @@ import butterknife.*;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 import com.yimeinew.activity.R;
+import com.yimeinew.activity.base.BaseActivity;
 import com.yimeinew.activity.base.BaseApplication;
 import com.yimeinew.adapter.tabledataadapter.BaseTableDataAdapter;
 import com.yimeinew.data.*;
@@ -31,11 +32,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * 解绑料盒号
  * @Auther: fengzejiang1987@163.com
  * @Date : 2018/12/8 22:16
  */
-public class UnbindingBoxActivity extends AppCompatActivity implements BaseStationBindingView {
+public class UnbindingBoxActivity extends BaseActivity implements BaseStationBindingView {
 
     private final String TAG_NAME = UnbindingBoxActivity.class.getSimpleName();
     @BindView(R.id.edt_op)
@@ -65,8 +65,7 @@ public class UnbindingBoxActivity extends AppCompatActivity implements BaseStati
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_unbindbox);
         ButterKnife.bind(this);
-        registerReceiver(barcodeReceiver, new IntentFilter(
-                CommCL.INTENT_ACTION_SCAN_RESULT)); // 注册广播
+        //registerReceiver(barcodeReceiver, new IntentFilter( CommCL.INTENT_ACTION_SCAN_RESULT)); // 注册广播
         presenter = new UnBindingPresenter(this, SchedulerProvider.getInstance());
         dataList = new ArrayList();
         List<HeaderRowInfo> header = getRowDataList();
@@ -104,19 +103,19 @@ public class UnbindingBoxActivity extends AppCompatActivity implements BaseStati
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(barcodeReceiver);
+        //unregisterReceiver(barcodeReceiver);
     }
 
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(barcodeReceiver, new IntentFilter(
-                CommCL.INTENT_ACTION_SCAN_RESULT)); // 注册广播
+       // registerReceiver(barcodeReceiver, new IntentFilter(CommCL.INTENT_ACTION_SCAN_RESULT)); // 注册广播
     }
 
     /***
      * 注册广播事件，监听PDA扫描
      */
+    /*
     private BroadcastReceiver barcodeReceiver = new BroadcastReceiver() {
 
         @Override
@@ -128,7 +127,7 @@ public class UnbindingBoxActivity extends AppCompatActivity implements BaseStati
                     return;
                 }
                 String barCodeData = null;
-                if(TextUtils.isEmpty(intent.getStringExtra(CommCL.SCN_CUST_HONEY))){
+                if(intent.getStringExtra(CommCL.SCN_CUST_HONEY).equals(null)){
                     barCodeData = intent.getStringExtra(CommCL.SCN_CUST_EX_SCODE);
                 }else{
                     barCodeData = intent.getStringExtra(CommCL.SCN_CUST_HONEY);
@@ -150,7 +149,7 @@ public class UnbindingBoxActivity extends AppCompatActivity implements BaseStati
         }
     };
 
-
+*/
     /***
      * 给输入框注册回车事件
      * @param editText
@@ -170,7 +169,7 @@ public class UnbindingBoxActivity extends AppCompatActivity implements BaseStati
      * @param editText
      * @return
      */
-    private boolean onEditTextKeyDown(EditText editText) {
+    public boolean onEditTextKeyDown(EditText editText) {
         if(TextUtils.isEmpty(edtOp.getText().toString())){
             showMessage("请输入操作员！");
             CommonUtils.textViewGetFocus(edtOp);
@@ -219,6 +218,7 @@ public class UnbindingBoxActivity extends AppCompatActivity implements BaseStati
     /***
      * 显示加载页面
      */
+    /*
     @Override
     public void showLoading() {
         if(zLoadingView==null){
@@ -226,17 +226,20 @@ public class UnbindingBoxActivity extends AppCompatActivity implements BaseStati
         }
         zLoadingView.show();
     }
+    */
+
 
 
     /***
      * 隐藏加载模态框
      */
+    /*
     @Override
     public void hideLoading() {
         if(zLoadingView!=null)
             zLoadingView.dismiss();
     }
-
+*/
     /***
      * 料盒号输入框远程访问回调
      * @param bok 是否存在该料盒号
@@ -304,7 +307,10 @@ public class UnbindingBoxActivity extends AppCompatActivity implements BaseStati
     public String getCurrMO() {
         return null;
     }
-
+    @Override
+    public List<JSONObject> getDataList() {
+        return dataList;
+    }
     /***
      *
      * @param bok  是否成功
@@ -355,6 +361,11 @@ public class UnbindingBoxActivity extends AppCompatActivity implements BaseStati
 
     @Override
     public void checkQCBatInfoBack(boolean bok, Object o, String error) {
+
+    }
+
+    @Override
+    public void commonBack(boolean bok, Object recordList, String error, int key) {
 
     }
 
@@ -427,5 +438,9 @@ public class UnbindingBoxActivity extends AppCompatActivity implements BaseStati
     public void checkActionBack(boolean bok, int key, CeaPars ceaPars, CWorkInfo cWorkInfo, String error) {
 
     }
-
+    @Override
+    public void clear() {
+        adapter.clear();
+        this.dataList.clear();
+    }
 }

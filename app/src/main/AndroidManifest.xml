@@ -1,10 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
           xmlns:tools="http://schemas.android.com/tools" package="com.yimeinew.activity">
-    <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.SET_TIME"
-                     tools:ignore="ProtectedPermissions">
-    </uses-permission>
+                     tools:ignore="ProtectedPermissions" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <application
             android:name="com.yimeinew.activity.base.BaseApplication"
             android:allowBackup="true"
@@ -12,6 +16,7 @@
             android:label="@string/app_name"
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
+            android:networkSecurityConfig="@xml/network_security_config"
             android:theme="@style/AppTheme">
         <activity android:name="com.yimeinew.activity.login.LoginActivity">
             <intent-filter>
@@ -19,24 +24,129 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <activity android:name="com.yimeinew.activity.MainActivity" android:label="菜单界面">
+        <activity
+                android:name=".deviceproduction.LookBeltNGActivity"
+                android:label="@string/title_activity_look_belt_ng">
         </activity>
-        <activity android:name="com.yimeinew.activity.deviceproduction.UnbindingBoxActivity" android:label="料盒解绑">
-
+        <activity
+                android:name=".deviceproduction.LookBeltFastActivity"
+                android:label="@string/title_activity_look_belt_fast">
         </activity>
-        <activity android:name="com.yimeinew.activity.deviceproduction.CommonStationActivity" android:label="器件通用工站">
+        <activity
+                android:name=".deviceproduction.PreheatZjActivity"
+                android:label="@string/title_activity_preheat_zj">
         </activity>
-        <activity android:name="com.yimeinew.activity.deviceproduction.commsub.CommGJActivity" android:label="器件生产">
+        <activity android:name=".deviceproduction.commsub.OutReceiveActivity">
         </activity>
-        <activity android:name="com.yimeinew.activity.deviceproduction.commsub.ChargingActivity" android:label="生产上料">
+        <activity android:name=".deviceproduction.commsub.BadRepairActivity">
         </activity>
-        <activity android:name="com.yimeinew.activity.qc.QCCommActivity" android:label="品质管理">
+        <activity
+                android:name=".MainActivity"
+                android:label="菜单界面">
         </activity>
-        <activity android:name="com.yimeinew.activity.qc.FirstInspectionActivity" android:label="首件检验">
+        <activity
+                android:name=".deviceproduction.UnbindingBoxActivity"
+                android:label="料盒解绑">
         </activity>
-        <activity android:name="com.yimeinew.activity.deviceproduction.commsub.GlueAndWeldingActivity" android:label="点胶工序">
+        <activity
+                android:name=".deviceproduction.CommonStationActivity"
+                android:label="器件通用工站">
         </activity>
-        <activity android:name="com.yimeinew.activity.deviceproduction.AddGluingActivity" android:label="设备加胶"></activity>
+        <activity
+                android:name=".deviceproduction.FastStationActivity"
+                android:label="快速过站">
+        </activity>
+        <activity
+                android:name=".deviceproduction.Fast2StationActivity"
+                android:label="二次快速过站">
+        </activity>
+        <activity
+                android:name=".deviceproduction.commsub.CommGJActivity"
+                android:label="器件生产">
+        </activity>
+        <activity
+                android:name=".deviceproduction.commsub.ChargingActivity"
+                android:label="生产上料">
+        </activity>
+        <activity
+                android:name=".qc.QCCommActivity"
+                android:label="品质管理">
+        </activity>
+        <activity
+                android:name=".qc.FirstInspectionActivity"
+                android:label="首件检验">
+        </activity>
+        <activity
+                android:name=".qc.OutCheckActivity"
+                android:label="出货检验">
+        </activity>
+        <activity
+                android:name=".deviceproduction.commsub.GlueAndWeldingActivity"
+                android:label="点胶工序">
+        </activity>
+        <activity
+                android:name=".deviceproduction.AddGluingActivity"
+                android:label="设备加胶"/>
+        <activity
+                android:name=".deviceproduction.MboxBindzjActivity"
+                android:label="支架绑料盒">
+        </activity>
+        <activity android:name=".ck.ScrkActivity">
+        </activity>
+        <activity android:name=".sb.WxsqActivity">
+        </activity>
+        <activity android:name=".sb.WxqrActivity">
+        </activity>
+        <activity android:name=".sb.WxScqrActivity">
+        </activity>
+        <activity android:name=".sb.WxQcqrActivity">
+        </activity>
+        <activity android:name=".sb.WxGhpjActivity">
+        </activity>
+        <activity
+                android:name=".deviceproduction.BianDaiActivity"
+                android:label="@string/title_activity_bian_dai">
+        </activity>
+        <activity
+                android:name=".deviceproduction.commsub.FastActivity"
+                android:label="@string/title_activity_fast">
+        </activity>
+        <activity
+                android:name=".deviceproduction.commsub.Fast2Activity"
+                android:label="@string/title_activity_fast">
+        </activity>
+        <activity
+                android:name=".deviceproduction.commsub.FastMzTYActivity"
+                android:label="@string/title_activity_fast">
+        </activity>
+        <activity
+                android:name=".pack.PackStationActivity"
+                android:label="@string/title_activity_pack">
+        </activity>
+        <activity
+                android:name=".pack.PackActivity"
+                android:label="@string/title_activity_pack">
+        </activity>
+        <activity
+                android:name=".deviceproduction.commsub.FastMzActivity"
+                android:label="@string/title_activity_fast_mz">
+        </activity>
+        <activity
+                android:name=".deviceproduction.RepairStationActivity"
+                android:label="@string/title_activity_repair">
+        </activity>
+        <activity
+                android:name=".deviceproduction.commsub.RepairActivity"
+                android:label="@string/title_activity_repair">
+        </activity>
+        <activity
+                android:name=".deviceproduction.commsub.RepairBadActivity"
+                android:label="@string/title_activity_repair_bad">
+        </activity>
+        <activity
+                android:name=".qc.QCCommStationActivity"
+                android:label="@string/title_activity_repair_qc">
+        </activity>
     </application>
 
 </manifest>

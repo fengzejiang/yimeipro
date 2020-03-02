@@ -19,8 +19,12 @@ public class ZCInfo extends BaseObservable implements Serializable {
     private int bfast;//是否是快速过站
     private int segid;//前段，中段，后段
     private Class clazz; //跳转的Class
-
+    private String bok;//维修生产确认ok
+    private String bokName;//判定结果名称
+    private String sort;//生产维修为A;品质维修为B
+    private String sbuid;//单据类型
     private int attr = CommCL.ZC_ATTR_START|CommCL.ZC_ATTR_DONE;//属性，上料、开工、出站、加胶
+    private int xdkAttr= CommCL.ZC_ATTR_DONE;
     private int imgIndex;
 
     public ZCInfo(){}
@@ -96,6 +100,16 @@ public class ZCInfo extends BaseObservable implements Serializable {
     public void setAttr(int attr) {
         this.attr = attr;
     }
+    //下单科界面按钮属性
+
+    public int getXdkAttr() {
+        return xdkAttr;
+    }
+
+    public void setXdkAttr(int xdkAttr) {
+        this.xdkAttr = xdkAttr;
+    }
+
     @Bindable
     public int getImgIndex() {
         return imgIndex;
@@ -134,5 +148,37 @@ public class ZCInfo extends BaseObservable implements Serializable {
 
     public void setSegid(int segid) {
         this.segid = segid;
+    }
+
+    public String getBok() {
+        return bok;
+    }
+
+    public void setBok(String bok) {
+        this.bok = bok;
+    }
+
+    public String getSort() {
+        return sort;
+    }
+
+    public void setSort(String sort) {
+        this.sort = sort;
+    }
+
+    public String getBokName() {
+        return bokName;
+    }
+
+    public void setBokName(String bokName) {
+        this.bokName = bokName;
+    }
+
+    public String getSbuid() {
+        return sbuid;
+    }
+
+    public void setSbuid(String sbuid) {
+        this.sbuid = sbuid;
     }
 }

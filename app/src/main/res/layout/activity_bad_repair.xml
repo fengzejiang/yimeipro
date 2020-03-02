@@ -1,0 +1,210 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/mainBKColor">
+
+
+        <RelativeLayout android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/container_scroll">
+            <ScrollView android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_alignParentTop="true"
+                        android:layout_alignParentStart="true">
+                <TableLayout
+                        android:id="@+id/jiebang_tab1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:shrinkColumns="0,1,2"
+                        android:paddingStart="20dp"
+                        android:paddingEnd="10dp">
+                    <TableRow android:paddingTop="5dp">
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingBottom="2dp"
+                                android:text="@string/yimei_lab_zc"
+                                android:layout_marginTop="8dp"
+                                android:textSize="16sp"/>
+                        <Spinner
+                                android:id="@+id/sp_zcno"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:textSize="16sp"
+                                android:textColor="@color/text_color"
+                                android:background="@drawable/bottom_gray_line"
+                        />
+                        <ImageView
+                                android:layout_width="35dp"
+                                android:layout_height="35dp"
+                                app:srcCompat="@drawable/new_bn"
+                                android:id="@+id/img_new"/>
+                    </TableRow>
+                    <TableRow android:paddingTop="5dp">
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingBottom="2dp"
+
+                                android:text="@string/yimei_op"
+                                android:textSize="16sp"/>
+
+                            <com.yimeinew.view.AuxText
+                                    android:id="@+id/edt_op"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:layout_marginStart="8dp"
+                                    android:paddingStart="10dp"
+                                    android:paddingEnd="5dp"
+                                    android:enabled="true"
+                                    android:layout_weight="1"
+                                    android:imeOptions="actionDone"
+                                    android:inputType="text"
+                                    android:textSize="16sp"
+                                    android:text=""
+                                    android:textColor="@color/text_color"
+                                    android:nextFocusDown="@id/edt_op"
+                                    android:hint="@string/yimei_op"
+                                    android:tag="operationUser"/>
+
+                    </TableRow>
+                    <TableRow android:paddingTop="5dp">
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingBottom="2dp"
+                                android:text="@string/sx_reason"
+                                android:textSize="16sp"/>
+                        <com.yimeinew.view.AuxText
+                                android:id="@+id/sp_reason"
+                                android:layout_width="match_parent"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:ems="10"
+                                android:enabled="true"
+                                android:textSize="16sp"
+                                android:textColor="@color/text_color"
+                                android:imeOptions="actionDone"
+                                android:inputType="text"
+                                android:text=""
+                                android:nextFocusForward="@id/sp_reason"
+                                android:hint="@string/sx_reason"
+                                android:tag="marking"
+                        />
+                    </TableRow>
+                    <TableRow android:paddingTop="5dp">
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/yimei_marking"
+                                android:textSize="16sp"/>
+
+                        <EditText
+                                android:id="@+id/edt_code"
+                                android:layout_width="match_parent"
+                                android:layout_weight="1"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:ems="10"
+                                android:enabled="true"
+                                android:textSize="16sp"
+                                android:textColor="@color/text_color"
+                                android:imeOptions="actionDone"
+                                android:inputType="text"
+                                android:text=""
+                                android:nextFocusForward="@id/edt_code"
+                                android:hint="@string/yimei_marking"
+                                android:tag="marking"/>
+                    </TableRow>
+
+                    <TableRow android:paddingTop="5dp">
+
+                    <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/yimei_position"
+                            android:textSize="16sp"/>
+
+                    <com.yimeinew.view.AuxText
+                            android:id="@+id/edt_position"
+                            android:layout_width="match_parent"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:paddingStart="10dp"
+                            android:paddingEnd="5dp"
+                            android:ems="10"
+                            android:enabled="true"
+                            android:textSize="16sp"
+                            android:textColor="@color/text_color"
+                            android:imeOptions="actionDone"
+                            android:inputType="text"
+                            android:text=""
+                            android:nextFocusForward="@id/edt_position"
+                            android:hint="@string/yimei_position"
+                            android:tag="marking"/>
+                </TableRow>
+
+                </TableLayout>
+            </ScrollView>
+        </RelativeLayout>
+        <!-- 提示区域-->
+        <LinearLayout
+                android:orientation="horizontal"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/tips_linearLayout"
+                android:paddingLeft="20dp"
+                android:paddingRight="20dp"
+                android:paddingTop="5dp"
+                android:layout_below="@id/container_scroll">
+
+            <TextView
+                    android:text="@string/yimei_jishu"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:textSize="16sp"/>
+            <EditText
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:focusable="false"
+                    android:longClickable="false"
+                    android:inputType="text"
+                    android:gravity="center"
+                    android:id="@+id/text_jishu"
+                    android:textSize="16sp"
+                    android:layout_weight="1"/>
+        </LinearLayout>
+
+        <!--扫描结果展示区域-->
+        <LinearLayout android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_below="@id/tips_linearLayout"
+                      android:layout_centerHorizontal="true"
+                      android:paddingLeft="10dp"
+                      android:paddingRight="10dp"
+                      android:paddingTop="10dp">
+            <com.yimeinew.tableui.TablePanelView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/table_view">
+                <ListView
+                        android:id="@+id/data_list_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:fastScrollEnabled="false"
+                        android:overScrollMode="never"/>
+            </com.yimeinew.tableui.TablePanelView>
+        </LinearLayout>
+    </RelativeLayout>
+</layout>

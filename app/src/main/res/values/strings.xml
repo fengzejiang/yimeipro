@@ -5,23 +5,38 @@
     <string name="btn_login_lab">登录</string>
     <string name="loading">加载中...</string>
     <string name="login_loading">登录中...</string>
-
     <string name="cancel">取消</string>
-
+    <string name="submit">提交</string>
     <string name="yimei_op">作业员</string>
     <string name="yimei_lab_box">料盒号</string>
     <string name="yimei_lab_box_gj">固晶料盒</string>
     <string name="yimei_lab_box_hj">焊接料盒</string>
     <string name="yimei_lab_box_dj">点胶料盒</string>
+    <string name="yimei_lab_box_dj1">点胶1料盒</string>
+    <string name="yimei_lab_box_dj2">点胶2料盒</string>
     <string name="yimei_lab_sid1">生产批号</string>
+    <string name="yimei_lab_lot1">测试号</string>
+    <string name="yimei_lab_lotno">批 号</string>
     <string name="app_lab_unbinding">料盒解绑</string>
     <string name="row_header_color">#CFD8DC</string>
-
+    <string name="yimei_prd_no">货号</string>
     <string name="font_size">16sp</string>
+    <string name="yimei_mm_mo">缴库单号</string>
+    <string name="yimei_tray">Tray盘</string>
+    <string name="yimei_marking">喷 码</string>
+    <string name="yimei_position">位置</string>
 
-    <string name="rule_text">0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`¬!"£$%^*()~=#{}[];':,./?/*-_+&#060;&#062;&#064;&#038;</string>
+    <string name="yimei_lab_sid2">模组内装批号</string>
+    <string name="yimei_lab_sidn">仓库内箱批号</string>
+    <string name="yimei_lab_sidw">仓库外箱批号</string>
+    <string name="yimei_opc">检验员</string>
+
+    <string name="rule_text">
+        0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ`¬!"£$%^*()~=#{}[];':,./?/*-_+&#060;&#062;&#064;&#038;
+    </string>
     <string name="yimei_equipment">设备号</string>
-
+    <string name="yimei_equipment_name">设备名称</string>
+    <string name="yimei_equipment_wxyy">维修原因</string>
 
     <string name="main_back_color">#F1F1F1</string>
     <string name="table_header_color">#CFD8DC</string>
@@ -31,6 +46,9 @@
     <string name="lab_sf_qty">实发数量</string>
     <string name="yimei_shoujian">首件</string>
     <string name="yimei_xunjian">巡检</string>
+    <string name="yimei_OQC">出货检验</string>
+    <string name="yimei_wxok">品质维修OK</string>
+    <string name="yimei_wxng">品质维修NG</string>
     <string name="yimei_lab_zc">制程号</string>
     <string name="yimei_lab_cause">发起原因</string>
     <string name="yimei_lab_prd_no">产品名称</string>
@@ -48,4 +66,58 @@
     <string name="yimei_value6">实际值6</string>
     <string name="yimei_remark">备注</string>
     <string name="yimei_gluing_no">胶杯号</string>
+    <string name="yimei_fill_pack">满箱</string>
+    <string name="yimei_already_pack">已包</string>
+    <string name="yimei_already_scan">已扫</string>
+    <string name="yimei_not_scanning">单盘未扫</string>
+    <string name="title_activity_scrk">仓库管理</string>
+    <string name="title_activity_bian_dai">编带管理</string>
+    <!--卡板-->
+    <string name="title_activity_fast">快速过站</string>
+    <string name="title_activity_fast_mz">快速过站</string>
+    <!--卡板-->
+    <string name="yimei_code">喷 码</string>
+    <string name="danpan_number">单盘数</string>
+    <string name="yimei_jishu">计数</string>
+    <string name="title_activity_pack">包装管理</string>
+    <string name="yimei_pack_bat_no">包装批号</string>
+    <!--维修确认-->
+    <string name="sx_reason">类别</string>
+    <string name="title_activity_repair">维修管理</string>
+    <string name="title_activity_repair_bad">不良品送修</string>
+    <string name="title_activity_repair_qc">品质维修管理</string>
+
+    <string name="bxsl">报修数量</string>
+    <string name="oksl">OK</string>
+    <string name="ngsl">NG</string>
+    <string name="wqr">未确认</string>
+
+
+    <string name="yimei_reason">原 因</string>
+    <string name="yimei_program">程 式</string>
+    <string name="title_activity_preheat_zj">支架预热</string>
+    <string name="title_activity_look_belt_fast">看带快速过站</string>
+    <string name="yimei_Bad_record">不良记录</string>
+    <string name="title_activity_look_belt_ng">看带不良登记</string>
+    <string name="yimei_save_and_new">保存并新增</string>
+    <string name="yimei_save_and_back">保存并返回</string>
+    <!--更换配件-->
+    <string name="yimei_pjname1">配件名称1</string>
+    <string name="yimei_pjnum1">数量1</string>
+    <string name="yimei_pjname2">配件名称2</string>
+    <string name="yimei_pjnum2">数量2</string>
+    <string name="yimei_pjname3">配件名称3</string>
+    <string name="yimei_pjnum3">数量3</string>
+    <string name="yimei_pjname4">配件名称4</string>
+    <string name="yimei_pjnum4">数量4</string>
+    <string name="yimei_pjname5">配件名称5</string>
+    <string name="yimei_pjnum5">数量5</string>
+    <!--入库数量-->
+    <string name="yimei_received_quantity">入库数量</string>
+    <string name="yimei_scan_quantity">已扫数量</string>
+    <string name="yimei_total_qty">投产数</string>
+    <string name="yimei_yikaban_qty">已卡板</string>
+    <string name="yimei_weikaban_qty">未卡板</string>
+    <string name="yimei_yi_pack_qty">已包装</string>
+    <string name="yimei_wei_pack_qty">未包装</string>
 </resources>

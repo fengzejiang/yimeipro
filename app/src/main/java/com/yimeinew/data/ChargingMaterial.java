@@ -21,7 +21,6 @@ public class ChargingMaterial implements Serializable {
     private String bincode;//BinCode
     private String sbid;//设备编码
     private String zcno;//制成编码
-
     private int sys_stated;//状态（系统使用字段）
 
     public int getSys_stated() {

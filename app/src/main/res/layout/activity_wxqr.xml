@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+
+    <RelativeLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            xmlns:app="http://schemas.android.com/apk/res-auto"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" android:background="@color/mainBKColor"
+    >
+
+        <RelativeLayout android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/container_scroll">
+            <ScrollView android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+
+                        android:layout_alignParentTop="true"
+                        android:layout_alignParentStart="true">
+                <TableLayout
+                        android:id="@+id/jiebang_tab1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:shrinkColumns="0,1,2"
+                        android:paddingStart="20dp"
+                        android:paddingEnd="10dp">
+                    <TableRow android:paddingTop="20dp">
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingBottom="2dp"
+                                android:text="@string/yimei_op"
+                                android:textSize="16sp"/>
+                        <com.yimeinew.view.AuxText
+                                android:id="@+id/edt_op"
+                                android:layout_width="250dp"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:enabled="true"
+                                android:imeOptions="actionDone"
+                                android:inputType="text"
+                                android:textSize="16sp"
+                                android:text=""
+                                android:textColor="@color/text_color"
+                                android:nextFocusDown="@id/edt_op"
+                                android:hint="@string/yimei_op"
+                                android:tag="operationUser"/>
+                    </TableRow>
+                    <TableRow android:paddingTop="8dp">
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingBottom="2dp"
+                                android:text="@string/yimei_equipment"
+                                android:textSize="16sp"/>
+                        <EditText
+                                android:id="@+id/edt_equipment_no"
+                                android:layout_width="250dp"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:enabled="true"
+                                android:imeOptions="actionDone"
+                                android:inputType="text"
+                                android:text=""
+                                android:textSize="16sp"
+                                android:textColor="@color/text_color"
+                                android:nextFocusDown="@id/edt_equipment_no"
+                                android:hint="@string/yimei_equipment"
+                                android:tag="equipment_no"/>
+                    </TableRow>
+
+
+                </TableLayout>
+            </ScrollView>
+        </RelativeLayout>
+        <!--按钮-->
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/container_scroll"
+                android:id="@+id/buttonrRL"
+        >
+
+            <Button
+                    android:id="@+id/weixiu_start"
+                    android:layout_width="0dip"
+                    android:layout_height="40dp"
+                    android:layout_margin="5dip"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_shape_check_border"
+                    android:text="开始维修" />
+
+
+            <Button
+                    android:id="@+id/weixiu_stop"
+                    android:layout_width="0dip"
+                    android:layout_height="40dp"
+                    android:layout_margin="5dip"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_shape_check_border"
+                    android:text="结束维修" />
+            <Button
+                    android:id="@+id/wx_ghpj"
+                    android:layout_width="0dip"
+                    android:layout_height="40dp"
+                    android:layout_margin="5dip"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_shape_check_border"
+                    android:text="更换配件" />
+
+
+
+
+        </LinearLayout>
+        <TableLayout
+                android:id="@+id/wxgj"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/buttonrRL"
+            android:shrinkColumns="0,1,2"
+            android:paddingStart="20dp"
+            android:paddingEnd="10dp">
+            <TableRow android:layout_marginTop="20dp" >
+
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="故障描述" />
+
+                <EditText
+                android:id="@+id/yimei_weixiu_remark"
+                android:layout_width="250dp"
+                android:layout_height="100dp"
+                android:background="@drawable/shape_edittext_bordercolor"
+                android:ems="10"
+                android:enabled="true"
+                android:imeOptions="actionDone"
+                android:inputType="textMultiLine"
+                android:labelFor="@+id/yimei_weixiu_remark"
+                android:paddingLeft="10dp"/>
+        </TableRow>
+
+        </TableLayout>
+
+        <!--扫描结果展示区域-->
+        <LinearLayout android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_below="@id/wxgj"
+                      android:layout_centerHorizontal="true"
+                      android:paddingLeft="10dp" android:paddingRight="10dp" android:paddingTop="10dp">
+            <com.yimeinew.tableui.TablePanelView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/table_view">
+                <ListView
+                        android:id="@+id/data_list_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:fastScrollEnabled="false"
+                        android:overScrollMode="never"/>
+            </com.yimeinew.tableui.TablePanelView>
+        </LinearLayout>
+    </RelativeLayout>
+</layout>

@@ -9,6 +9,7 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent" android:background="@color/mainBKColor"
     >
+
         <RelativeLayout android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:id="@+id/container_scroll">
@@ -124,12 +125,57 @@
             </TableLayout>
         </ScrollView>
         </RelativeLayout>
+        <!--按钮-->
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/container_scroll"
+                android:id="@+id/buttonrRL"
+                >
+
+            <Button
+                    android:id="@+id/gujing_shangliao"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_margin="5dip"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_shape_check_border"
+                    android:text="上料"/>
+
+            <Button
+                    android:id="@+id/gujing_kaigong"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_margin="5dip"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_shape_check_border"
+                    android:text="开工"/>
+
+            <Button
+                    android:id="@+id/gujing_chuzhan"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_margin="5dip"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_shape_check_border"
+                    android:text="出站"/>
+            <Button
+                    android:id="@+id/gujing_gettime"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_margin="5dip"
+                    android:visibility="gone"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_shape_check_border"
+                    android:text="时间"/>
+
+        </LinearLayout>
         <!--扫描结果展示区域-->
-        <RelativeLayout android:layout_width="match_parent"
+        <LinearLayout android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_below="@id/container_scroll"
+                      android:layout_below="@id/buttonrRL"
                         android:layout_centerHorizontal="true"
-                        android:paddingLeft="10dp" android:paddingRight="10dp" android:paddingTop="30dp">
+                        android:paddingLeft="10dp" android:paddingRight="10dp" android:paddingTop="10dp">
             <com.yimeinew.tableui.TablePanelView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
@@ -141,6 +187,6 @@
                         android:fastScrollEnabled="false"
                         android:overScrollMode="never"/>
             </com.yimeinew.tableui.TablePanelView>
-        </RelativeLayout>
+        </LinearLayout>
     </RelativeLayout>
 </layout>

@@ -1,6 +1,7 @@
 package com.yimeinew.presenter;
 
 import android.content.Intent;
+import com.yimeinew.activity.base.BaseActivity;
 import com.yimeinew.activity.deviceproduction.CommonStationActivity;
 import com.yimeinew.data.ZCInfo;
 import com.yimeinew.modelInterface.BaseView;
@@ -11,9 +12,9 @@ import com.yimeinew.utils.CommCL;
  * @Date : 2018/12/9 14:08
  */
 public class CommStationPresenter {
-    private CommonStationActivity menuView;
+    private BaseActivity menuView;
     public CommStationPresenter(BaseView menuView){
-        this.menuView = (CommonStationActivity)menuView;
+        this.menuView = (BaseActivity)menuView;
     }
 
     public void menuImgOnClick(ZCInfo zCnoInfo){

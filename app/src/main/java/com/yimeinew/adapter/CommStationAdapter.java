@@ -7,9 +7,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import com.yimeinew.activity.R;
+import com.yimeinew.activity.base.BaseApplication;
 import com.yimeinew.activity.databinding.MainCommStationItemBinding;
 import com.yimeinew.activity.deviceproduction.commsub.CommGJActivity;
 import com.yimeinew.activity.deviceproduction.commsub.GlueAndWeldingActivity;
+import com.yimeinew.data.Menu;
 import com.yimeinew.data.ZCInfo;
 import com.yimeinew.modelInterface.BaseView;
 import com.yimeinew.presenter.CommStationPresenter;
@@ -18,6 +20,7 @@ import com.yimeinew.utils.CommonUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 通用工站适配器
@@ -48,6 +51,7 @@ public class CommStationAdapter extends BaseAdapter {
         attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
         gjzc.setAttr(attr);
         zCnoInfos.add(gjzc);
+
         gjzc = CommonUtils.getZCInfoById("12");
 //        gjzc.setStartNum(2);
         gjzc.setImgIndex(R.drawable.qj_gj2);
@@ -55,6 +59,7 @@ public class CommStationAdapter extends BaseAdapter {
         attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
         gjzc.setAttr(attr);
         zCnoInfos.add(gjzc);
+
         gjzc = CommonUtils.getZCInfoById("13");
         gjzc.setImgIndex(R.drawable.qj_gj3);
 //        gjzc.setStartNum(2);
@@ -62,6 +67,16 @@ public class CommStationAdapter extends BaseAdapter {
         attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
         gjzc.setAttr(attr);
         zCnoInfos.add(gjzc);
+
+        gjzc = CommonUtils.getZCInfoById("14");
+        gjzc.setImgIndex(R.drawable.qj_gj4);
+//        gjzc.setStartNum(2);
+        gjzc.setClazz(CommGJActivity.class);
+        attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+        gjzc.setAttr(attr);
+        zCnoInfos.add(gjzc);
+
+
         gjzc = CommonUtils.getZCInfoById("1A");
         gjzc.setImgIndex(R.drawable.qj_gj_hk1);
         gjzc.setClazz(CommGJActivity.class);
@@ -77,6 +92,15 @@ public class CommStationAdapter extends BaseAdapter {
         gjzc.setAttr(attr);
         gjzc.setClazz(GlueAndWeldingActivity.class);
         zCnoInfos.add(gjzc);
+        /*-----------*/
+        gjzc = CommonUtils.getZCInfoById("22");
+//        gjzc.setStartNum(1);
+        gjzc.setImgIndex(R.drawable.qj_hj_2);
+        attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+        gjzc.setAttr(attr);
+        gjzc.setClazz(GlueAndWeldingActivity.class);
+        zCnoInfos.add(gjzc);
+        /*-----------*/
         gjzc = CommonUtils.getZCInfoById("31");
 //        gjzc.setStartNum(1);
         gjzc.setImgIndex(R.drawable.qj_dianjiao);
@@ -84,8 +108,30 @@ public class CommStationAdapter extends BaseAdapter {
         gjzc.setAttr(attr);
         gjzc.setClazz(GlueAndWeldingActivity.class);
         zCnoInfos.add(gjzc);
+
+        gjzc = CommonUtils.getZCInfoById("32");
+//        gjzc.setStartNum(1);
+        gjzc.setImgIndex(R.drawable.qj_dj2);
+        attr = gjzc.getAttr() | CommCL.ZC_ATTR_GLUING;
+        gjzc.setAttr(attr);
+        gjzc.setClazz(GlueAndWeldingActivity.class);
+        zCnoInfos.add(gjzc);
+
         gjzc = CommonUtils.getZCInfoById("41");
         gjzc.setImgIndex(R.drawable.qj_dianjiao_hk);
+        gjzc.setClazz(CommGJActivity.class);
+        zCnoInfos.add(gjzc);
+
+        gjzc = CommonUtils.getZCInfoById("42");
+        gjzc.setImgIndex(R.drawable.qj_djhk2);
+        gjzc.setClazz(CommGJActivity.class);
+        zCnoInfos.add(gjzc);
+
+//下单颗
+        gjzc=CommonUtils.getZCInfoById("514");
+        gjzc.setImgIndex(R.drawable.qj_xiadangke);
+//        attr = CommCL.ZC_ATTR_DONE;
+        gjzc.setAttr(0);
         gjzc.setClazz(CommGJActivity.class);
         zCnoInfos.add(gjzc);
     }

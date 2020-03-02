@@ -56,7 +56,7 @@ android:background="@color/mainBKColor">
                                     android:hint="@string/yimei_lab_material"
                                     android:tag="edt_material"/>
                         </TableRow>
-                        <TableRow android:layout_marginTop="15dp">
+                        <TableRow android:layout_marginTop="15dp" android:id="@+id/row_lot">>
                             <TextView
                                     android:layout_width="wrap_content"
                                     android:layout_height="wrap_content"

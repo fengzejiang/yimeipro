@@ -90,8 +90,7 @@ public class AddGluingActivity extends AppCompatActivity implements BaseStationB
             gluingPresenter.getLatelyMesRecord(currSbId);
         }
 
-        registerReceiver(barcodeReceiver,new IntentFilter(
-                CommCL.INTENT_ACTION_SCAN_RESULT));
+        registerReceiver(barcodeReceiver,new IntentFilter(CommCL.INTENT_ACTION_SCAN_RESULT));
 
 
     }
@@ -163,7 +162,17 @@ public class AddGluingActivity extends AppCompatActivity implements BaseStationB
         }
         return null;
     }
-
+    public String getZcno(){
+        if(mesRecordList != null){
+            JSONObject jsonObject = mesRecordList.get(0);
+            return jsonObject.containsKey("zcno")?jsonObject.getString("zcno"):null;
+        }
+        return null;
+    }
+    @Override
+    public List<JSONObject> getDataList() {
+        return dataList;
+    }
     @Override
     public void saveRecordBack(boolean bok, Object record, String error) {
         if(bok){
@@ -252,6 +261,13 @@ public class AddGluingActivity extends AppCompatActivity implements BaseStationB
                 CommonUtils.textViewGetFocus(editTextGluingNo);
                 return ;
             }
+            //制程判断
+            String prtZcno=gluingInfo.getZcno();
+            String zcno=getZcno();
+            if(!TextUtils.equals(prtZcno,zcno)){
+                showMessage("配胶制程是"+prtZcno+"当前制程是"+zcno+"，无法加胶！");
+                return;
+            }
 
             MesGluingRecord mesGluingRecord = new MesGluingRecord();
             mesGluingRecord.setOp(currOP);
@@ -278,6 +294,11 @@ public class AddGluingActivity extends AppCompatActivity implements BaseStationB
 
     @Override
     public void checkQCBatInfoBack(boolean bok, Object o, String error) {
+
+    }
+
+    @Override
+    public void commonBack(boolean bok, Object recordList, String error, int key) {
 
     }
 
@@ -324,6 +345,12 @@ public class AddGluingActivity extends AppCompatActivity implements BaseStationB
         hideLoading();
         adapter.addRecord(CommonUtils.getJsonObjFromBean(unBindInfo));
         CommonUtils.textViewGetFocus(editTextSbId);
+    }
+
+    @Override
+    public void clear() {
+        adapter.clear();
+        dataList.clear();
     }
 
     @Override

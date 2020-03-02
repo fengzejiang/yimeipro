@@ -1,0 +1,326 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layout>
+
+    <RelativeLayout
+            xmlns:android="http://schemas.android.com/apk/res/android"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" android:background="@color/mainBKColor"
+    >
+
+        <RelativeLayout android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:id="@+id/container_scroll">
+            <ScrollView android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+
+                        android:layout_alignParentTop="true"
+                        android:layout_alignParentStart="true">
+                <TableLayout
+                        android:id="@+id/jiebang_tab1"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:shrinkColumns="0,1,2"
+                        android:paddingStart="20dp"
+                        android:paddingEnd="10dp">
+                    <TableRow android:paddingTop="10dp">
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:paddingBottom="2dp"
+                                android:text="lot号"
+                                android:textColor="@android:color/holo_red_dark"
+                                android:textSize="16sp"/>
+                        <EditText
+                                android:id="@+id/edt_lot_no"
+                                android:layout_width="250dp"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:enabled="true"
+                                android:imeOptions="actionDone"
+                                android:inputType="text"
+                                android:textSize="16sp"
+                                android:text=""
+                                android:textColor="@color/text_color"
+                                android:nextFocusDown="@id/edt_lot_no"
+                                android:hint="lot号"
+                                android:tag="LotNo"/>
+                    </TableRow>
+
+
+                    <TableRow android:paddingTop="5dp">
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="补料lot"
+                                android:textColor="@android:color/holo_red_dark"
+                                android:textSize="16sp"/>
+
+                        <EditText
+                                android:id="@+id/edt_lot_no1"
+                                android:layout_width="250dp"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:ems="10"
+                                android:enabled="true"
+                                android:textSize="16sp"
+                                android:textColor="@color/text_color"
+                                android:imeOptions="actionDone"
+                                android:inputType="text"
+                                android:text=""
+                                android:nextFocusForward="@id/edt_lot_no1"
+                                android:hint="补料lot号"
+                                android:tag="补料lot号"/>
+                    </TableRow>
+                    <TableRow android:paddingTop="5dp">
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="断裂"
+                                android:textSize="16sp"/>
+
+                        <EditText
+                                android:id="@+id/edt_fracture"
+                                android:layout_width="250dp"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:ems="10"
+                                android:enabled="true"
+                                android:textSize="16sp"
+                                android:textColor="@color/text_color"
+                                android:imeOptions="actionDone"
+                                android:inputType="number"
+                                android:text=""
+                                android:nextFocusForward="@id/edt_fracture"
+                                android:hint="断裂"
+                                android:tag="断裂"/>
+                    </TableRow>
+                    <TableRow android:paddingTop="5dp">
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="压伤"
+                                android:textSize="16sp"/>
+
+                        <EditText
+                                android:id="@+id/edt_crushed"
+                                android:layout_width="250dp"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:ems="10"
+                                android:enabled="true"
+                                android:textSize="16sp"
+                                android:textColor="@color/text_color"
+                                android:imeOptions="actionDone"
+                                android:inputType="number"
+                                android:text=""
+                                android:nextFocusForward="@id/edt_crushed"
+                                android:hint="压伤"
+                                android:tag="压伤"/>
+                    </TableRow>
+                    <TableRow android:paddingTop="5dp">
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="点记"
+                                android:textSize="16sp"/>
+
+                        <EditText
+                                android:id="@+id/edt_poinrem"
+                                android:layout_width="250dp"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:ems="10"
+                                android:enabled="true"
+                                android:textSize="16sp"
+                                android:textColor="@color/text_color"
+                                android:imeOptions="actionDone"
+                                android:inputType="number"
+                                android:text=""
+                                android:nextFocusForward="@id/edt_poinrem"
+                                android:hint="点记"
+                                android:tag="点记"/>
+                    </TableRow>
+                    <TableRow android:paddingTop="5dp">
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="破损"
+                                android:textSize="16sp"/>
+
+                        <EditText
+                                android:id="@+id/edt_broken"
+                                android:layout_width="250dp"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:ems="10"
+                                android:enabled="true"
+                                android:textSize="16sp"
+                                android:textColor="@color/text_color"
+                                android:imeOptions="actionDone"
+                                android:inputType="number"
+                                android:text=""
+                                android:nextFocusForward="@id/edt_broken"
+                                android:hint="破损"
+                                android:tag="破损"/>
+                    </TableRow>
+                    <TableRow android:paddingTop="5dp">
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="压合"
+                                android:textSize="16sp"/>
+
+                        <EditText
+                                android:id="@+id/edt_pressing"
+                                android:layout_width="250dp"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:ems="10"
+                                android:enabled="true"
+                                android:textSize="16sp"
+                                android:textColor="@color/text_color"
+                                android:imeOptions="actionDone"
+                                android:inputType="number"
+                                android:text=""
+                                android:nextFocusForward="@id/edt_pressing"
+                                android:hint="压合"
+                                android:tag="压合"/>
+                    </TableRow>
+                    <TableRow android:paddingTop="5dp">
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="溢胶"
+                                android:textSize="16sp"/>
+
+                        <EditText
+                                android:id="@+id/edt_overflow"
+                                android:layout_width="250dp"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:ems="10"
+                                android:enabled="true"
+                                android:textSize="16sp"
+                                android:textColor="@color/text_color"
+                                android:imeOptions="actionDone"
+                                android:inputType="number"
+                                android:text=""
+                                android:nextFocusForward="@id/edt_overflow"
+                                android:hint="溢胶"
+                                android:tag="溢胶"/>
+                    </TableRow>
+                    <TableRow android:paddingTop="5dp">
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="杂物"
+                                android:textSize="16sp"/>
+
+                        <EditText
+                                android:id="@+id/edt_impurity"
+                                android:layout_width="250dp"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:ems="10"
+                                android:enabled="true"
+                                android:textSize="16sp"
+                                android:textColor="@color/text_color"
+                                android:imeOptions="actionDone"
+                                android:inputType="number"
+                                android:text=""
+                                android:nextFocusForward="@id/edt_impurity"
+                                android:hint="杂物"
+                                android:tag="杂物"/>
+                    </TableRow>
+                    <TableRow android:paddingTop="5dp">
+
+                        <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="切割不良"
+                                android:textSize="16sp"/>
+
+                        <EditText
+                                android:id="@+id/edt_cutting"
+                                android:layout_width="250dp"
+                                android:layout_marginStart="8dp"
+                                android:paddingStart="10dp"
+                                android:paddingEnd="5dp"
+                                android:ems="10"
+                                android:enabled="true"
+                                android:textSize="16sp"
+                                android:textColor="@color/text_color"
+                                android:imeOptions="actionDone"
+                                android:inputType="number"
+                                android:text=""
+                                android:nextFocusForward="@id/edt_cutting"
+                                android:hint="切割不良"
+                                android:tag="切割不良"/>
+                    </TableRow>
+
+                </TableLayout>
+            </ScrollView>
+        </RelativeLayout>
+        <!--按钮-->
+        <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_below="@id/container_scroll"
+                android:id="@+id/buttonrRL"
+        >
+
+            <Button
+                    android:id="@+id/bn_save_new"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_margin="5dip"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_shape_check_border"
+                    android:text="@string/yimei_save_and_new"/>
+            <Button
+                    android:id="@+id/bn_save_back"
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_margin="5dip"
+                    android:layout_weight="1"
+                    android:background="@drawable/btn_shape_check_border"
+                    android:text="@string/yimei_save_and_back"/>
+        </LinearLayout>
+        <!--扫描结果展示区域-->
+        <LinearLayout android:layout_width="match_parent"
+                      android:layout_height="wrap_content"
+                      android:layout_below="@id/buttonrRL"
+                      android:layout_centerHorizontal="true"
+                      android:visibility="gone"
+                      android:paddingLeft="10dp" android:paddingRight="10dp" android:paddingTop="10dp">
+            <com.yimeinew.tableui.TablePanelView
+                    android:layout_width="match_parent"
+                    android:layout_height="match_parent"
+                    android:id="@+id/table_view">
+                <ListView
+                        android:id="@+id/data_list_content"
+                        android:layout_width="match_parent"
+                        android:layout_height="match_parent"
+                        android:fastScrollEnabled="false"
+                        android:overScrollMode="never"/>
+            </com.yimeinew.tableui.TablePanelView>
+        </LinearLayout>
+    </RelativeLayout>
+</layout>

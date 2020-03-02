@@ -6,11 +6,10 @@ import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fast
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 import com.yimeinew.activity.MainActivity;
 import com.yimeinew.activity.base.BaseApplication;
-import com.yimeinew.activity.login.LoginActivity;
 import com.yimeinew.data.Menu;
 import com.yimeinew.data.User;
 import com.yimeinew.model.LoginModelI;
-import com.yimeinew.model.impl.LoginData;
+import com.yimeinew.model.impl.LoginModel;
 import com.yimeinew.modelInterface.BaseView;
 import com.yimeinew.network.response.ResponseTransformer;
 import com.yimeinew.network.schedulers.BaseSchedulerProvider;
@@ -29,7 +28,7 @@ public class LoginPresenter implements LoginModelI {
 
     private static long app_t=0;
     private static long tim_ce=0;
-    LoginData loginData = new LoginData(this);
+    LoginModel loginModel = new LoginModel(this);
     private BaseSchedulerProvider schedulerProvider;
 
     private CompositeDisposable mDisposable;
@@ -85,7 +84,7 @@ public class LoginPresenter implements LoginModelI {
             return;
         }
         baseView.showLoading();
-        loginData.doLogin(user).compose(ResponseTransformer.handleResult())
+        loginModel.doLogin(user).compose(ResponseTransformer.handleResult())
                 .compose(schedulerProvider.applySchedulers()).subscribe(
                         carBeans -> {
                             Log.i(TAG_NAME, carBeans.toString());
@@ -101,13 +100,13 @@ public class LoginPresenter implements LoginModelI {
                         },
                         throwable -> {
                             Log.i(TAG_NAME,"出错了！！");
-                            baseView.onRemoteFailed(throwable.getMessage());
+                            baseView.onRemoteFailed(throwable.getMessage()+"oo");
                         }
                 );
     }
 
     public void getZCInfo(){
-        loginData.getZCInfo().compose(ResponseTransformer.handleResult()).compose(schedulerProvider.applySchedulers())
+        loginModel.getZCInfo().compose(ResponseTransformer.handleResult()).compose(schedulerProvider.applySchedulers())
                 .subscribe(jsonObject -> {
                     if (jsonObject.getIntValue(CommCL.RTN_ID) == -1){
                         Log.i(TAG_NAME,jsonObject.getString(CommCL.RTN_MESSAGE));

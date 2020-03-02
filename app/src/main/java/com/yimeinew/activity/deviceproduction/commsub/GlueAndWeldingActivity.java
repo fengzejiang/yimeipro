@@ -1,28 +1,28 @@
 package com.yimeinew.activity.deviceproduction.commsub;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.app.AlertDialog;
+import android.content.*;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.text.InputType;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.*;
 import android.widget.*;
-import butterknife.BindView;
-import butterknife.ButterKnife;
-import butterknife.OnEditorAction;
-import butterknife.OnItemClick;
+import butterknife.*;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSON;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 import com.yimeinew.activity.R;
 import com.yimeinew.activity.base.BaseActivity;
 import com.yimeinew.activity.deviceproduction.AddGluingActivity;
+import com.yimeinew.activity.qc.FirstInspectionActivity;
+import com.yimeinew.adapter.SpinnerAdapterImpl;
 import com.yimeinew.adapter.tabledataadapter.BaseTableDataAdapter;
 import com.yimeinew.data.EquipmentInfo;
 import com.yimeinew.data.MESPRecord;
 import com.yimeinew.data.ZCInfo;
+import com.yimeinew.entity.Pair;
 import com.yimeinew.modelInterface.BaseStationBindingView;
 import com.yimeinew.network.schedulers.SchedulerProvider;
 import com.yimeinew.presenter.CommStationZCPresenter;
@@ -51,9 +51,11 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
     @BindView(R.id.tx_box1)
     TextView txbox1;
     private ZCInfo zcInfo;
+    private String zcno;
     public static final String Title = "通用工站-->";
-    private boolean isDJ = false;
+    //private boolean isDJ = false;
 
+    private HashMap<String,Integer> cache=new HashMap<>();
     //注入输入框
     @BindView(R.id.edt_op)
     EditText editTextOp;//作业员
@@ -65,8 +67,17 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
     EditText editTextBox1;//料盒号1
     @BindView(R.id.edt_sid1)
     EditText editTextSid1;//批次号
-
-
+    //按钮
+    @BindView(R.id.gujing_shangliao)
+    Button shangliao;
+    @BindView(R.id.gujing_kaigong)
+    Button kaigong;
+    @BindView(R.id.gujing_chuzhan)
+    Button chuzhan;
+    @BindView(R.id.gujing_jiajiao)
+    Button jiajiao;
+    @BindView(R.id.gujing_yichang)
+    Button dianjiaoyc;
     //数据表格
     @BindView(R.id.table_view)
     TablePanelView tableView;
@@ -77,6 +88,7 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
     private MultiChoiceModeCallback commChoice;
 
     private CommStationZCPresenter commStationZCPresenter;
+    private String GBKEY="broadcastReceiverHX";
 
     String currOP = "";//当前操作员
     EquipmentInfo currEquipMent;
@@ -89,17 +101,22 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
         setContentView(R.layout.activity_comm_gluing);
         ButterKnife.bind(this);
         zcInfo = (ZCInfo) getIntent().getSerializableExtra(CommCL.COMM_ZC_INFO_FLD);
-        isDJ = zcInfo.getId().equals("31");
+        zcno=zcInfo.getId();
+        //isDJ = zcInfo.getId().equals("31");
         this.setTitle(Title + zcInfo.getName());//设置标题
-        if (isDJ) {//是否是点胶工序
-            txbox.setText(getString(R.string.yimei_lab_box_hj));
-            txbox1.setText(getString(R.string.yimei_lab_box_dj));
-        }
-        registerReceiver(barcodeReceiver, new IntentFilter(
-                CommCL.INTENT_ACTION_SCAN_RESULT)); // 注册广播
+        txbox.setText(getTextByIndex(0));
+        txbox1.setText(getTextByIndex(1));
+        setButtonVisibility();
         initTableView();
         commStationZCPresenter = new CommStationZCPresenter(this, SchedulerProvider.getInstance());
 
+    }
+
+    public void broadEdit(EditText editText,String value){
+        if(canGetMessage){
+           editText.setText(value);
+           OnEditorAction(editText);
+        }
     }
 
     /***
@@ -109,6 +126,7 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
      */
     @OnEditorAction({R.id.edt_op, R.id.edt_equipment_no, R.id.edt_sid1, R.id.edt_box, R.id.edt_box1})
     public boolean OnEditorAction(EditText editText) {
+        int id = editText.getId();
         currOP = editTextOp.getText().toString().toUpperCase();
         String str1 = editText.getText().toString().toUpperCase();
         if (TextUtils.isEmpty(currOP)) {
@@ -118,11 +136,13 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
         }
         String op = CommCL.sharedPreferences.getString(currOP, "");
         if (TextUtils.isEmpty(op)) {
-            showMessage("输入的作业员" + currOP + "不存在！");
+            if (id == R.id.edt_op) {
+                showMessage("输入的作业员" + currOP + "不存在！");
+            }
             CommonUtils.textViewGetFocus(editTextOp);
             return false;
         }
-        int id = editText.getId();
+
         if (id == R.id.edt_op) {
             CommonUtils.textViewGetFocus(editTextSbId);
             return true;
@@ -134,8 +154,9 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                 CommonUtils.textViewGetFocus(editTextSbId);
                 return false;
             }
-            if (currEquipMent == null) {
+            if (currEquipMent == null||true) {
                 showLoading();
+                //获取设备和设备上生产占用的制程
                 commStationZCPresenter.getEquipmentInfo(str1, zcInfo.getId());
                 return true;
             } else {
@@ -157,34 +178,58 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
         if (R.id.edt_box == id) {
             if (checkBoxEmpt(str1, 0))
                 return false;
+            showLoading();
             commStationZCPresenter.checkBoxExit(str1, 0);
             return true;
         }
+
         if (checkBoxEmpt(currBox, 0))
             return false;
 
         if (R.id.edt_box1 == id) {
             if (checkBoxEmpt(str1, 1))
                 return false;
+            showLoading();
             commStationZCPresenter.checkBoxExit(str1, 1);
+
             return true;
         }
+
         if (checkBoxEmpt(currBox1, 1))
             return false;
 
+        /*入站动作*/
         if (R.id.edt_sid1 == id) {
             if (TextUtils.isEmpty(str1)) {
                 showMessage("请输入生产批次！");
                 CommonUtils.textViewGetFocus(editTextSid1);
                 return false;
             }
-            showLoading();
-            commStationZCPresenter.getBatchInfo(str1, zcInfo.getId());
+            if(!CommonUtils.isRepeat("hanxian_sid1",str1)) {
+
+                showLoading();
+                CommonUtils.banDo(GBKEY);//禁用广播
+
+                commStationZCPresenter.getBatchInfo(str1, zcInfo.getId(), currEquipMent);
+            }
             return true;
         }
         return false;
     }
+    @Override
+    public void onRemoteFailed(String message) {
+        hideLoading();
+        CommonUtils.canDo(GBKEY);
+        CommonUtils.showError(this, "onRemoteFailed="+message);
+        /*
+            showLoading();
+            dataList.clear();
+            dataAdapter.notifyDataSetChanged();
+            commChoice.clearChoice();
+            commStationZCPresenter.getRecordBySbId(currEquipMent.getId(), zcInfo.getId());
+        */
 
+    }
 
     /***
      * 注册表格的行点击事件
@@ -200,6 +245,31 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
         dataListViewContent.setItemChecked(position, !bSelect);
     }
 
+    public boolean checkBoxState(String str1,int key){
+
+        String err = getTextByIndex(key);
+        switch (key) {
+            case 0:
+                if(!(cache.get(currBox)== CommCL.BOX_STATE_WORKING)){
+                    showMessage(err+"是空闲状态！");
+                    return false;
+                }
+                break;
+            case 1:
+                if(cache.get(currBox1)== CommCL.BOX_STATE_WORKING){
+                    showMessage(err+"料盒没有解绑");
+                    CommonUtils.textViewGetFocus(key == 0 ? editTextBox : editTextBox1);
+                    return false;
+                }else{
+                    cache.put(currBox1,CommCL.BOX_STATE_WORKING);
+                }
+                break;
+        }
+
+
+        return true;
+
+    }
     /**
      * 检查料盒号是否为空
      *
@@ -209,16 +279,8 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
      */
     public boolean checkBoxEmpt(String str1, int key) {
         if (TextUtils.isEmpty(str1)) {
-            String err = "";
-            switch (key) {
-                case 0:
-                    err = isDJ ? getString(R.string.yimei_lab_box_hj) : getString(R.string.yimei_lab_box_gj);
-                    break;
-                case 1:
-                    err = isDJ ? getString(R.string.yimei_lab_box_dj) : getString(R.string.yimei_lab_box_hj);
-                    break;
-            }
-            showMessage("请输入" + err);
+            String err = getTextByIndex(key);
+            showMessage("请输入" + err+",或者手输料盒号必须回车");
             CommonUtils.textViewGetFocus(key == 0 ? editTextBox : editTextBox1);
             return true;
         }
@@ -228,14 +290,61 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(barcodeReceiver, new IntentFilter(
-                CommCL.INTENT_ACTION_SCAN_RESULT)); // 注册广播
+        String str1=editTextSbId.getText().toString().toUpperCase();
+        dataList.clear();
+        dataAdapter.notifyDataSetChanged();
+        if(currEquipMent!=null){
+            showLoading();
+            commStationZCPresenter.getEquipmentInfo(currEquipMent.getId(), zcInfo.getId());
+        }
+
     }
 
+    //Activity被覆盖到下面或者锁屏时被调用
+    @Override
+    protected void onPause() {
+        super.onPause();
+        //Log.i(TAG, "onPause called.");
+        //有可能在执行完onPause或onStop后,系统资源紧张将Activity杀死,所以有必要在此保存持久数据
+
+
+
+
+
+
+    }
+    //退出当前Activity或者跳转到新Activity时被调用
+    @Override
+    protected void onStop() {
+        super.onStop();
+        //Log.i(TAG, "onStop called.");
+
+
+    }
+    /**
+     * 锁屏的管理类叫KeyguardManager，
+     * 通过调用其内部类KeyguardLockmKeyguardLock的对象的disableKeyguard方法可以取消系统锁屏，
+     * newKeyguardLock的参数用于标识是谁隐藏了系统锁屏
+     */
+    /*
+    private BroadcastReceiver mScreenOReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+
+            if (action.equals("android.intent.action.SCREEN_ON")) {
+                System.out.println("—— SCREEN_ON ——");
+            } else if (action.equals("android.intent.action.SCREEN_OFF")) {
+                System.out.println("—— SCREEN_OFF ——");
+            }
+        }
+
+    };
+*/
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(barcodeReceiver);
+
     }
 
     /***
@@ -270,7 +379,23 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
             int state = json.getInteger("state");
             switch (key) {
                 case 0:
+                    if(!TextUtils.isEmpty(id)){
+                        if (state == CommCL.BOX_STATE_WORKING) {
+                            currBox = id;
+                            CommonUtils.textViewGetFocus(editTextBox1);
+                            cache.put(id, state);
+                        }else {
+                            showMessage("该料盒号【" + id + "】的状态是空闲状态");
+                            currBox = "";
+                            CommonUtils.textViewGetFocus(editTextBox);
+                            break;
+                        }
+                    }else{
+                        showMessage("该料盒号不存在");
+                    }
+                    break;
 
+                    /*
                     if (state == CommCL.BOX_STATE_WORKING) {
                         currBox = id;
                         CommonUtils.textViewGetFocus(editTextBox1);
@@ -281,7 +406,24 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                         CommonUtils.textViewGetFocus(editTextBox);
                         break;
                     }
+                    */
                 case 1:
+                    if(!TextUtils.isEmpty(id)){
+                        if (state == CommCL.BOX_STATE_WORKING) {
+                            showMessage("该料盒号【" + id + "】没有解绑");
+                            currBox1 = "";
+                            CommonUtils.textViewGetFocus(editTextBox1);
+                            break;
+                        } else {
+                            currBox1 = id;
+                            CommonUtils.textViewGetFocus(editTextSid1);
+                            cache.put(id, state);
+                        }
+                    }else{
+                        showMessage("该料盒号不存在");
+                    }
+                    break;
+                    /*
                     if (state == CommCL.BOX_STATE_WORKING) {
                         showMessage("该料盒号【" + id + "】没有解绑");
                         currBox1 = "";
@@ -292,6 +434,7 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                         CommonUtils.textViewGetFocus(editTextSid1);
                         break;
                     }
+                    */
             }
         } else {
             showMessage(error);
@@ -319,17 +462,56 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
         if (bok) {
             String box = batchInfo.getString("mbox");
             String sid1 = editTextSid1.getText().toString().toUpperCase();//批次号
-            if (!currBox.equals(box)) {
+            if(TextUtils.isEmpty(currBox1)||TextUtils.isEmpty(currBox)) {
                 hideLoading();
+                CommonUtils.canDo(GBKEY);
+                showMessage("手输料盒号需要回车,或者信息未返回！");
+                return;
+            }
+            if(!TextUtils.equals(currBox1,editTextBox1.getText().toString().toUpperCase())){
+                hideLoading();
+                CommonUtils.canDo(GBKEY);
+                CommonUtils.textViewGetFocus(editTextBox1);
+                showMessage("手输料盒号需要回车,或者信息未返回！");
+                return;
+            }
+            if(!TextUtils.equals(currBox,editTextBox.getText().toString().toUpperCase())){
+                hideLoading();
+                CommonUtils.canDo(GBKEY);
+                CommonUtils.textViewGetFocus(editTextBox);
+                showMessage("手输料盒号需要回车,或者信息未返回！");
+                return;
+            }
+            if(!checkBoxState(currBox1,1)){
+                hideLoading();
+                CommonUtils.canDo(GBKEY);
+                return;
+            }
+            if(TextUtils.equals(currBox,currBox1)){
+                showMessage("两个料盒一样无法倒料盒！");
+                hideLoading();
+                CommonUtils.canDo(GBKEY);
+                return;
+            }
+            if (!TextUtils.equals(currBox,box)) {
+                hideLoading();
+                CommonUtils.canDo(GBKEY);
                 if (TextUtils.isEmpty(box)) {
                     showMessage("当前批次【" + sid1 + "】没有绑定的料盒");
                     return;
                 } else {
-                    showMessage("当前批次【" + sid1 + "】绑定的料盒号是【" + box + "】");
+                    showMessage("当前料盒号绑定不是该批次【" + sid1 + "】，请找领班确认");
                     return;
                 }
             }
+            /*
+            if(!checkBoxState(currBox,0)){
+                hideLoading();
+                return;
+            }
+            */
             //保存生产记录
+            String op = editTextOp.getText().toString().toUpperCase();//操作员
             String mono = batchInfo.getString("sid");
             String zcno1 = batchInfo.getString("zcno1");
             String remark = batchInfo.getString("remark");
@@ -340,17 +522,22 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
             MESPRecord record = new MESPRecord(sid1, mono, zcInfo.getId(), currEquipMent.getId());
             record.setSlkid(mono);
             record.setZcno1(zcno1);
+            record.setOp(op);
+            record.setState1("01");
             record.setRemark(remark);
             record.setQty(qty);
             record.setPrd_no(prd_no);
             record.setPrd_name(prd_name);
             record.setFirstchk(fircheck);
             record.setMbox(currBox1);
+
+
             commStationZCPresenter.makeProRecord(record);
             return;
 
         } else {
             hideLoading();
+            CommonUtils.canDo(GBKEY);
             showMessage(error);
             CommonUtils.textViewGetFocus(editTextSid1);
         }
@@ -366,10 +553,13 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
     public void checkSbIdCallBack(boolean bok, EquipmentInfo sbInfo, String error) {
         dataList.clear();
         dataAdapter.notifyDataSetChanged();
+        commChoice.clearChoice();
         if (bok) {
             currEquipMent = sbInfo;
+            //判断是否点胶制程，如果是，就不要直接查记录。而且查改设备上面是否有记录，且这个记录是否与当前相同
+
             commStationZCPresenter.getRecordBySbId(sbInfo.getId(), zcInfo.getId());
-//            CommonUtils.textViewGetFocus(editTextBox);
+//          CommonUtils.textViewGetFocus(editTextBox);
         } else {
             hideLoading();
             currEquipMent = null;
@@ -392,10 +582,21 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
             JSONArray array = (JSONArray) jsons;
             for (int k = 0; k < array.size(); k++) {
                 JSONObject jsonObject = array.getJSONObject(k);
-                MESPRecord mespRecord = JSON.parseObject(jsonObject.toJSONString(), MESPRecord.class);
-                dataAdapter.addRecord(CommonUtils.getJsonObjFromBean(mespRecord));
+                //MESPRecord mespRecord = JSON.parseObject(jsonObject.toJSONString(), MESPRecord.class);
+                dataAdapter.addRecord(jsonObject);//CommonUtils.getJsonObjFromBean(mespRecord)
             }
         }
+    }
+
+    @Override
+    public void clear() {
+        this.dataAdapter.clear();
+        this.dataList.clear();
+    }
+
+    @Override
+    public boolean onEditTextKeyDown(EditText editText) {
+        return OnEditorAction(editText);
     }
 
     /***
@@ -427,7 +628,10 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
         }
         return currMONO;
     }
-
+    @Override
+    public List<JSONObject> getDataList() {
+        return dataList;
+    }
     /***
      * 保存生产记录回调
      * @param bok  是否成功
@@ -440,16 +644,17 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
             MESPRecord mespRecord = (MESPRecord) record;
             dataAdapter.addRecord(CommonUtils.getJsonObjFromBean(record));
             //更改生产记录状态//绑定料盒号
-            commStationZCPresenter.changeRecordStateOneByOne(mespRecord, CommCL.BATCH_STATUS_IN);
+            commStationZCPresenter.changeLotStateOneByOne(mespRecord, CommCL.BATCH_STATUS_IN);
         } else {
             hideLoading();
+            CommonUtils.canDo(GBKEY);
             showMessage(error);
         }
     }
 
     @Override
     public void changeRecordStateBack(boolean bok, Object record, String error) {
-        hideLoading();
+
         if (bok) {
             MESPRecord mespRecord = (MESPRecord) record;
             int key = -1;
@@ -461,15 +666,26 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
             }
             if (key == -1) {
                 dataList.add(CommonUtils.getJsonObjFromBean(mespRecord));
+
             } else {
                 dataList.set(key, CommonUtils.getJsonObjFromBean(mespRecord));
+
             }
             dataAdapter.notifyDataSetChanged();
-            commStationZCPresenter.bindingBox(currBox1, mespRecord.getSid1(), zcInfo.getId());
+            commStationZCPresenter.bindingBox(mespRecord.getMbox(), mespRecord.getSid1(), zcInfo.getId());
             CommonUtils.textViewGetFocus(editTextSid1);
+            /*入站清理缓存*/
+            /*入站清理缓存*/
+            currBox="";
+            currBox1="";
+            cache.clear();
+            CommonUtils.canDo(GBKEY);
+            hideLoading();
             return;
         } else {
+            hideLoading();
             showMessage(error);
+            CommonUtils.canDo(GBKEY);
             CommonUtils.textViewGetFocus(editTextSid1);
         }
     }
@@ -487,8 +703,9 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
             List<Integer> selectIndex = commChoice.selectIndex;
             boolean bDone = CommCL.BATCH_STATUS_DONE.equals(error);
             if (!bDone) {
+
                 for (int i = 0; i < selectIndex.size(); i++) {
-                    dataList.set(i, CommonUtils.getJsonObjFromBean(recordList.get(i)));
+                    dataList.set(selectIndex.get(i), CommonUtils.getJsonObjFromBean(recordList.get(i)));
                 }
                 dataAdapter.notifyDataSetChanged();
                 commChoice.clearChoice();
@@ -506,6 +723,12 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
     @Override
     public void getMultiRecordBack(boolean bok, JSONArray recordList, String error, int type) {
 
+        if(bok){
+
+        }else{
+            hideLoading();
+            showMessage(error);
+        }
     }
 
     @Override
@@ -523,6 +746,246 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
 
     }
 
+    @Override
+    public void commonBack(boolean bok, Object recordList, String error, int key) {
+        switch(key){
+            case 1:
+                if(bok){
+                    MESPRecord record= (MESPRecord) recordList;
+                    List<Integer> selectIndex = commChoice.selectIndex;
+                    for(int i=0;i<selectIndex.size();i++){
+                        dataList.set(selectIndex.get(i),CommonUtils.getJsonObjFromBean(record));
+                    }
+                    commChoice.clearChoice();
+                    dataAdapter.notifyDataSetChanged();
+                    hideLoading();
+
+                }
+                break;
+             default:
+                 if(!bok){
+                     hideLoading();
+                     showMessage(error+"key="+key);
+                 }
+        }
+        if(!bok){
+            hideLoading();
+            showMessage(error+"key="+key);
+        }
+    }
+
+    //按钮点击动作
+    @OnClick({R.id.gujing_shangliao,R.id.gujing_kaigong,R.id.gujing_chuzhan,R.id.gujing_jiajiao,R.id.gujing_yichang})
+    public  void OnClick(View v){
+
+        int selectNum = 0;
+        String currState = "";
+        String error = "";
+        switch (v.getId()) {
+
+            case R.id.gujing_shangliao:
+                selectNum = dataListViewContent.getCheckedItemCount();
+                if (selectNum == 1) {
+                    //上料
+                    List<MESPRecord> list = commChoice.getSelectItem();
+                    MESPRecord record = list.get(0);
+                    HashMap<String, Serializable> map = new HashMap<>();
+                    map.put(CommCL.COMM_ZC_INFO_FLD, zcInfo);
+                    map.put(CommCL.COMM_OP_FLD, currOP);
+                    map.put(CommCL.COMM_RECORD_FLD, record);
+                    map.put(CommCL.COMM_SBID_FLD, currEquipMent.getId());
+                    myUnregisterReceiver(barcodeReceiver);
+                    jumpNextActivity(ChargingActivity.class, map);
+                } else {
+                    showMessage("请选择一条记录上料！");
+                }
+                break;
+            case R.id.gujing_kaigong:
+                //开工
+                List<MESPRecord> startList = commChoice.getSelectItem();
+                selectNum = dataListViewContent.getCheckedItemCount();
+                if(selectNum<=0){
+                    showMessage("请选择记录");
+                    return;
+                }
+                if (!TextUtils.isEmpty(error)) {
+                    showMessage(error + "，不能开工！！");
+                    break;
+                } else {
+                    currState = startList.get(0).getState1();
+                    if ("00".equals(currState)||currState.equals(CommCL.BATCH_STATUS_IN) || currState.equals(CommCL.BATCH_STATUS_CHARGING)) {
+                        //只有在01入站或者是02上料的状态才可以开工
+                        int start = zcInfo.getStartnum();
+                        if (start > 0) {
+                            int canStartNum = zcInfo.getStartnum() - commChoice.getStartCount();
+                            if (canStartNum <= 0) {
+                                showMessage("制成" + zcInfo.getId() + "最多可开工数为【" + zcInfo.getStartnum() + "】");
+                                break;
+                            }
+                            if (startList.size() > canStartNum) {
+                                showMessage("制成" + zcInfo.getId() + "最多可开工数为【" + zcInfo.getStartnum() + "】还可以开工:【" + canStartNum + "】");
+                                break;
+                            }
+                        }
+                        MESPRecord record = startList.get(0);
+                        if (record.getFirstchk() == 1) {
+                            int bf = currEquipMent.getFirstchk();
+                            if (bf == 1 && currEquipMent.getPrdno().equals(record.getPrd_no())) {
+                                if(TextUtils.equals(zcInfo.getId(),"31")){//点胶校验胶水是否过期，再调用开工代码
+                                    showLoading();
+                                    //commStationZCPresenter.changeRecordStateBatch(startList, CommCL.BATCH_STATUS_WORKING);
+                                    commStationZCPresenter.getMachineGlueInfo(record.getSbid(),record.getSlkid(),startList);
+                                }else {
+                                    showLoading();
+                                    commStationZCPresenter.changeRecordStateBatch(startList, CommCL.BATCH_STATUS_WORKING);
+                                }
+                                break;
+                            } else {
+                                //showMessage("设备：" + currEquipMent.getId() + "没有做首件检验！");
+                                //MESPRecord record = startList.get(0);
+
+                                CommonUtils.showOKCancel(GlueAndWeldingActivity.this, "开工首检", "设备："+currEquipMent.getId()+"没有做首件检验,是否打开首检界面", new DialogInterface.OnClickListener() {
+                                    @Override
+                                    public void onClick(DialogInterface dialog, int which) {
+                                        HashMap<String, Serializable> map = new HashMap<>();
+                                        map.put(CommCL.COMM_ZC_INFO_FLD,zcInfo);
+                                        map.put(CommCL.COMM_OP_FLD,currOP);
+                                        map.put(CommCL.COMM_RECORD_FLD,record);
+                                        map.put(CommCL.COMM_SBID_FLD,currEquipMent);
+                                        myUnregisterReceiver(barcodeReceiver);
+                                        jumpNextActivity(FirstInspectionActivity.class,map);
+                                    }
+                                });
+                                break;
+                            }
+                        } else {
+                            showLoading();
+                            commStationZCPresenter.changeRecordStateBatch(startList, CommCL.BATCH_STATUS_WORKING);
+                            break;
+                        }
+                    } else {
+                        showMessage("选中的记录不可以开工!");
+                        break;
+                    }
+                }
+            case R.id.gujing_chuzhan:
+                //完工出站
+                List<MESPRecord> outList = commChoice.getSelectItem();
+                selectNum = dataListViewContent.getCheckedItemCount();
+                if(selectNum<=0){
+                    showMessage("请选择记录");
+                    return;
+                }
+                if (!TextUtils.isEmpty(error)) {
+                    showMessage(error + "，不能出站！！");
+                } else {
+                    currState = outList.get(0).getState1();
+                    if (CommCL.BATCH_STATUS_WORKING.equals(currState)) {
+                        //校验出站时间
+                        boolean doDone = true;
+                        String errStr = "";
+                        if (zcInfo.getPtime() > 0) {
+                            for (int i = 0; i < outList.size(); i++) {
+                                MESPRecord cr = outList.get(i);
+                                int key = DateUtil.subDate(DateUtil.getCurrDateTime(ICL.DF_YMDT), cr.getHpdate(), 4);
+                                if (key < zcInfo.getPtime() && key >= 0&&!CommCL.isTest) {
+                                    doDone = false;
+                                    errStr = cr.getSid1() + "已开工:" + key + "分钟，需要等待" + zcInfo.getPtime() + "分钟，不能出站！";
+                                    break;
+                                }
+                            }
+                        }
+                        if (!TextUtils.isEmpty(errStr)) {
+                            showMessage(errStr);
+                            return ;
+                        }
+                        if (doDone) {
+                            showLoading();
+                            commStationZCPresenter.changeRecordStateBatch(outList, CommCL.BATCH_STATUS_DONE);
+                            return ;
+                        }
+                    } else {
+                        showMessage("选中记录的状态不是生产中，不可以出站");
+                        break;
+                    }
+                }
+
+            case R.id.gujing_jiajiao:
+                //加胶
+                selectNum = dataListViewContent.getCheckedItemCount();
+                if(selectNum<=0){
+                    showMessage("请选择记录");
+                    return;
+                }
+                HashMap<String, Serializable> map = new HashMap<>();
+                map.put(CommCL.COMM_OP_FLD, currOP);
+                map.put(CommCL.COMM_SBID_FLD, currEquipMent.getId());
+                myUnregisterReceiver(barcodeReceiver);
+                jumpNextActivity(AddGluingActivity.class, map);
+                break;
+            case R.id.gujing_yichang:
+                //点胶异常按钮
+                selectNum = dataListViewContent.getCheckedItemCount();
+
+                if (selectNum == 1) {
+
+                    List<MESPRecord> list = commChoice.getSelectItem();
+                    MESPRecord record = list.get(0);
+                    String op = editTextOp.getText().toString().toUpperCase();//操作员
+                    alertWindow(this,record,op);
+                } else {
+                    showMessage("请选择一条记录，执行数量修改！");
+                }
+
+                break;
+        }
+        return ;
+    }
+    //点胶异常，弹框界面
+    public void alertWindow(Context context,MESPRecord record,String op){
+        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+        builder.setTitle("点胶异常登记");
+        LinearLayout layout=new LinearLayout(context);
+        layout.setOrientation(LinearLayout.VERTICAL);
+        TextView text=new TextView(context);
+        text.setTextSize(18);
+        text.setText("   批次号："+record.getSid1());
+        layout.addView(text);
+        //添加UI选择器
+        LayoutInflater layoutInflater = LayoutInflater.from(this);
+        View layout_list = layoutInflater.inflate(R.layout.comm_spinner_body, null);
+        Spinner spinner=(Spinner)layout_list.findViewById(R.id.comm_spinner);
+        spinner.setAdapter(SpinnerAdapterImpl.getSpinnerAdapter(getApplicationContext(),CommCL.DJYCSM));
+        layout.addView(spinner);
+        builder.setView(layout);
+        builder.setPositiveButton("确定", new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialog, int which)
+            {
+                Pair p= (Pair) spinner.getSelectedItem();
+                String value=p.value;
+                if(!TextUtils.isEmpty(value)){
+                    showLoading();
+                    int v=Integer.parseInt(value);
+                    commStationZCPresenter.updatePrecodeYCState(record,op,v);
+                }else{
+                    Toast.makeText(context, "没选择不会修改" , Toast.LENGTH_SHORT).show();
+                }
+                //showMessage(p.key+" "+p.value);
+
+            }
+        });
+        builder.setNegativeButton("取消", new DialogInterface.OnClickListener()
+        {
+            @Override
+            public void onClick(DialogInterface dialog, int which)
+            {
+                Toast.makeText(context, "取消修改" , Toast.LENGTH_SHORT).show();
+            }
+        });
+        builder.show();
+    }
     private class MultiChoiceModeCallback implements AbsListView.MultiChoiceModeListener {
         private View actionBarView;
         private TextView tv_selectedCount;
@@ -589,7 +1052,7 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                         map.put(CommCL.COMM_OP_FLD, currOP);
                         map.put(CommCL.COMM_RECORD_FLD, record);
                         map.put(CommCL.COMM_SBID_FLD, currEquipMent.getId());
-                        unregisterReceiver(barcodeReceiver);
+                        myUnregisterReceiver(barcodeReceiver);
                         jumpNextActivity(ChargingActivity.class, map);
                     } else {
                         showMessage("请选择一条记录上料！");
@@ -653,7 +1116,7 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                                 for (int i = 0; i < outList.size(); i++) {
                                     MESPRecord cr = outList.get(i);
                                     int key = DateUtil.subDate(DateUtil.getCurrDateTime(ICL.DF_YMDT), cr.getHpdate(), 4);
-                                    if (key < zcInfo.getPtime() && key > 0) {
+                                    if (key < zcInfo.getPtime() && key > 0&&!CommCL.isTest) {
                                         doDone = false;
                                         errStr = cr.getSid1() + "已开工:" + key + "分钟，需要等待" + zcInfo.getPtime() + "分钟，不能出站！";
                                         break;
@@ -680,7 +1143,7 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                     HashMap<String, Serializable> map = new HashMap<>();
                     map.put(CommCL.COMM_OP_FLD, currOP);
                     map.put(CommCL.COMM_SBID_FLD, currEquipMent.getId());
-                    unregisterReceiver(barcodeReceiver);
+                    myUnregisterReceiver(barcodeReceiver);
                     jumpNextActivity(AddGluingActivity.class, map);
                     break;
             }
@@ -694,6 +1157,7 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
 
         public List<MESPRecord> getSelectItem() {
             String currstate = "";
+            error = "";
             List<MESPRecord> selectList = new ArrayList<>();
             //获取选中列表
             selectIndex.clear();
@@ -740,51 +1204,47 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
     }
 
 
-    /***
-     * 注册广播事件，监听PDA扫描
-     */
-    private BroadcastReceiver barcodeReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if (CommCL.INTENT_ACTION_SCAN_RESULT.equals(intent.getAction())) {
-                View rootView = getCurrentFocus();//获取光标当前所在组件
-                Object tag = rootView.findFocus().getTag();
-                if (tag == null) {
-                    return;
-                }
-                String barCodeData = null;
-                if (TextUtils.isEmpty(intent.getStringExtra(CommCL.SCN_CUST_HONEY))) {
-                    barCodeData = intent.getStringExtra(CommCL.SCN_CUST_EX_SCODE);
-                } else {
-                    barCodeData = intent.getStringExtra(CommCL.SCN_CUST_HONEY);
-                }
-                barCodeData = barCodeData.toUpperCase();
-                int id = rootView.getId();
-                switch (id) {
-                    case R.id.edt_op:
-                        editTextOp.setText(barCodeData);
-                        OnEditorAction(editTextOp);
-                        break;
-                    case R.id.edt_equipment_no:
-                        editTextSbId.setText(barCodeData);
-                        OnEditorAction(editTextSbId);
-                        break;
-                    case R.id.edt_box:
-                        editTextBox.setText(barCodeData);
-                        OnEditorAction(editTextBox);
-                        break;
-                    case R.id.edt_box1:
-                        editTextBox1.setText(barCodeData);
-                        OnEditorAction(editTextBox1);
-                        break;
-                    case R.id.edt_sid1:
-                        editTextSid1.setText(barCodeData);
-                        OnEditorAction(editTextSid1);
-                        break;
-                }
-            }
+
+
+
+
+    public String getTextByIndex(int i){
+        switch (getIndexByZcno(zcno)){
+            case 21:
+            case 22:
+                return (i==0)?getString(R.string.yimei_lab_box_gj):getString(R.string.yimei_lab_box_hj);
+            case 31:
+                return (i==0)?getString(R.string.yimei_lab_box_hj):getString(R.string.yimei_lab_box_dj);
+            case 32:
+                return (i==0)?getString(R.string.yimei_lab_box_dj1):getString(R.string.yimei_lab_box_dj2);
+            default:
+                return getString(R.string.yimei_lab_box);
         }
-    };
-
-
+    }
+    public void setButtonVisibility(){
+        switch (getIndexByZcno(zcno)){
+            case 21:
+            case 22:dianjiaoyc.setVisibility(View.GONE);
+                    jiajiao.setVisibility(View.GONE);
+                break;
+            case 31:
+            case 32:shangliao.setVisibility(View.GONE);
+                break;
+        }
+    }
+    public int getIndexByZcno(String zcno){
+        if(TextUtils.equals("21",zcno)){
+            return 21;
+        }
+        if(TextUtils.equals("22",zcno)){
+            return 22;
+        }
+        if(TextUtils.equals("31",zcno)){
+            return 31;
+        }
+        if(TextUtils.equals("32",zcno)){
+            return 32;
+        }
+        return 0;
+    }
 }
