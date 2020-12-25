@@ -241,9 +241,9 @@ public class MboxBindzjActivity extends BaseActivity implements CommBaseView {
             String lotno=edtLotNo.getText().toString().toUpperCase();
             String prdNo1=edtPrdNo.getText().toString().toUpperCase();
             if(!TextUtils.equals(prdNo1,prdNo)){
+                hideLoading();
                 showMessage("手输货品代号必须回车");
                 CommonUtils.textViewGetFocus(edtPrdNo);
-                hideLoading();
                 return;
             }
             if(!isSame(op,lotno,prdNo1)){
@@ -280,9 +280,9 @@ public class MboxBindzjActivity extends BaseActivity implements CommBaseView {
 
             CommonUtils.textViewGetFocus(edtMbox);
         }else{
+            hideLoading();
             CommonUtils.textViewGetFocus(edtMbox);
             showMessage(error);
-            hideLoading();
         }
     }
 

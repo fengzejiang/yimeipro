@@ -4,12 +4,14 @@ import android.text.TextUtils;
 import android.util.Log;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
+import com.yimeinew.data.EquipmentInfo;
 import com.yimeinew.data.MESPRecord;
 import com.yimeinew.model.impl.CommZCModel;
 import com.yimeinew.modelInterface.CommFastView;
 import com.yimeinew.network.response.ResponseTransformer;
 import com.yimeinew.network.schedulers.SchedulerProvider;
 import com.yimeinew.utils.CommCL;
+import com.yimeinew.utils.CommonUtils;
 import com.yimeinew.utils.DateUtil;
 
 import java.util.HashMap;
@@ -34,7 +36,7 @@ public class CommFast2Presenter {
      * @param zcno
      * @param key
      */
-    public void checkQuickLot(String sid1,String zcno,int key) {
+    public void checkQuickLot(String sid1, String zcno, EquipmentInfo currEquipment,int key) {
         baseModel.getQuickLot2(sid1,zcno).compose(ResponseTransformer.handleResult())
                 .compose(schedulerProvider.applySchedulers()).subscribe(
                 carBeans -> {
@@ -85,26 +87,41 @@ public class CommFast2Presenter {
                                 baseView.getQuickLotBack(false, null, "该批次【" + sid1 + "】已经别的机台入站,不能再次入站！",key);
                                 return;
                             }
+                            if(CommCL.BATCH_STATUS_CHECKING.equals(stateValue)){
+                                baseView.getQuickLotBack(false, null, "该批次【" + sid1 + "】该批次处于待检，不能再次入站！",key);
+                                return;
+                            }
+
                             //一次清洗超过6小时才能进行二次清洗
                             String qxTime=jsonObject.getString("edate");
                             int subTime= DateUtil.subSecond(DateUtil.getNowCurrDateTime(),qxTime);
-                            if((TextUtils.equals("1P",zcno) || TextUtils.equals("313",zcno)) &&subTime<CommCL.HANXIAN_QINGXI_MAX_WAIT_TIME){
+                            if((TextUtils.equals("1P",zcno) || TextUtils.equals("313",zcno)) &&subTime<CommCL.HANXIAN_MAX_WAIT_TIME){
                                 baseView.getQuickLotBack(false,null,"一次过站时间="+qxTime+"未超时不需要二次过站，请直接做下一道工序",key);
                                 return;
                             }
-                            //一次预热超过10小时才能进行二次清洗
+                            //一次预热超过24小时才能进行二次预热
                             if(TextUtils.equals("311",zcno) &&subTime<CommCL.DIANJIAO_YURE_MAX_WAIT_TIME){
                                 baseView.getQuickLotBack(false,null,"一次过站时间="+qxTime+"未超时不需要二次过站，请直接做下一道工序",key);
                                 return;
                             }
                             String currMO = baseView.getCurrMO();
                             String sid = jsonObject.getString("sid");
-                            if (currMO.length() > 0) {
-                                if (!currMO.equals(sid)&&!"41".equals(zcno)&&!"1A".equals(zcno)&&!"1B".equals(zcno)) {
-                                    baseView.getQuickLotBack(false, null, "当前工单是【" + currMO + "】,扫描的工单是【" + sid + "】",key);
+                            //支架预热
+                            if(CommonUtils.contentEquals(zcno,"311",",")) {
+                                String stents=currEquipment.getStents();
+                                String mzhij=jsonObject.getString("mzhij");
+                                if(!TextUtils.isEmpty(stents)&&!CommonUtils.contentEquals(stents,mzhij,";")) {
+                                    baseView.getQuickLotBack(false, null, "烤箱支架【"+stents+"】,当前批次支架【"+mzhij+"】不一致无法入烤！",key);
                                     return;
                                 }
                             }
+
+//                            if (currMO.length() > 0) {
+//                                if (!currMO.equals(sid)&&!"41".equals(zcno)&&!"1A".equals(zcno)&&!"1B".equals(zcno)) {
+//                                    baseView.getQuickLotBack(false, null, "当前工单是【" + currMO + "】,扫描的工单是【" + sid + "】",key);
+//                                    return;
+//                                }
+//                            }
                             baseView.getQuickLotBack(true,jsonObject,"",key);
                         }
                     }
@@ -162,6 +179,32 @@ public class CommFast2Presenter {
                 },
                 throwable -> {
                     baseView.onRemoteFailed("200修改状态"+throwable.getMessage());
+                });
+    }
+    /**
+     * 通用查询
+     * @param assistId
+     * @param cont
+     * @param key
+     */
+    public void getAssistInfo(String assistId,String cont,int key) {
+        baseModel.getAssistInfo(assistId,cont).compose(ResponseTransformer.handleResult())
+                .compose(schedulerProvider.applySchedulers()).subscribe(
+                carBeans -> {
+                    if (carBeans.getIntValue(CommCL.RTN_ID) != 0) {
+                        baseView.getAssistInfoBack(false, null,"获取服务器信息失败" + carBeans.toString(), 0);
+                    }else if (carBeans.getIntValue(CommCL.RTN_ID) == 0) {
+                        JSONObject msg = carBeans.getJSONObject(CommCL.RTN_DATA);//response里面的data，存放的是查询记录
+                        JSONObject rtnMap = (JSONObject) msg.get(CommCL.RTN_DATA);//获取实际的查询结果
+                        if (rtnMap.getInteger(CommCL.RTN_CODE) == 0) {
+                            baseView.getAssistInfoBack(false, null,"没有查询到记录"+assistId+cont+";", key);
+                        } else {
+                            JSONArray array = rtnMap.getJSONArray(CommCL.RTN_VALUES);//返回数据
+                            baseView.getAssistInfoBack(true, array, "", key);
+                        }
+                    }
+                },throwable -> {
+                    baseView.onRemoteFailed(throwable.getMessage());
                 });
     }
 

@@ -18,14 +18,14 @@ public interface BaseStationBindingView extends BaseView {
      * @param error 错误信息,或者是json字符串
      * @param key 界面上会有多个box输入框，key值代表第几个
      */
-    void checkMboxCallBack(boolean bok, String error, int key);
+    void checkMboxCallBack(boolean bok,String error,int key);
     /***
      * 解绑批次输入框远程访问回调处理
      * @param bok 是否存在
      * @param batchInfo 如果存在，返回JSON格式的数据
      * @param error 如果不存在返回错误信息
      */
-    void checkSidCallBack(boolean bok, JSONObject batchInfo, final String error);
+    void checkSidCallBack(boolean bok, JSONObject batchInfo,final String error);
 
     /***
      * 设备号远程访问回调处理
@@ -35,7 +35,7 @@ public interface BaseStationBindingView extends BaseView {
      */
     void checkSbIdCallBack(boolean bok, EquipmentInfo sbInfo, final String error);
 
-    void checkRecordCallBack(boolean bok, JSONObject sbInfo, final String error);
+    void checkRecordCallBack(boolean bok, JSONObject sbInfo,final String error);
 
     /***
      * 获取当前工单号
@@ -74,7 +74,7 @@ public interface BaseStationBindingView extends BaseView {
      * @param error 错误信息
      * @param type 类型（是哪个返回的）
      */
-    void getMultiRecordBack(boolean bok, JSONArray recordList, String error, int type);
+    void getMultiRecordBack(boolean bok, JSONArray recordList, String error,int type);
 
     /***
      * 获取制成发起原因
@@ -100,6 +100,6 @@ public interface BaseStationBindingView extends BaseView {
      */
     abstract void checkQCBatInfoBack(boolean bok, Object o, String error);
 
-    void commonBack(boolean bok, Object recordList, String error, int key);
+    void commonBack(boolean bok, Object recordList, String error,int key);
 
 }

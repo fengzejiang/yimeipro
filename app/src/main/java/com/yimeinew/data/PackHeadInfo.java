@@ -1,6 +1,7 @@
 package com.yimeinew.data;
 
 import com.yimeinew.activity.base.BaseApplication;
+import com.yimeinew.utils.CommonUtils;
 import com.yimeinew.utils.DateUtil;
 import com.yimeinew.utils.ICL;
 
@@ -34,12 +35,13 @@ public class PackHeadInfo implements Serializable {
     private String mkdate= DateUtil.getCurrDateTime(ICL.DF_YMDT);//制单时间
     private String sorg= BaseApplication.currUser.getDeptCode();//部门
     private String zcno="S21";
+    private String rslkid;
 
     private String sid1;//只是为了缓存Tray号
     private int totalqty;
     private String prd_mark;
     private String rem;
-
+    private String dcid= CommonUtils.getMacID();
 
     public PackHeadInfo(){}
     public PackHeadInfo(String slkid,String prd_no,String prd_name,int binfullqty,String op,String cus_no,String bincode){
@@ -277,5 +279,21 @@ public class PackHeadInfo implements Serializable {
 
     public void setRem(String rem) {
         this.rem = rem;
+    }
+
+    public String getRslkid() {
+        return rslkid;
+    }
+
+    public void setRslkid(String rslkid) {
+        this.rslkid = rslkid;
+    }
+
+    public String getDcid() {
+        return dcid;
+    }
+
+    public void setDcid(String dcid) {
+        this.dcid = dcid;
     }
 }

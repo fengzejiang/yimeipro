@@ -7,7 +7,9 @@ import android.os.Bundle;
 import android.text.InputType;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
 import android.widget.*;
 import butterknife.*;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
@@ -20,6 +22,8 @@ import com.yimeinew.adapter.tabledataadapter.BaseTableDataAdapter;
 import com.yimeinew.data.MESPRecord;
 import com.yimeinew.data.ZCInfo;
 import com.yimeinew.entity.Pair;
+import com.yimeinew.listener.OnAlertListener;
+import com.yimeinew.listener.OnConfirmListener;
 import com.yimeinew.modelInterface.CommBaseView;
 import com.yimeinew.modelInterface.CommFastView;
 import com.yimeinew.network.schedulers.SchedulerProvider;
@@ -37,7 +41,7 @@ import java.util.HashMap;
 import java.util.List;
 
 public class OutCheckActivity extends BaseActivity implements CommBaseView {
-    private final String TAG_NAME = CommGJActivity.class.getSimpleName();
+    private final String TAG_NAME = OutCheckActivity.class.getSimpleName();
 
 
     //数据表格
@@ -49,12 +53,18 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
     BaseTableDataAdapter adapter;
     @BindView(R.id.edt_op)
     EditText edtOP;//作业员
+    @BindView(R.id.edt_tray)
+    EditText edtTray;//tray盘
     @BindView(R.id.edt_sid1)
     EditText edtSid1;//内装批号
     @BindView(R.id.edt_sidn)
     EditText edtSidn;//仓库内箱批号
     @BindView(R.id.edt_sidw)
     EditText edtSidw;//仓库内箱批号
+
+    EditText edtQrn;//内箱二位码
+    EditText edtQrw;//外箱二位码
+
     @BindView(R.id.text_okng)
     TextView textOkNg;//提示框
     @BindView(R.id.img_qrw)
@@ -84,7 +94,11 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
     private String qrw="";//外箱二维码
     private String qrn="";//内箱二维码
     private JSONArray clist=new JSONArray();
-
+    //弹出
+    private AlertDialog qrnAlert;
+    private AlertDialog qrwAlert;
+    JSONObject info;
+    JSONArray trayInfo=new JSONArray();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -95,17 +109,17 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
         initTableView();
 
         //测试数据初始化
-        /*
-        edtOP.setText("A0122");
-        edtSidw.setText("PK19092700001W");
-        edtSidn.setText("PK19092700001N");
-        edtSid1.setText("MOB19090206001");
-        */
+//
+//        edtOP.setText("A0122");
+//        edtSidw.setText("PK19092700001W");
+//        edtSidn.setText("PK19092700001N");
+//        edtSid1.setText("MOB19090206001");
+
         //setSid("OQC1909300001");
     }
 
 
-    @OnEditorAction({R.id.edt_op,  R.id.edt_sid1,R.id.edt_sidw,R.id.edt_sidn})
+    @OnEditorAction({R.id.edt_op, R.id.edt_tray, R.id.edt_sid1,R.id.edt_sidw,R.id.edt_sidn})
     public boolean OnEditorAction(EditText editText) {
         return onEditTextKeyDown(editText);
     }
@@ -128,36 +142,31 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
             return true;
         }
         if (id == R.id.edt_op) {
-            CommonUtils.textViewGetFocus(edtSidw);
+            CommonUtils.textViewGetFocus(edtTray);
             return false;
         }
-        //外箱箱号不能为空
-        String sidw=edtSidw.getText().toString().toUpperCase();
-        if(TextUtils.isEmpty(sidw)){
-            CommonUtils.textViewGetFocus(edtSidw);
-            showMessage("请输入仓库外箱箱号");
+        //扫描tray盘号
+        String tray=edtTray.getText().toString().toUpperCase();
+        if(TextUtils.isEmpty(tray)){
+            showMessage("请输入Tray盘号");
+            CommonUtils.textViewGetFocus(edtTray);
             return true;
         }
-        if(id==R.id.edt_sidw){
-            showText();
-            CommonUtils.textViewGetFocus(edtSidn);
+        if(id==R.id.edt_tray){
+            showLoading();
+            String cont="~m.tray='"+tray+"' or m.sid1='"+tray+"'";
+            commPresenter.getAssistInfo(CommCL.AID_OQC_TRAY,cont,R.id.edt_tray);
             return false;
         }
-        //内箱箱号不能为空
-        String sidn=edtSidw.getText().toString().toUpperCase();
-        if(TextUtils.isEmpty(text)){
-            CommonUtils.textViewGetFocus(edtSidn);
-            showMessage("请输入仓库内箱箱号");
-            return true;
-        }
-        if(id==R.id.edt_sidn){
-            CommonUtils.textViewGetFocus(edtSid1);
-            return false;
-        }
+        //扫描内装
         String sid1 = edtSid1.getText().toString().toUpperCase();
         if (TextUtils.isEmpty(sid1)) {
-            showMessage("请输入批次号");
+            showMessage("请输入内装批次号");
             CommonUtils.textViewGetFocus(edtSid1);
+            return true;
+        }
+        //检验Tray盘是不是在内装里
+        if(!checkTrayAndBatNo(tray,sid1)){
             return true;
         }
         if (id == R.id.edt_sid1) {
@@ -167,11 +176,84 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
                 return true;
             }
             if(!CommonUtils.isRepeat("OQC_saomao_sid1",sid1)) {
+                showText();
                 showLoading();
                 //获取内箱批次号
                 commPresenter.getAssistInfo(CommCL.AID_OQC_BAT_INFO_HD,"~bat_no='"+sid1+"'",R.id.edt_sid1);
-             }
+            }
+            return false;
         }
+        if(info==null||!TextUtils.equals(info.getString("bat_no"),sid1)){
+            showMessage("手输内装批次号必须回车");return false;
+        }
+        if(id==edtQrn.getId()){
+            checkQRN();
+            return false;
+        }
+        //内箱箱号不能为空
+        String sidn=edtSidn.getText().toString().toUpperCase();
+        if(TextUtils.isEmpty(sidn)){
+            CommonUtils.textViewGetFocus(edtSidn);
+            showMessage("请输入仓库内箱箱号");
+            return true;
+        }
+        if(id==R.id.edt_sidn){
+            //判断内箱是否正确
+            if(TextUtils.equals(sidn,info.getString("sidn"))){
+                //判断是否必须内箱二位码校验
+                if(!TextUtils.isEmpty(info.getString("qrn"))){
+                    alertWindowN();
+                    qrnAlert.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
+                    CommonUtils.textViewGetFocus(edtQrn);
+                }else{
+                    CommonUtils.textViewGetFocus(edtSidw);
+                }
+            }else {
+                CommonUtils.textViewGetFocus(edtSidn);
+                showMessage("内箱箱号错误");
+
+            }
+            return false;
+        }
+
+        //判断是否一定要输入内箱二维码
+        String infoqrn=info.getString("qrn");
+        if(!TextUtils.isEmpty(infoqrn)&&!TextUtils.equals(qrn,infoqrn)){
+            alertWindowN();
+            qrnAlert.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
+            showMessage("内箱二位码必填");
+        }
+        if(id==edtQrw.getId()){
+            checkQRW();
+            return false;
+        }
+        //外箱箱号不能为空
+        String sidw=edtSidw.getText().toString();
+        if(TextUtils.isEmpty(sidw)){
+            CommonUtils.textViewGetFocus(edtSidw);
+            showMessage("请输入仓库外箱箱号");
+            return true;
+        }
+        if(id==R.id.edt_sidw){
+            //判断内箱是否正确
+            if(TextUtils.equals(sidw,info.getString("sidw"))){
+                //判断是否必须外箱二位码校验
+                if(!TextUtils.isEmpty(info.getString("qrw"))){
+                    alertWindowW();
+                    qrwAlert.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(false);
+                    CommonUtils.textViewGetFocus(edtQrw);
+                }else{
+                    //如果外箱二维码非必填直接保存
+                    saveData();
+                }
+            }else {
+                CommonUtils.textViewGetFocus(edtSidw);
+                showMessage("外箱箱号错误");
+            }
+
+            return false;
+        }
+
         return false;
     }
 
@@ -181,13 +263,13 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
         int id=view.getId();
         switch (id){
             case R.id.img_qrw:
-                alertWindow(this,id,"外箱二维码",qrw);
+                alertWindowW();
                 break;
             case R.id.img_qrn:
-                alertWindow(this,id,"内箱二维码",qrn);
+                alertWindowN();
                 break;
             case R.id.img_new:
-                alertWindow1(this,"是否创建新的单子");
+                alertWindow1(this,"是否创建新的单据");
                 break;
             case R.id.img_view:
                 alertWindow2(this,"出货明细",tongji());
@@ -200,8 +282,10 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
         super.onResume();
         Log.i(TAG_NAME,"onResume");
         //通过sid获取数据填充列表
-        commPresenter.getAssistInfo(CommCL.AID_OQC_INFO_HD,"~sid='"+getSid()+"'",R.id.table_view);//此处id不起任何作用，只是为了与其他id做区分，随便挑选一个。
-        showLoading();
+        if(!TextUtils.isEmpty(getSid())) {
+            commPresenter.getAssistInfo(CommCL.AID_OQC_INFO_HD, "~sid='" + getSid() + "'", R.id.table_view);//此处id不起任何作用，只是为了与其他id做区分，随便挑选一个。
+            showLoading();
+        }
     }
     @Override
     protected void onDestroy() {
@@ -232,16 +316,17 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
     private void initTableView() {
         dataList = new ArrayList();
         List<HeaderRowInfo> header =getRowDataList();
-        initView();
+
+        dataListViewContent.setChoiceMode(ListView.CHOICE_MODE_NONE);
         adapter = new BaseTableDataAdapter(this,tableView,dataListViewContent,dataList,header);
         adapter.setSwipeRefreshEnabled(false);
         adapter.setTitle("项次");
         adapter.setTitleHeight(90);
         adapter.setTitleWidth(90);
         tableView.setAdapter(adapter);
-    }
-    private void initView() {
-        dataListViewContent.setChoiceMode(ListView.CHOICE_MODE_NONE);
+        edtQrn=newEditText(R.string.yimei_qrn);
+        edtQrw=newEditText(R.string.yimei_qrw);
+
     }
     /***
      * 初始化表格头数据
@@ -273,7 +358,7 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
     public void onRemoteFailed(String message) {
         hideLoading();
         CommonUtils.canDo(GBKEY);
-        ngText();
+        ngText("");
         CommonUtils.showError(this, "onRemoteFailed="+message);
 
     }
@@ -292,64 +377,20 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
     public void getAssistInfoBack(Boolean bok, JSONArray info, String error, int key) {
         if(bok) {
             switch (key) {
+                case R.id.edt_tray:
+                    this.trayInfo = info;
+                    CommonUtils.textViewGetFocus(edtSid1);
+                    hideLoading();
+                    break;
                 case R.id.edt_sid1:
-                    JSONObject rs = info.getJSONObject(0);
-                    String rssidw=rs.getString("sidw").toUpperCase();
-                    String rssidn=rs.getString("sidn").toUpperCase();
-                    String sidw=edtSidw.getText().toString().toUpperCase();
-                    String sidn=edtSidn.getText().toString().toUpperCase();
-                    String bat_no=rs.getString("bat_no").toUpperCase();
-                    int bok1=rs.getIntValue("bok1");
-                    if(bok1==0){
-                        showMessage(bat_no+"该批次已扫描！");
-                        hideLoading();
-                        ngText();
+                    this.info=info.getJSONObject(0);
+                    if(this.info.getInteger("bok1")==0){
                         CommonUtils.textViewGetFocus(edtSid1);
-                        break;
-                    }
-                    if(!TextUtils.equals(rssidw,sidw)){
                         hideLoading();
-                        CommonUtils.textViewGetFocus(edtSidw);
-                        ngText();
-                        showMessage("仓库外箱箱号错误");
-                    }
-                    else if(!TextUtils.equals(rssidn,sidn)){
-                        hideLoading();
-                        CommonUtils.textViewGetFocus(edtSidn);
-                        ngText();
-                        showMessage("仓库内箱箱号错误");
+                        showMessage("该内装批次已扫描！");
                     }else {
-                        if(!TextUtils.isEmpty(cus_no)&&!TextUtils.equals(cus_no,rs.getString("cus_no"))){
-                            showMessage("当前客户是"+rs.getString("cus_no")+"已扫描的客户是"+cus_no+"不一致，请新增");
-                            hideLoading();
-                            CommonUtils.textViewGetFocus(edtSidw);
-                            return;
-                        }
-                        //信息插入动作
-                        //需要的公共信息
-                        MESPRecord record=new MESPRecord();
-                        rs.put("mkdate",record.getMkdate());
-                        rs.put("sbuid",record.getSbuid());
-                        rs.put("smake",record.getSmake());
-                        rs.put("bok",0);
-                        rs.put("dcid",record.getDcid());
-                        rs.put("sorg",record.getSorg());
-                        rs.put("opc",edtOP.getText().toString().toUpperCase());
-                        rs.put("state",0);
-                        rs.put("qrw",qrw);
-                        rs.put("qrn",qrn);
-                        sid=getSid();
-                        if(TextUtils.isEmpty(sid)){
-                            //没有主表主键
-                            commPresenter.saveData(CommCL.CELL_ID_Q00113A,rs,1);//保存主表
-                        }else{
-                            //有主表主键--直接保存子表
-                            rs.put("sid",sid);
-                            rs.put("indate",DateUtil.getCurrDateTime(ICL.DF_YMDT));
-                            commPresenter.saveData(CommCL.CELL_ID_Q00113B,rs,0);
-                        }
-                        //信息加入缓存和列表里
-                        //CommonUtils.textViewGetFocus(edtSidw);
+                        CommonUtils.textViewGetFocus(edtSidn);
+                        hideLoading();
                     }
                     break;
                 case  R.id.table_view://用sid获取已经扫描的信息
@@ -357,8 +398,9 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
                     if(info.size()>0){
                         JSONObject obj = info.getJSONObject(0);
                         cus_no=obj.getString("cus_no");
+                        bindSid1.putAll(CommonUtils.JSONArrayToMap(info,"bat_no","sid"));
+                        addRow(info);
                     }
-                    addRow(info);
                     hideLoading();
                     break;
             }
@@ -366,9 +408,15 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
             hideLoading();
             showMessage(error);
             switch (key){
+                case R.id.edt_tray:
+                    CommonUtils.textViewGetFocus(edtTray);
+                    break;
                 case R.id.edt_sid1:
                     CommonUtils.textViewGetFocus(edtSid1);
-                    ngText();
+                    ngText("");
+                    break;
+                case R.id.table_view:
+                    newClear();//单获取新失败自动新建
                     break;
             }
         }
@@ -389,23 +437,26 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
                     break;
                 case 0://插入记录完成添加列表
                     bindSid1.put(record.getString("bat_no"),record.getString("sid"));
+                    this.info=null;
                     hideLoading();
                     addRow(record);
                     if(getSidNum(record.getString("sid"))>=record.getInteger("num")){
-                        CommonUtils.textViewGetFocus(edtSidw);
-                        edtSidn.setText("");edtSid1.setText("");
-                        qrw="";qrn="";
+                        CommonUtils.textViewGetFocus(edtTray);
+                        edtSidn.setText("");edtSid1.setText("");edtSidw.setText("");
+                        qrw="";qrn="";this.info=null;
                     }else{
-                        CommonUtils.textViewGetFocus(edtSid1);
+                        CommonUtils.textViewGetFocus(edtTray);
+                        edtSidn.setText("");edtSid1.setText("");edtSidw.setText("");
+                        qrw="";qrn="";this.info=null;
                     }
-                    okText();
+                    okText("");
                     break;
             }
         }else{
             hideLoading();
             CommonUtils.textViewGetFocus(edtSid1);
             showMessage(error);
-            ngText();
+            ngText("");
         }
     }
 
@@ -421,11 +472,11 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
 
 
     /*OK   NG*/
-    public void okText(){
+    public void okText(String msg){
         textOkNg.setText("OK");
         textOkNg.setBackgroundColor(Color.GREEN);
     }
-    public void ngText(){
+    public void ngText(String msg){
         textOkNg.setText("NG");
         textOkNg.setBackgroundColor(Color.RED);
     }
@@ -458,112 +509,90 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
         adapter.clear();
         this.dataList.clear();
     }
-    //编带数量修改，弹框界面
-    public void alertWindow(Context context,int vid,String title,String value){
-        canGetMessage=false;
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(title);
-        LinearLayout layout=new LinearLayout(context);
-        layout.setOrientation(LinearLayout.VERTICAL);
-        /*
-        TextView text=new TextView(context);
-        text.setTextSize(18);
-        text.setText("   ");
-        layout.addView(text);
-        */
-        /*
-        EditText qtyEid=new EditText(context);
-        //qtyEid.setText(""+record.getQty());
-        qtyEid.setInputType(InputType.TYPE_CLASS_TEXT);
-        //qtyEid.setMinLines(3);
-        qtyEid.setText(value);
-        //qtyEid.setHeight(300);
-        layout.addView(qtyEid);
-        */
-        MultiAutoCompleteTextView mact=new MultiAutoCompleteTextView(context);
-        mact.setText(value);
-        layout.addView(mact);
-
-        builder.setView(layout);
-        builder.setPositiveButton("确定", new DialogInterface.OnClickListener()
-        {
-            @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
-                canGetMessage=true;
-                String qr= mact.getText().toString();
-                if(TextUtils.isEmpty(qr)){
-                    Toast.makeText(context, "信息为空！" , Toast.LENGTH_SHORT).show();
-                }else{
-                    switch (vid){
-                        case R.id.img_qrw:
-                            qrw=qr;
-                            break;
-                        case R.id.img_qrn:
-                            qrn=qr;
-                            break;
-
-                    }
+    //二维码 弹框界面
+    public void alertWindowN(){
+        if(info==null||info.size()<=0){
+            showMessage("请先扫描内装批号");
+            return;
+        }
+        if(qrnAlert==null) {
+            edtQrn.setOnEditorActionListener(new TextView.OnEditorActionListener() {//设置监听器
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    checkQRN();
+                    return true;
+                }
+            });
+            qrnAlert = CommonUtils.confirm(this, "内箱二维码", "", edtQrn, new OnConfirmListener() {
+                @Override
+                public void OnConfirm(DialogInterface dialog) {
+                    checkQRN();
+                    isAlert=false;
                 }
 
-            }
-        });
-        builder.setNegativeButton("取消", new DialogInterface.OnClickListener()
-        {
-
-            @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
-                canGetMessage=true;
-                Toast.makeText(context, "取消" , Toast.LENGTH_SHORT).show();
-            }
-        });
-        builder.show();
+                @Override
+                public void OnCancel(DialogInterface dialog) {
+                    isAlert=false;
+                }
+            });
+        }else{
+            qrnAlert.show();
+        }
+        alertView=edtQrn;
+        isAlert=true;
     }
+    //外箱二维码
+    public void alertWindowW() {
+        if(info==null||info.size()<=0){
+            showMessage("请先扫描内装批号");
+            return;
+        }
+        if(qrwAlert==null) {
+            edtQrw.setOnEditorActionListener(new TextView.OnEditorActionListener() {//设置监听器
+                @Override
+                public boolean onEditorAction(TextView v, int actionId, KeyEvent event) {
+                    checkQRW();
+                    return false;
+                }
+            });
+            qrwAlert = CommonUtils.confirm(this, "外箱二维码", "", edtQrw, new OnConfirmListener() {
+                @Override
+                public void OnConfirm(DialogInterface dialog) {
+                    checkQRW();
+                    isAlert=false;
+                }
+                @Override
+                public void OnCancel(DialogInterface dialog) {
+                    isAlert=false;
+                }
+            });
+        }else{
+            qrwAlert.show();
+        }
+        alertView=edtQrw;
+        isAlert=true;
+    }
+    //新建按钮
     public void alertWindow1(Context context,String title){
         canGetMessage=false;
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(title);
-        LinearLayout layout=new LinearLayout(context);
-        layout.setOrientation(LinearLayout.VERTICAL);
-
-        TextView text=new TextView(context);
-        text.setTextSize(18);
-        text.setText("   ");
-        layout.addView(text);
-        builder.setView(layout);
-        builder.setPositiveButton("确定", new DialogInterface.OnClickListener()
-        {
+        String msg="检验单号："+sid;
+        CommonUtils.confirm(context, title, msg, null, new OnConfirmListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
+            public void OnConfirm(DialogInterface dialog) {
                 canGetMessage=true;
-                sid="";
-                spno="";
-                edtSidw.setText("");
-                edtSidn.setText("");
-                edtSid1.setText("");
-                setSid("");
-                clear();
-                Toast.makeText(context, "已新建" , Toast.LENGTH_SHORT).show();
+                showSuccess("已新建");
+                newClear();
+            }
+            @Override
+            public void OnCancel(DialogInterface dialog) {
+                canGetMessage=true;
+                showMessage("取消新建");
             }
         });
-        builder.setNegativeButton("取消", new DialogInterface.OnClickListener()
-        {
-
-            @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
-                canGetMessage=true;
-                Toast.makeText(context, "取消修改" , Toast.LENGTH_SHORT).show();
-            }
-        });
-        builder.show();
     }
+    //查看统计
     public void alertWindow2(Context context,String title,ArrayList<String> array){
         canGetMessage=false;
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(title);
         LinearLayout layout=new LinearLayout(context);
         layout.setOrientation(LinearLayout.VERTICAL);
         for(int i=0;i<array.size();i++) {
@@ -572,23 +601,17 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
             text.setText("   "+array.get(i));
             layout.addView(text);
         }
-        builder.setView(layout);
-        builder.setPositiveButton("确定", new DialogInterface.OnClickListener()
-        {
+        CommonUtils.alert(context, title, "", layout, new OnAlertListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
-
+            public void OnConfirm(DialogInterface dialog) {
+                canGetMessage=true;
             }
         });
-
-        builder.show();
     }
     public String getSid() {
         sid=CommCL.sharedPreferences.getString(TAG_NAME+"sid","");
         return sid;
     }
-
     public void setSid(String sid) {
         CommCL.sharedPreferences.edit().putString(TAG_NAME+"sid",sid).commit();
         this.sid = sid;
@@ -622,5 +645,177 @@ public class OutCheckActivity extends BaseActivity implements CommBaseView {
             rs.add(key+":     "+temp.get(key));
         }
         return rs;
+    }
+    //新建
+    public void newClear(){
+        sid="";
+        this.info=null;
+        spno="";
+        edtSidw.setText("");
+        edtSidn.setText("");
+        edtSid1.setText("");
+        CommonUtils.textViewGetFocus(edtTray);
+        setSid("");
+        clear();
+        Toast.makeText(this, "已新建" , Toast.LENGTH_SHORT).show();
+    }
+    //创建输入框
+    public EditText newEditText(int hint){
+        EditText text=new EditText(this);
+        text.setId(View.generateViewId());
+        text.setHint(hint);
+        text.setTag(getResources().getString(hint));
+        text.setImeOptions(EditorInfo.IME_ACTION_DONE);
+        text.setEnabled(true);
+        text.setTextSize(16);
+        text.setTextColor(getResources().getColor(R.color.text_color));
+        text.setInputType(EditorInfo.TYPE_TEXT_FLAG_AUTO_COMPLETE);
+        return text;
+    }
+    //内箱二位码扫描校验
+    public boolean checkQRN(){
+        String tqrn = edtQrn.getText().toString().toUpperCase();
+        String infoqrn=info.getString("qrn");
+        if(TextUtils.isEmpty(infoqrn)||TextUtils.equals(infoqrn,tqrn)){
+            qrnAlert.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(true);
+            isAlert=false;
+            qrn=tqrn;
+            qrnAlert.dismiss();
+            if(!TextUtils.isEmpty(infoqrn)) {
+                CommonUtils.textViewGetFocus(edtSidw);
+            }
+            return true;
+        }else {
+            edtQrn.setText("");
+            showMessage("内箱二维码输入错误");
+            return false;
+        }
+    }
+    //外箱二位码扫描校验
+    public boolean checkQRW(){
+        String tqrw = edtQrw.getText().toString().toUpperCase();
+        String infoqrw=info.getString("qrw");
+        if(TextUtils.isEmpty(infoqrw)||TextUtils.equals(infoqrw,tqrw)){
+            qrwAlert.getButton(DialogInterface.BUTTON_POSITIVE).setEnabled(true);
+            isAlert=false;
+            qrw=tqrw;
+            qrwAlert.dismiss();
+            //保存数据
+            if(!TextUtils.isEmpty(infoqrw)) {
+                saveData();
+            }
+            return true;
+        }else {
+            edtQrw.setText("");
+            showMessage("外箱二维码输入错误");
+            return false;
+        }
+    }
+    //保存前的校验
+    public boolean checkSave(String op,String sid1,String sidn,String sidw,String tray){
+        if(TextUtils.isEmpty(op)){
+            showMessage("检验员不能为空");
+            return false;
+        }
+        if(trayInfo.size()<=0){
+            showMessage("手输tray盘号必须回车！");
+            return false;
+        }
+        String trayStr = this.trayInfo.getJSONObject(0).getString("tray");
+        if(!TextUtils.equals(trayStr,tray)){
+            showMessage("手输tray盘号必须回车！");
+            return false;
+        }
+        if(info==null||!TextUtils.equals(info.getString("bat_no"),sid1)){
+            showMessage("手输内装批次号必须回车");
+            return false;
+        }
+        if(!TextUtils.equals(info.getString("sidn"),sidn)){
+            showMessage("内箱箱号错误！");
+            return false;
+        }
+        if(!TextUtils.equals(info.getString("sidw"),sidw)){
+            showMessage("外箱箱号错误！");
+            return false;
+        }
+        String infoqrn=info.getString("qrn");
+        if(!TextUtils.isEmpty(infoqrn)&&!TextUtils.equals(infoqrn,qrn)){
+            showMessage("内箱二维码错误！");
+            return false;
+        }
+        String infoqrw=info.getString("qrw");
+        if(!TextUtils.isEmpty(infoqrw)&&!TextUtils.equals(infoqrw,qrw)){
+            showMessage("内箱二维码错误！");
+            return false;
+        }
+
+        return true;
+    }
+    public void saveData(){
+        String opc=edtOP.getText().toString().toUpperCase();
+        String sid1=edtSid1.getText().toString().toUpperCase();
+        String sidn=edtSidn.getText().toString().toUpperCase();
+        String sidw=edtSidw.getText().toString().toUpperCase();
+        String tray=edtTray.getText().toString().toUpperCase();
+        if(!checkSave(opc,sid1,sidn,sidw,tray)){
+            return;
+        }
+        JSONObject rs=info;
+        if(!TextUtils.isEmpty(cus_no)&&!TextUtils.equals(cus_no,rs.getString("cus_no"))){
+            hideLoading();
+            showMessage("当前客户是"+rs.getString("cus_no")+"已扫描的客户是"+cus_no+"不一致，请新增");
+            CommonUtils.textViewGetFocus(edtSidw);
+            return;
+        }
+        //信息插入动作
+        //需要的公共信息
+        MESPRecord record=new MESPRecord();
+        rs.put("mkdate",record.getMkdate());
+        rs.put("sbuid",record.getSbuid());
+        rs.put("smake",record.getSmake());
+        rs.put("bok",0);
+        rs.put("dcid",record.getDcid());
+        rs.put("sorg",record.getSorg());
+        rs.put("opc",opc);
+        rs.put("state",0);
+        rs.put("qrw",qrw);
+        rs.put("qrn",qrn);
+        rs.put("tray",tray);
+        sid=getSid();
+        if(TextUtils.isEmpty(sid)){
+            showLoading();
+            //没有主表主键
+            commPresenter.saveData(CommCL.CELL_ID_Q00113A,rs,1);//保存主表
+        }else{
+            showLoading();
+            //有主表主键--直接保存子表
+            rs.put("sid",sid);
+            rs.put("indate",DateUtil.getCurrDateTime(ICL.DF_YMDT));
+            commPresenter.saveData(CommCL.CELL_ID_Q00113B,rs,0);
+        }
+    }
+
+    public boolean checkTrayAndBatNo(String tray,String batno){
+        boolean trayb=false;
+        boolean batnob=false;
+        for(int i=0;i<trayInfo.size();i++){
+            JSONObject obj=trayInfo.getJSONObject(i);
+            if(TextUtils.equals(obj.getString("tray"),tray)){
+                trayb=true;
+            }
+            if(TextUtils.equals(obj.getString("cus_pn"),batno)){
+                batnob=true;
+            }
+        }
+        if(!trayb){
+            showMessage("手输Tray盘号必须回车");
+            return false;
+        }
+        if(!batnob){
+            showMessage("该Tray不在该包装批号里！");
+            CommonUtils.textViewGetFocus(edtSid1);
+            return false;
+        }
+        return true;
     }
 }

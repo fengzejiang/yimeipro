@@ -1,5 +1,6 @@
 package com.yimeinew.presenter;
 
+import android.annotation.SuppressLint;
 import android.text.TextUtils;
 import android.util.Log;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
@@ -82,11 +83,12 @@ public class CommStationZCPresenter {
                         JSONObject msg = carBeans.getJSONObject(CommCL.RTN_DATA);//response里面的data，存放的是查询记录
                         JSONObject rtnMap = (JSONObject) msg.get(CommCL.RTN_DATA);//获取实际的查询结果
                         if (rtnMap.getInteger(CommCL.RTN_CODE) == 0) {
-                            baseView.checkSidCallBack(false, null, "在该工序【" + zcNo + "】没有查到【" + sid1 + "】批次号！");
+                            baseView.checkSidCallBack(false, null, "在该工序【" + zcNo + "】没有查到【" + sid1 + "】！");
                         } else {
                             JSONArray jsonArray = (JSONArray) rtnMap.get(CommCL.RTN_VALUES);
                             JSONObject jsonObject = jsonArray.getJSONObject(0);
                             Log.i(TAG_NAME, jsonObject.toJSONString());
+                            String rsSid1=jsonObject.getString("sid1");
                             //校验是否可以开工
                             int bok = jsonObject.getInteger("bok");
                             if (CommCL.BOK != bok) {
@@ -117,6 +119,14 @@ public class CommStationZCPresenter {
                                 baseView.checkSidCallBack(false, null, "该批次【" + sid1 + "】已经别的机台入站,不能再次入站！");
                                 return;
                             }
+                            if(CommCL.BATCH_STATUS_CHECKING.equals(stateValue)){
+                                baseView.checkSidCallBack(false, null, "该批次【" + sid1 + "】该批次处于待检，不能再次入站！");
+                                return;
+                            }
+                            if(!(CommCL.BATCH_STATUS_READY.equals(stateValue)||CommCL.BATCH_STATUS_READY1.equals(stateValue))){
+                                baseView.checkSidCallBack(false, null, "该批次【" + sid1 + "】该批次处于"+stateValue+"，不是准备状态不能入站！");
+                                return;
+                            }
                             String currMO = baseView.getCurrMO();
                             String sid = jsonObject.getString("sid");
                             if (currMO.length() > 0) {
@@ -125,6 +135,8 @@ public class CommStationZCPresenter {
                                     return;
                                 }
                             }
+                            ZCInfo zcInfo = CommonUtils.getZCInfoById(zcNo);
+
                             //如果是固晶1就验证料盒绑支架-是否支架预热
                             if("11".equals(zcNo)){
                                 String mbox=cache.get(sid1);
@@ -152,6 +164,7 @@ public class CommStationZCPresenter {
                                 }
                             }
                             //固晶烘烤检验支架和胶水
+                            //超过4小时，不能入烤
                             if(TextUtils.equals("1A",zcNo)||TextUtils.equals("1B",zcNo)){
                                 String MZHIJ=jsonObject.getString("mzhij");
                                 //stype=0只有固晶烘烤1，烤的是绝缘胶
@@ -179,18 +192,25 @@ public class CommStationZCPresenter {
                                         return;
                                     }
                                 }
+                                //4小时控制
+                                String gjTime=jsonObject.getString("edate");
+                                int subTime=DateUtil.subSecond(DateUtil.getNowCurrDateTime(),gjTime);
+                                if(zcInfo.getMaxwait()>0&&subTime>zcInfo.getMaxwait()*3600){
+                                    baseView.checkSidCallBack(false, null, "最大等待时间超过"+zcInfo.getMaxwait()+"小时，固晶出站时间"+gjTime);
+                                    return;
+                                }
                             }
                             //焊线判断plasma清洗(焊接)是否超过6小时,（当前是焊线，且上一站是焊线清洗）
                             String zcno0=jsonObject.getString("zcno0");
                             if((TextUtils.equals("21",zcNo)||TextUtils.equals("22",zcNo))&&TextUtils.equals("1P",zcno0)){
                                 String qxTime=jsonObject.getString("edate");
                                 int subTime=DateUtil.subSecond(DateUtil.getNowCurrDateTime(),qxTime);
-                                if(subTime>CommCL.HANXIAN_QINGXI_MAX_WAIT_TIME){
+                                if(subTime>CommCL.HANXIAN_MAX_WAIT_TIME){
                                     baseView.checkSidCallBack(false,null,"plasma清洗(焊接)时间="+qxTime+"超过6小时");
                                     return;
                                 }
                             }
-                            //点胶站判断支架预热不超过10小时、清洗不超过6小时
+                            //点胶站判断支架预热不超过24小时、清洗不超过12小时
                             if(TextUtils.equals("31",zcNo)){
                                 String edate=jsonObject.getString("edate");
                                 int subeTime=DateUtil.subSecond(DateUtil.getNowCurrDateTime(),edate);
@@ -203,20 +223,20 @@ public class CommStationZCPresenter {
                                 }
                                 //假如：zcno00='311'支架除湿
                                 //假如：zcno0='313'支架清洗
-                                if(TextUtils.equals("311",zcno00)&&subupTime>CommCL.DIANJIAO_YURE_MAX_WAIT_TIME){//大于10小时
-                                    baseView.checkSidCallBack(false,null,"支架预热(点胶)时间="+up_date00+"超过10小时");
+                                if(TextUtils.equals("311",zcno00)&&subupTime>CommCL.DIANJIAO_YURE_MAX_WAIT_TIME){//大于24小时
+                                    baseView.checkSidCallBack(false,null,"支架预热(点胶)时间="+up_date00+"超过24小时");
                                     return;
                                 }
-                                if(TextUtils.equals("311",zcno0)&&subeTime>CommCL.DIANJIAO_YURE_MAX_WAIT_TIME){//大于10小时
-                                    baseView.checkSidCallBack(false,null,"支架预热(点胶)时间="+edate+"超过10小时");
+                                if(TextUtils.equals("311",zcno0)&&subeTime>CommCL.DIANJIAO_YURE_MAX_WAIT_TIME){//大于24小时
+                                    baseView.checkSidCallBack(false,null,"支架预热(点胶)时间="+edate+"超过24小时");
                                     return;
                                 }
-                                if(TextUtils.equals("313",zcno00)&&subupTime>CommCL.HANXIAN_QINGXI_MAX_WAIT_TIME){//大于6小时
-                                    baseView.checkSidCallBack(false,null,"plasma清洗(点胶)时间="+up_date00+"超过6小时");
+                                if(TextUtils.equals("313",zcno00)&&subupTime>CommCL.QINGXI_MAX_WAIT_TIME){//大于12小时
+                                    baseView.checkSidCallBack(false,null,"plasma清洗(点胶)时间="+up_date00+"超过12小时");
                                     return;
                                 }
-                                if(TextUtils.equals("313",zcno0)&&subeTime>CommCL.HANXIAN_QINGXI_MAX_WAIT_TIME){//大于6小时
-                                    baseView.checkSidCallBack(false,null,"plasma清洗(点胶)时间="+edate+"超过6小时");
+                                if(TextUtils.equals("313",zcno0)&&subeTime>CommCL.QINGXI_MAX_WAIT_TIME){//大于12小时
+                                    baseView.checkSidCallBack(false,null,"plasma清洗(点胶)时间="+edate+"超过12小时");
                                     return;
                                 }
                             }
@@ -231,18 +251,26 @@ public class CommStationZCPresenter {
                                     baseView.checkSidCallBack(false,null , "当前烤箱胶水是【" + currEquipment.getGlue() + "】,扫描批次绑定胶水是【" + djabj_prd_no + "】");
                                     return;
                                 }
-                                //时间控制小于1小时不能进烤，大于2小时提示
+                                //时间控制小于1小时不能进烤，大于2小时提示---时间取辅助里面的值
+                                double static_time=jsonObject.getDouble("static_time")*CommCL.DATE_TIME_HOUR_SECOND;//静止待烤时间
+                                double over_time=jsonObject.getDouble("over_time")*CommCL.DATE_TIME_HOUR_SECOND;//超时入烤时间
                                 String djTime=jsonObject.getString("edate");
+                                int processrelease=jsonObject.getInteger("processrelease");
                                 if(TextUtils.isEmpty(djTime)){
                                     baseView.checkSidCallBack(false,null,"点胶出站时间为空！");
                                     return;
                                 }
                                 int subTime=DateUtil.subSecond(DateUtil.getNowCurrDateTime(),djTime);
-                                if(subTime<CommCL.DIANJIAO_HONGKAO_MIN_WAIT_TIME){
-                                    baseView.checkSidCallBack(false,null,"点胶出站时间="+djTime+"未到达1小时");
+                                if(subTime<static_time){
+                                    baseView.checkSidCallBack(false,null,"点胶出站时间="+djTime+"未到达"+static_time/CommCL.DATE_TIME_HOUR_SECOND+"小时");
                                     return;
-                                }else if(subTime>CommCL.DIANJIAO_HONGKAO_MAX_WAIT_TIME){
-                                    baseView.checkSidCallBack(true,jsonObject,"点胶出站时间="+djTime+"超过2小时，请在流程单上贴异常标签");
+                                }
+                                else if(subTime>over_time&&processrelease==0){
+                                    baseView.checkSidCallBack(false,null,"点胶出站时间="+djTime+"超过"+over_time/CommCL.DATE_TIME_HOUR_SECOND+"小时,请通知品质放行");
+                                    return;
+                                }
+                                else if(subTime>over_time){
+                                    baseView.checkSidCallBack(true,jsonObject,"点胶出站时间="+djTime+"超过"+over_time/CommCL.DATE_TIME_HOUR_SECOND+"小时，请在流程单上贴异常标签");
                                     return;
                                 }
                             }
@@ -310,6 +338,14 @@ public class CommStationZCPresenter {
                             }
                             if (CommCL.BATCH_STATUS_IN.equals(stateValue)) {
                                 baseView.checkSidCallBack(false, null, "该批次【" + sid1 + "】已经别的机台入站,不能再次入站！");
+                                return;
+                            }
+                            if(CommCL.BATCH_STATUS_CHECKING.equals(stateValue)){
+                                baseView.checkSidCallBack(false, null, "该批次【" + sid1 + "】该批次处于待检，不能再次入站！");
+                                return;
+                            }
+                            if(!(CommCL.BATCH_STATUS_READY.equals(stateValue)||CommCL.BATCH_STATUS_READY1.equals(stateValue))){
+                                baseView.checkSidCallBack(false, null, "该批次【" + sid1 + "】该批次处于"+stateValue+"，不是准备状态不能入站！");
                                 return;
                             }
                             String currMO = baseView.getCurrMO();
@@ -392,8 +428,8 @@ public class CommStationZCPresenter {
                                 if (state == CommCL.EQUIPMENT_STATE_OK) {
                                     //一个机台不能再两个制程同时加工。
                                     if(TextUtils.equals("31",zcNo)||TextUtils.equals("32",zcNo)){
-                                        String zc_id=equipmentInfo.getZcno();
-                                        if(!TextUtils.equals(zc_id,zcNo)){
+                                        String zc_id=equipmentInfo.getPzcno();
+                                        if(!TextUtils.isEmpty(zc_id)&&!TextUtils.equals(zc_id,zcNo)){
                                             String zcname="";
                                             for(ZCInfo zi:BaseApplication.zcList){
                                                 if(TextUtils.equals(zi.getId(),zc_id)){
@@ -643,6 +679,7 @@ public class CommStationZCPresenter {
      * @param cont 条件
      *@param key 0:代表材料明细，1代表上料明细
      */
+    @SuppressLint("CheckResult")
     public void loadMaterialInfo(String cont, int key) {
         baseModel.getAssistInfo(key == 0 ? CommCL.AID_MATERIAL_LIST : CommCL.AID_MATERIAL_RECORD_LIST, cont).compose(ResponseTransformer.handleResult())
                 .compose(schedulerProvider.applySchedulers())
@@ -670,7 +707,7 @@ public class CommStationZCPresenter {
      * @param sbId 设备编码
      * @param slkid 工单号
      */
-    public void getMachineGlueInfo(String sbId, String slkid,List<MESPRecord> startList) {
+    public void getMachineGlueInfo(String sbId, String slkid,List<MESPRecord> startList,String op) {
 
         baseModel.getMachineGlue(sbId, slkid).compose(ResponseTransformer.handleResult())
                 .compose(schedulerProvider.applySchedulers())
@@ -694,10 +731,14 @@ public class CommStationZCPresenter {
                                 String prtno=jiaoshui.getString("prtno");
                                 Date mkdate=jiaoshui.getDate("mkdate");//
                                 int tms=jiaoshui.getInteger("tms");
+                                //机台加胶水超过80分钟，需要重新加胶，才能开工
                                 if(tms>CommCL.DIANJIAO_VALIDITY_MAX_WAIT_TIME){
                                     baseView.getMultiRecordBack(false, null, sbId+"机台的["+prtno+"]胶水时间["+tms+"]超过"+CommCL.DIANJIAO_VALIDITY_MAX_WAIT_TIME+"分钟！请联系工程,或者加新胶",1);
                                 }else {
                                     //调开工代码
+                                    for(MESPRecord mp:startList){
+                                        mp.setOp(op);
+                                    }
                                     this.changeRecordStateBatch(startList, CommCL.BATCH_STATUS_WORKING);
                                 }
 
@@ -807,7 +848,7 @@ public class CommStationZCPresenter {
      */
     public void getLaunchingReasons(String zcId) {
         String cont = "~id='" + zcId + "'";
-        baseModel.getAssistInfo(CommCL.AID_ZC_QCREASON, cont).compose(ResponseTransformer.handleResult())
+        baseModel.getAssistInfo(CommCL.AID_ZC_FIRSTTIME, cont).compose(ResponseTransformer.handleResult())
                 .compose(schedulerProvider.applySchedulers())
                 .subscribe(jsonObject -> {
                     if (jsonObject.getIntValue(CommCL.RTN_ID) == -1) {//调用返回失败
@@ -910,16 +951,36 @@ public class CommStationZCPresenter {
                     baseView.onRemoteFailed(throwable.getMessage());
                 });
     }
-
+    //通用更新
+    public void updateData(String insObject,Object record,int key){
+        baseModel.comUpdateData(record,insObject).compose(ResponseTransformer.handleResult())
+                .compose(schedulerProvider.applySchedulers()).subscribe(
+                carBeans -> {
+                    if (carBeans.getIntValue(CommCL.RTN_ID) != 0) {
+                        baseView.commonBack(false, null,"获取服务器信息失败" + carBeans.toString(), key);
+                    }else if (carBeans.getIntValue(CommCL.RTN_ID) == 0) {
+                        Log.i(TAG_NAME, carBeans.toJSONString());
+                        if (carBeans.getIntValue(CommCL.RTN_ID) != 0) {
+                            baseView.commonBack(false, null,"记录更新失败", key);
+                        } else if (carBeans.getIntValue(CommCL.RTN_ID) == 0) {
+                            JSONArray array=new JSONArray();
+                            array.add(record);
+                            baseView.commonBack(true,array,"",key);
+                        }
+                    }
+                },throwable -> {
+                    baseView.onRemoteFailed(throwable.getMessage());
+                });
+    }
     /***
      * 根据制程代号，检验标志，获取检验项目
      *
      * @param key 分支标志
      */
-    public void getCheckWaferBatNoNum(String key_str,String str,String material,int key) {
+    public void getCheckWaferBatNoNum(String key_str,String str,String material,String slkid,int key) {
 
         String cont = "~bat_no='"+str+"'";
-        baseModel.getAssistInfo(CommCL.AID_MATERIAL_USE, cont).compose(ResponseTransformer.handleResult())
+        baseModel.getAssistInfo(CommCL.AID_MATUSE, cont).compose(ResponseTransformer.handleResult())
                 .compose(schedulerProvider.applySchedulers())
                 .subscribe(jsonObject -> {
                     if (jsonObject.getIntValue(CommCL.RTN_ID) == -1) {//调用返回失败
@@ -929,16 +990,30 @@ public class CommStationZCPresenter {
                         JSONObject rtnMap = (JSONObject) msg.get(CommCL.RTN_DATA);//获取实际的查询结果
                         if (rtnMap.getInteger(CommCL.RTN_CODE) == 0) {
                             //没有获取到数据
-                            baseView.commonBack(false,null,"没有查询到任何信息",key);
+                            HashMap<String,String> hashMap=new HashMap<>();
+                            hashMap.put("key",key_str);hashMap.put("str",str);hashMap.put("material",material);
+                            baseView.commonBack(true,hashMap,"",key);
                         } else {
                             //有数据
                             JSONArray data = rtnMap.getJSONArray(CommCL.RTN_VALUES);
-                            if(data.size()>0&&data.getJSONObject(0).getInteger("num")>=CommCL.ADDGLUING_P_REPEAT_NUM){//当有上料记录时，这个批次不能超过三次
-                                baseView.commonBack(false,data,"该晶片批次已经绑定3次，不能再绑定",key);
+                            if(data.size()>0&&data.size()>=CommCL.ADDGLUING_P_REPEAT_NUM){//当有上料记录时，这个批次不能超过三次
+                                baseView.commonBack(false,data,"该晶片批次已经绑定"+CommCL.ADDGLUING_P_REPEAT_NUM+"次，不能再绑定",key);
                             }else{
                                 HashMap<String,String> hashMap=new HashMap<>();
                                 hashMap.put("key",key_str);hashMap.put("str",str);hashMap.put("material",material);
                                 baseView.commonBack(true,hashMap,"",key);
+                                //循环更新废弃标志位
+                                for(int i=0;i<data.size();i++){
+                                    JSONObject theObj=data.getJSONObject(i);
+                                    if(!TextUtils.equals("1",theObj.getString("cancel"))&&theObj.getString("sid").contains(slkid)){
+                                        //
+                                        JSONObject ucJsObj=new JSONObject();
+                                        ucJsObj.put("sid",theObj.getString("sid"));
+                                        ucJsObj.put("cid",theObj.getInteger("cid"));
+                                        ucJsObj.put("cancel",1);
+                                        updateData(CommCL.CELL_ID_D0040AUPC,ucJsObj,-1);
+                                    }
+                                }
                             }
                         }
                     }
@@ -977,6 +1052,34 @@ public class CommStationZCPresenter {
                             QCBatchInfo batchInfo = JSONObject.parseObject(jj.toJSONString(), QCBatchInfo.class);
                             batchInfo.setHuoduan(bhd);
                             baseView.checkQCBatInfoBack(true, batchInfo, null);
+                        }
+                    }
+                }, throwable -> {
+                    baseView.onRemoteFailed(throwable.getLocalizedMessage());
+                });
+    }
+
+    /***
+     * 获取固晶胶查询
+     * @param sid 工单号号
+     */
+    public void getGuleInfo(String sid,int key) {
+
+        String cont = "~mo_no='" + sid + "'";
+        baseModel.getAssistInfo(CommCL.AID_GJ_GULE, cont).compose(ResponseTransformer.handleResult())
+                .compose(schedulerProvider.applySchedulers())
+                .subscribe(jsonObject -> {
+                    if (jsonObject.getIntValue(CommCL.RTN_ID) == -1) {//调用返回失败
+                        baseView.onRemoteFailed(jsonObject.toJSONString());
+                    } else {
+                        JSONObject msg = jsonObject.getJSONObject(CommCL.RTN_DATA);//response里面的data，存放的是查询记录
+                        JSONObject rtnMap = (JSONObject) msg.get(CommCL.RTN_DATA);//获取实际的查询结果
+                        if (rtnMap.getInteger(CommCL.RTN_CODE) == 0) {
+                            //没有获取到数据
+                            baseView.commonBack(false, null, "没有获取到胶水信息:" + sid,key);
+                        } else {
+                            //有胶水记录
+                            baseView.commonBack(true, rtnMap.getJSONArray(CommCL.RTN_VALUES), null,key);
                         }
                     }
                 }, throwable -> {

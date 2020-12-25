@@ -6,7 +6,6 @@
         android:orientation="vertical">
     <ScrollView android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-
                 android:id="@+id/tab_ui_sc">
         <TableLayout android:layout_width="match_parent"
                      android:layout_height="wrap_content"

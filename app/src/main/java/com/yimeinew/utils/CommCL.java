@@ -1,11 +1,19 @@
 package com.yimeinew.utils;
 
 import android.content.SharedPreferences;
+import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 import com.yimeinew.activity.R;
+import com.yimeinew.activity.ck.OutHouseStationActivity;
 import com.yimeinew.activity.ck.ScrkActivity;
+import com.yimeinew.activity.ck.SellBoxActivity;
+import com.yimeinew.activity.ck.SellStationActivity;
 import com.yimeinew.activity.deviceproduction.*;
 import com.yimeinew.activity.deviceproduction.commsub.OutReceiveActivity;
+import com.yimeinew.activity.deviceproduction.commsub.ScrappingCancellationActivity;
+import com.yimeinew.activity.deviceproduction.commsub.UpMaterialMzActivity;
 import com.yimeinew.activity.pack.PackStationActivity;
+import com.yimeinew.activity.qc.BakeReleaseActivity;
+import com.yimeinew.activity.qc.FirstInspectionActivity;
 import com.yimeinew.activity.qc.QCCommActivity;
 import com.yimeinew.activity.qc.QCCommStationActivity;
 import com.yimeinew.activity.sb.WxQcqrActivity;
@@ -16,27 +24,29 @@ import com.yimeinew.entity.Pair;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 
 public class CommCL {
 
     //    public static final String URi = "http://192.168.0.179:9999/jd/"; //服务器项目地址
     //    public static final String DB_ID = "mes";//数据库连接id
-    public static  String URi = "http://59.53.182.251:8088/mes/"; //服务器项目地址
-    public static  String NURi = "http://192.168.7.15:8088/mes/";
-    public static  String WURi = "http://59.53.182.251:8088/mes/";
+    public static  String URi = "http://192.168.7.15:8088/mes/"; //服务器项目地址
+    public static  String NURi = "http://192.168.7.15:8088/mes/";//MES内网
+    public static  String WURi = "http://59.53.182.251:8088/mes/";//MES外网
+    public static  String PRINT_URi = "http://192.168.7.16:8090/";//打印服务器Url
+    public static  String UPLOAD_URi = "http://192.168.7.16:8080/upload/api";//文件上传服务器Url
     public static final String DB_ID = "01";//数据库连接id
     public static final String URi_KEY="URiKeyToIp";
     public static final long ALLOW_REPEAT_TIME=1000*3;//应许重复的时间阈值
     public static final long ALLOW_CANDO_TIME=1000*8;//应许再次执行的时间阈值
     public static final boolean isDev = true;//初始化登录账户密码.(发布是为false)
-    public static final boolean isTest = false;//true的时候跳过时间控制。false是有时间控制的(发布是为false)
+    public static boolean isTest = false;//true的时候跳过时间控制。false是有时间控制的(发布是为false)
+    public static final String SHOW_VERSION = "V20-12-24 10:36";//PDA显示的版本号
     public static final String API = "api";//接口名称
     public static String WIFIMAC="PDA";//当获取不到PDA设备号的时候使用这个字段
 
 //    public static final String URi="http://192.168.7.15:8088/mes/"; //服务器项目地址
 //    public static final String DB_ID = "01";//数据库连接id
-
-    public static final String SHOW_VERSION = "V20-02-25 09:50";
     public static  String IP = "IP:" + URi.substring(7, URi.lastIndexOf(":"));
     public static final String APK_URL=URi+"shineon.apk";
     public static final String UP_APK_KEY="adminadmin";
@@ -58,7 +68,7 @@ public class CommCL {
     public static final String COMM_SBID_FLD = "sbid";
     public static final String COMM_SLKID_FLD = "slkid";
     public static final String COMM_LOTNO_FLD = "lotno";
-
+    public static final String COMM_MSG_ID="msg_id";//请求消息id
     public static final String COMM_CHECK_FIRST = "01"; //首件检验
     public static final String COMM_CHECK_ROUNT = "02"; //巡检检验类别
 
@@ -70,11 +80,12 @@ public class CommCL {
     public static final int COMM_CHK_DO = 34;//执行审批
     public static final String PARAMS_MES_SB_ID_FLD = "sbid";
     public static final String PARAMS_MES_PRT_NO_FLD = "prtno";
-
+    public static final boolean BAKE_USE_MBOX=true;//烘烤扫描料盒，如果true表示扫描料盒过站，false表示扫描批次过站
+    public static final String[] isBake=new String[]{"41","42"};
 
     public static HashMap<String, Integer> menuImgMap;
     public static HashMap<String, Class> menuActivitys;
-
+    public static List<JSONObject> addMenus;
 
     public static final String RTN_ID = "id";//服务端返回成功失败字段，0（调用成功）,1（可能是失败，具体调用查看），-1（可能是服务器错误）
     public static final String RTN_MESSAGE = "message";//调用服务以后，服务端返回的信息
@@ -113,6 +124,7 @@ public class CommCL {
     public static final String COMM_ABNORMAL_FLD="abnormal";//通用生产记录表的异常字段
     public static final String COMM_ABNORMALOP_FLD="abnormalop";//通用生产记录表的异常字段
     public static final String COMM_DCID_FLD="dcid";//通用生产记录表的手持设备MAC
+    public static final String TRAY_LAB="328";//模组包装tray小标签模板
     //系统ApiId
     public static final String COMM_MES_UDP_UNBIND_VALUE = "650";//用于料盒号绑定和解绑
     public static final String COMM_MES_UDP_MBOXZJ_VALUE = "655";//用于料盒号绑定支架的绑定
@@ -127,10 +139,12 @@ public class CommCL {
     public static final String COMM_BIND_UN_BIND = "0";//料盒号解绑标志值
 
 
-    public static final String AID_M_PROCESS_QUERY = "{M_PROCESSNEW}";
-    public static final String AID_ZC_QCREASON = "{CAUSEDQ}";//检验发起原因
+    public static final String AID_M_PROCESS_QUERY = "{M_PROCESSNEW}";//获取制程
+    public static final String AID_ZC_QCREASON = "{CAUSEDQ}";//设备故障原因
+    public static final String AID_ZC_FIRSTTIME= "{FIRSTTIME}";//首件发起原因
     //设备维修确认
     public static final String AID_SBWXQR="{SBWXQR}";
+    public static final String AID_BMSELECT="{BMSELECT}";
     public static final String AID_SBWXQR2="{SBWXQR2}";
     public static final String AID_SBWXQR3="{SBWXQR3}";
     public static final String AID_SBWXYY="{SBWXYY}";//设备维修原因
@@ -138,12 +152,17 @@ public class CommCL {
     public static final String AID_PROCESS_ID = "{PROCESSAQ}";//制程检验项目辅助ID
     public static final String AID_BOX_QUERY = "{MBOXQUERY}";//料盒号辅助ID
     public static final String AID_QJ_BOX_QUERY = "{QJBOXWEB2}";//器件批次解绑辅助ID  原来是QJBOXWEB
-    public static final String AID_QJ_EQUIPMENT_QUERY = "{EQUIPMENT}";//设备辅助ID
+    public static final String AID_QJ_EQUIPMENT_QUERY = "{EQUIPMENT2}";//设备辅助ID
     public static final String AID_QJ_EQUIPMENT= "{EQUIPMENT}";//设备辅助ID
-    public static final String AID_QJ_PRO_RECORD_QUERY = "{MSBMOLIST}";//生产记录查询辅助ID
+    public static final String AID_QJ_PRO_RECORD_QUERY = "{MSBMOLIST}";//生产记录设备任务查询辅助ID
+    public static final String AID_QJ_MESPRECORD= "{MESPRECORD}";//生产记录表查询辅助ID
+    public static final String AID_QJ_TESTLOT= "{TESTLOT}";//测试记录表查询辅助ID
+    public static final String AID_QJ_PACKLOT= "{PACKLOT}";//包装记录表查询辅助ID
+    public static final String AID_QJ_PROCESSZCNO= "{PROCESSZCNO}";//首件-巡检-抽检-全检 制程
     public static final String AID_QJ_PRO_RECORD_QUERY_BD = "{BDMSBMOLIST}";//编带生产记录查询辅助ID
     public static final String AID_QJ_BATCH_RECORD_QUERY = "{QJBOXWEB2}";//生产批次查询辅助ID
     public static final String AID_QJ_LOT_PRECORD_QUERY = "{TESTLOTQUERY}";//生产批次查询辅助ID
+    public static final String AID_LOT_PLANA1_QUERY = "{LOT_PLANA1}";//模组生产批次查询辅助ID
     public static final String AID_QJ_JIAOSHUI_XIAOQI_QUERY = "{Q_GRECORD}";//器件胶水效期查询辅助ID
     public static final String AID_All_OP = "{MESOPWEB}";//业务员ID
     public static final String AID_P_RECORD_GLUING_ID = "{MSBMOLIST_JJ}";//(加胶查询)设备任务列表ID
@@ -154,23 +173,31 @@ public class CommCL {
     public static final String AID_MAIN_MATERIAL_SID = "{MAINMR}";//上料主记录辅助ID
     public static final String AID_QC_BAT_INFO_QD = "{QCBATCHINFO}";//QC获取批次信息，前段
     public static final String AID_QC_BAT_INFO_HD = "{QCLOTINFO}";//QC获取批次信息，后段
+    public static final String AID_GJ_GULE = "{GJGULE}";//固晶胶
     public static final String AID_OQC_BAT_INFO_HD="{OQCLOTINFO}";//OQC获取批次信息,仓库
     public static final String AID_OQC_INFO_HD="{OQCINFO}";//出货检验已扫入信息获取
+    public static final String AID_OQC_TRAY="{OQCTRAY}";//出货检验扫描tray盘
     public static final String AID_GLUING_INFO_ID = "{MESGLUEJOBN}";//获取加胶信息辅助
     public static final String AID_ERP_PRDT="{PRDNO}";//获取ERP货品信息
     public static final String AID_QUICK_LOT="{MOZCLISTWEB}";//快速过站获取LOT表信息
     public static final String AID_QUICK_LOT2="{MOZCLISTWEB2}";//二次快速过站获取LOT表信息
-    public static final String AID_CK_MM="MESTMM0";//生产入库检验查询
+    public static final String AID_CK_MM="{MESTMM0}";//生产入库检验查询
+    public static final String AID_CK_MM_STATE="{MM_STATE}";//生产入库检验查询状态
+    public static final String AID_MES_ZCGH_SJ="{MESZCGHSJ}";//制程规划时间
+
     public static final String SAVE_DATA_STATE = "sys_stated";//数据状态2表示更新、3表示新增
     public static final String AID_ENSB_GLUE_INFO_ID = "{Q_GRECORD2}";//获取加胶机台的胶水信息
     public static final String AID_GJ_WAFER_QTY="{GJWAFERQTY}";//获取固晶上晶片是否上够
     public static final String AID_MATERIAL_USE="{MATERIALUSE}";//获取材料批次使用次数
+    public static final String AID_MATUSE="{MATUSE}";//获取材料批次使用次数
     public static final String AID_PACK_TRAY_MO="{PACK_TRAY_MO}";//按Tray获取Tray和工单信息
     public static final String AID_PACK_MARKING="{PACK_MARKING}";//按喷码获取信息
+    public static final String AID_PACK_MARK2="{PACK_MARK2}";//按喷码获取信息(尾数)
     public static final String AID_PACK_Get_INFO="{PACK_GETINFO}";//按主键获取包装信息
     public static final String AID_PACK_ALREADY="{PACK_ALREADY}";//按主键获取包装信息
 
 	public static final String AID_MZ_KB="{MZKBGZ}";//快速过站获取LOT表信息
+	public static final String AID_SLKID_QTY="{SLKID_QTY}";//快速过站获取LOT表信息
     public static final String AID_WXQR="{WXQR}";//维修确认
     public static final String AID_BLYY="{BLYY}";//不良原因
     public static final String AID_BLPSX="{BLPSX}";//不良送修
@@ -182,6 +209,9 @@ public class CommCL {
     public static final String AID_MES_BOX_PRD_SORT="{BOX_PRD_SORT}";//器件转出接收查询
 	public static final String AID_MES_OUT_IN="{MESOUTINWEB}";//器件转出接收查询
 	public static final String AID_TEST_LOT_WEB="{TESTLOTWEB}";//器件看带查询
+	public static final String AID_V_TAPE_OUT="{V_TAPE_OUT}";//器件看带出站批量校验查询
+	public static final String AID_V_KD_CT="{V_KD_CT}";//器件看带检验类型
+	public static final String AID_WEIXIUOK_OP="{WEIXIUOK_OP}";//器件全检修改人员密码
     public static final String AID_BAD_RECODE="{BAD_RECODE}";//看带不良登记查询
     public static final String AID_TMM0_WEB="{TMM0_WEB}";//正常入库缴库单查询
     public static final String AID_BXSL="{BXSL}";//报修数量
@@ -191,21 +221,62 @@ public class CommCL {
     public static final String AID_BXSL2="{BXSL2}";//品质报修数量
     public static final String AID_OKSL2="{OKSL2}";//品质OK数量
     public static final String AID_NGSL2="{NGSL2}";//品质NG数量
-
+    public static final String AID_MZ_CP_PRINT="{MZ_CP_PRINT}";//模组Tray标签打印
+    public static final String AID_MZ_CP_PRINT2="{MZ_CP_PRINT2}";//模组Tray标签打印
+    public static final String AB_MO_CHECK="{ABMOCHECK}";//检验是否AB料
+ 	public static final String AID_QC_CSZJY= "{CSZJY}";//品质测试站检验记录
+ 	public static final String AID_ERPCKNO= "{ERPCKNO}";//ERP出货检验单
+ 	public static final String AID_PENMAPRINT1= "{PENMAPRINT1}";//仓库所有打印模板
+ 	public static final String AID_CK_PRINT= "{CK_PRINT}";//按客户代号取仓库出货要求
+ 	public static final String AID_CKBATNO= "{CKBATNO}";//出货装箱获取包装信息
+ 	public static final String AID_CKINFO ="{CKINFO}";//获取一整个出货装箱信息
+ 	public static final String AID_MES_PACKINGA ="{MES_PACKINGA}";//用包装批号获取主键
+ 	public static final String AID_MES_OQCISOK ="{OQCISOK}";//是否已经出货检验
+    public static final String AID_JIAOSHUI="{JIAJAOSELECT}";//胶水查询
+    public static final String AID_ZHIJUSELECT="{ZHIJUSELECT}";//胶水查询
+    public static final String AID_TFMOCL="{TFMOCL}";//工单材料查询
+    public static final String AID_TFMOPATCH="{TFMOPATCH}";//贴片工单材料查询
+    public static final String AID_JSXGLOT="{JSXGLOT}";//锡膏Lot查询
+    public static final String AID_JSTOPLOT="{JSTOPLOT}";//胶水Lot查询
+    public static final String AID_JSXGZXFZ="{JSXGZXFZ}";//胶水注销查询
+    public static final String AID_MSMRECORDA="{MSMRECORDA}";//模组上料查询-透镜
+    public static final String AID_MOMLCL="{MOMLCL}";//模组上料查询-透镜
+    public static final String AID_QCCHECK="{QCCHECK}";//首件检验记录
+    public static final String AID_BAKERLOT="{BAKERLOT}";//点胶烘烤放行
+    public static final String AID_V_PATCH_FEED="{V_PATCH_FEED}";//贴片上料校验是否上齐
+    public static final String AID_V_QR_RULE="{QR_RULE}";//二维码QR规则
+    public static final String AID_V_MO_FLA="{V_MO_FLA}";//发料表查询
+    public static final String AID_V_MO_FEED="{V_MO_FEED}";//上料表查询
+    public static final String AID_MES_QCINFO="{MES_QCINFO}";//QC确认账号密码
+    public static final String AID_FEED_CID="{FEED_CID}";//贴片上料最大cid
+    public static final String AID_PRDTWEB="{PRDTWEB}";//货品信息查询
+    public static final String AID_FQCPACK="{FQCPACK}";//一摞批次号
+    public static final String AID_MZ_PILE_LOT="{MZ_PILE_LOT}";//一摞批次号
+    public static final String AID_FQCDATA="{FQCDATA}";//一摞批次号
+    public static final String AID_PKSIDELOT="{PKSIDELOT}";//侧入式包装lot查询
+    public static final String AID_PKMZHEAD="{PKMZHEAD}";//侧入式包装表头查询
+    public static final String AID_SPOT_ZCNO="{SPOTZCNO}";//获取抽检制程
+    public static final String AID_V_SPOT_LOT="{V_SPOT_LOT}";//获取抽检lot信息
+    public static final String AID_V_SPOT_PMLOT="{V_SPOT_PMLOT}";//获取抽检lot喷码信息
+    public static final String AID_V_OUTHOUSE="{V_OUTHOUSE}";//出仓lot查询
+    public static final String AID_V_GET_OH="{V_GET_OH}";//查询出仓数据
 
 
     public static final String CELL_ID_D0040WEB = "D0040WEB(D0040AWEB)";//检验项目
-    public static final String CELL_ID_Q00101 = "Q00101(Q00101A)";//QC检验保存CellID
+    public static final String CELL_ID_Q00101 = "Q00101(Q00101A)";//QC首件检验保存CellID
+    public static final String CELL_ID_Q00102 = "Q00102(Q00102A)";//QC巡检检验保存CellID
     public static final String CELL_ID_D2010 = "D2010";//加胶对象ID
     public static final String CELL_ID_D0090WEB = "D0090WEB";//解绑对象ID
     public static final String CELL_ID_D0001WEB = "D0001WEB";//生产记录对象ID
     public static final String CELL_ID_D0071 = "D0071";//生产记录对象ID快速过站
     public static final String CELL_ID_D0073W = "D0073W";//生产记录对象ID二次快速过站
+    public static final String CELL_ID_D0071Z = "D0071Z";//看带不良产能登记
     public static final String CELL_ID_D0092A="D0092A";//料盒绑支架主表
     public static final String CELL_ID_D0092B="D0092C";//料盒绑支架子表
     public static final String LOT_QJ_BIANDAI_LOTQTY_XIUGAI="D0070PDA";//TestLot数量修改语句
     public static final String LOT_QJ_BIANDAI_QTY_XIUGAI="D0020PDA";//编带数量修改mes_precord对象定义
     public static final String LOT_QJ_BIANDAI_QTY_XIUGAI_JILU="D0071PDA";//编带数量修改记录表
+    public static final String LOT_QJ_BIANDAI_SB_BINCODE="B0003WEB";//编带数量修改记录表
     public static final String CELL_ID_D300101WEBAB="D300101WEBAB";//生产记录表更新异常标识的对象定义
     public static final String CELL_ID_D0074W="D0074W";//抛出异常登记表
     public static final String CELL_ID_Q00113A="Q00113AWEB";//出货检验主表
@@ -238,10 +309,46 @@ public class CommCL {
     public static final String CELL_ID_B0003B="B0003B";//设备维修申请
     public static final String CELL_ID_E0004AWEB="E0004AWEB";//入库校验
     public static final String CELL_ID_E0004WEB="E0004WEB";//入库更新收料人
+    public static final String CELL_ID_F0029A="F0029A";//AB主表-A表
+    public static final String CELL_ID_F0029B="F0029B";//AB主表-B表
+    public static final String CELL_ID_F0033A="F0033A";//AB主表-A表
+    public static final String CELL_ID_F0033B="F0033B";//AB主表-B表
+	public static final String CELL_ID_D0053A="D0053A";//测试站检验记录子表
+    public static final String CELL_ID_D0053TJ="D0053TJ";//测试站检验记录主表
+    public static final String CELL_ID_H0003="H0003";//出货装箱主表
+    public static final String CELL_ID_H0003AWEB="H0003AWEB";//出货装箱主表
+    public static final String CELL_ID_Q00113="Q00113A(Q00113B)";// 器件出货检验
+    public static final String CELL_ID_D6004="D6004";// 加锡膏
+    public static final String CELL_ID_D7004="D7004";// 加胶水
+    public static final String CELL_ID_D7001WEB="D7001WEB";// 更新锡膏胶水首次，最近一次
+    public static final String CELL_ID_D0001WEBSL="D0001WEBSL";// 更新记录表上料时间状态
+    public static final String CELL_ID_D0001LOTWEBSL="D0001LOTWEBSL";// 更新LOT上料时间状态
+    public static final String CELL_ID_D5002WEB="D5002WEB";//保存模组上料表头
+    public static final String CELL_ID_D5002AWEB="D5002AWEB";//保存模组上料表头
+    public static final String CELL_ID_D5002WEB1="D5002WEB1";//更新模组上料表头标识
+    public static final String CELL_ID_D7005="D7005";//胶水注销
+    public static final String CELL_ID_D7001WEB1="D7001WEB1";//胶水登记表更新
+    public static final String CELL_ID_D5090="D5090A(D5090B)";//一摞绑定tray盘
+    public static final String CELL_ID_Q00117="Q00117(Q00117A)";//点胶烘烤放行保存
+    public static final String AID_LOTWEB51_1="LOTWEB51_1";//外观快速过站lot表更新-更新外观在
+    public static final String AID_LOTWEB51_2="LOTWEB51_2";//外观快速过站lot表更新-更新外观在
+    public static final String AID_LOTWEB51_3="LOTWEB51_3";//外观快速过站lot表更新-更新外观在
+    public static final String AID_D5003AWEB="D5003AWEB";//贴片上料
+    public static final String AID_Q00118A="Q00118A";//FQC检验表头
+    public static final String AID_Q00118B="Q00118BWEB";//FQC检验表身
+    public static final String AID_Q00118UPPK="Q00118UPPK";//FQC更新包装标识
+    public static final String CELL_ID_F0009="F0009";//
+    public static final String CELL_ID_B0003WEB1="B0003WEB1";//更新设备在产工单
+    public static final String CELL_ID_Q00103="Q00103";//保存抽检总表头Q00103A(Q00103AA)
+    public static final String CELL_ID_Q00103A="Q00103AWEB";//保存抽检总表头
+    public static final String CELL_ID_Q00103AA="Q00103AAWEB";//保存抽检总表头
+    public static final String CELL_ID_D0040AUPC="D0040AUPC";//保存抽检总表头
+    public static final String CELL_ID_H0028="H0028";//保存出仓表头
+    public static final String CELL_ID_H0028_WEBA="H0028WEBA";//保存出仓表身
+    public static final String CELL_ID_E0004WEBOH="E0004WEBOH";//更新出仓数量
 
-
-
-    public static final String BATCH_STATUS_READY = "00";//批次生产状态 --准备中
+    public static final String BATCH_STATUS_READY = "00";
+    public static final String BATCH_STATUS_READY1 = "0";//批次生产状态 --准备中
     public static final String BATCH_STATUS_IN = "01";//批次生产状态 -- 入站状态
     public static final String BATCH_STATUS_CHARGING = "02";//批次生产状态-- 上料
     public static final String BATCH_STATUS_WORKING = "03";//批次生产状态-- 生产中
@@ -263,6 +370,12 @@ public class CommCL {
     /**talbe state 辅助和color*/
     public static HashMap<String, String> STATEMap = new HashMap<>();
     public static HashMap<String, String> STATEColorMap = new HashMap<>();
+    /**talbe 打钩 辅助和color*/
+    public static HashMap<String, String> TICKMap = new HashMap<>();
+    public static HashMap<String, String> TICKColorMap = new HashMap<>();
+    /**talbe OKNG 辅助和color*/
+    public static HashMap<String, String> OKNGMap = new HashMap<>();
+    public static HashMap<String, String> OKNGColorMap = new HashMap<>();
     /**talbe 校验 辅助和color*/
     public static HashMap<String, String> CheckMap = new HashMap<>();
     public static HashMap<String, String> CheckColorMap = new HashMap<>();
@@ -277,9 +390,11 @@ public class CommCL {
     public static final int ZC_ATTR_GLUING = 8;//加胶
 
     //工序时间卡控设置（单位都是秒）
-    public static final int HANXIAN_QINGXI_MAX_WAIT_TIME=6*60*60;//焊线清洗应许最大等待的时间6小时。
-    public static final int DIANJIAO_YURE_MAX_WAIT_TIME=10*60*60;//点胶预热应许最大等待的时间10小时。
+    public static final int HANXIAN_MAX_WAIT_TIME=6*60*60;//焊线清洗-应许最大等待的时间6小时。
+    public static final int QINGXI_MAX_WAIT_TIME=12*60*60;//点胶清洗-应许最大等待的时间12小时。
+    public static final int DIANJIAO_YURE_MAX_WAIT_TIME=24*60*60;//点胶预热应许最大等待的时间24小时。
     public static final int DIANJIAO_HONGKAO_MIN_WAIT_TIME=1*60*60;//点胶烘烤应许最小等待的时间1小时。
+    public static final int DATE_TIME_HOUR_SECOND=1*60*60;//秒转小时进率。
     public static final int DIANJIAO_HONGKAO_MAX_WAIT_TIME=2*60*60;//点胶烘烤应许最大等待的时间2小时。
     public static final int DIANJIAO_VALIDITY_MAX_WAIT_TIME=80;//点胶胶水在机台过期时间80分钟。
     //上料校验类型
@@ -334,6 +449,15 @@ public class CommCL {
         CheckMap.put("1", "V");
         CheckColorMap.put("0", "#ffffff");
         CheckColorMap.put("1", "#37e700");
+        TICKMap.put("0", "X");
+        TICKMap.put("1", "√");
+        TICKColorMap.put("0", "#FF4F53");
+        TICKColorMap.put("1", "#37e700");
+        OKNGMap.put("0", "OK");
+        OKNGMap.put("1", "NG");
+        OKNGColorMap.put("0", "#259b25");
+        OKNGColorMap.put("1", "#e93a3a");
+
 		STATESbwx.put("0","待维修");
         STATESbwx.put("1","维修中");
         STATESbwx.put("2","待确认");
@@ -362,6 +486,7 @@ public class CommCL {
      * E6001设备报修申请*
      * H0003装箱作业
      * K0 ORT
+     * Q00117 点胶烘烤放行
      * Q0品质管理
      */
     private static void initMenuImgMap() {
@@ -390,7 +515,9 @@ public class CommCL {
         menuImgMap.put("D2009", R.drawable.hunjiao);//混胶作业
         menuImgMap.put("D2010", R.drawable.jiajiao);//加胶登记
         menuActivitys.put("D2010", AddGluingActivity.class);
+
         menuImgMap.put("D5001", R.drawable.mozu);//模组通用
+        menuActivitys.put("D5001", CommonMzStationActivity.class);
 
         menuImgMap.put("D5030", R.drawable.jieshou);//快速过站
         menuActivitys.put("D5030", FastStationActivity.class);//快速过站
@@ -399,10 +526,19 @@ public class CommCL {
         menuActivitys.put("D5040", Fast2StationActivity.class);//快速过站
 
         menuImgMap.put("D6004", R.drawable.jiaxigao);//添加锡膏
+        menuActivitys.put("D6004", UpMaterialMzActivity.class);
+
+        menuImgMap.put("D7004", R.drawable.mz_jiajiaoshui);//添加胶水
+        menuActivitys.put("D7004", UpMaterialMzActivity.class);
+
+        menuImgMap.put("D7005", R.drawable.mz_jiaoshuizhuxiao);//胶水报废缴销登记
+        menuActivitys.put("D7005", ScrappingCancellationActivity.class);
 
         menuImgMap.put("E0001", R.drawable.scfl);//生产发料
         menuImgMap.put("E0004", R.drawable.shengcanruku);//生产入库登记
         menuActivitys.put("E0004", ScrkActivity.class);//生产入库登记
+
+
 
         menuImgMap.put("E5004", R.drawable.zhijuruku);//治具入库
         menuImgMap.put("E5005", R.drawable.zhijulingchu);//治具领出
@@ -412,9 +548,9 @@ public class CommCL {
         menuImgMap.put("E6002", R.drawable.mozu);//设备维确认
         menuActivitys.put("E6002", WxqrActivity.class);//设备维修确认
         menuImgMap.put("E6003", R.drawable.zhuanchu);//设备维确认
-        menuActivitys.put("E6003", WxScqrActivity.class);//设备维修s生产确认
+        menuActivitys.put("E6003", WxScqrActivity.class);//设备维修生产确认
         menuImgMap.put("E6005", R.drawable.mozu);//设备维确认
-        menuActivitys.put("E6005", WxQcqrActivity.class);//设备维修s生产确认
+        menuActivitys.put("E6005", WxQcqrActivity.class);//设备维修QC确认
 
 
 
@@ -425,13 +561,22 @@ public class CommCL {
         menuActivitys.put("F0", PackStationActivity.class);
 
         menuImgMap.put("H0003", R.drawable.zhuangxiang);//装箱作业
-
+        menuActivitys.put("H0003", SellStationActivity.class);//装箱作业
+        menuImgMap.put("H0028", R.drawable.zhuangxiang);//装箱作业
+        menuActivitys.put("H0028", OutHouseStationActivity.class);//装箱作业
         menuImgMap.put("K0", R.drawable.ort);//ORT抽样
 
         menuImgMap.put("Q0", R.drawable.pinzhiguanli);//品质管理
         menuActivitys.put("Q0", QCCommStationActivity.class);
+        menuImgMap.put("Q00101", R.drawable.mozu);//品质管理
+        menuActivitys.put("Q00101", FirstInspectionActivity.class);
 
-
+        //添加到主键的按钮
+        addMenus=new ArrayList<>();
+        JSONObject obj=new JSONObject();
+        obj.put("menuId","Q00101");
+        obj.put("menuName","首件记录");
+        addMenus.add(obj);
     }
 
 }

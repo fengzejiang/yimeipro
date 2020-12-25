@@ -26,6 +26,7 @@ public class ICL {
 
     public final static int DATA_ATTR_MAP = 1;
     public final static int DATA_ATTR_COLOR = 2;
+    public final static int DATA_ATTR_MAP_COLOR = 3;
 
 
 }

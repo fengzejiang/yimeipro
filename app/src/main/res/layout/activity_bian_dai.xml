@@ -132,6 +132,7 @@
                     android:layout_height="40dp"
                     android:layout_margin="5dip"
                     android:layout_weight="1"
+                    android:visibility="gone"
                     android:background="@drawable/btn_shape_check_border"
                     android:text="出站"/>
             <Button

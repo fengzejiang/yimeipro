@@ -1,11 +1,9 @@
 package com.yimeinew.activity.pack;
 
-import android.app.AlertDialog;
 import android.content.*;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.text.TextUtils;
 import android.util.Log;
 import android.view.Gravity;
@@ -15,17 +13,16 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnEditorAction;
-import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSON;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 import com.yimeinew.activity.R;
+import com.yimeinew.activity.SystemSetActivity;
 import com.yimeinew.activity.base.BaseActivity;
 import com.yimeinew.activity.base.BaseApplication;
 import com.yimeinew.adapter.tabledataadapter.BaseTableDataAdapter;
 import com.yimeinew.data.PackHeadInfo;
 import com.yimeinew.data.PackInfo;
 import com.yimeinew.data.ZCInfo;
-import com.yimeinew.entity.PrintModel;
 import com.yimeinew.listener.OnConfirmListener;
 import com.yimeinew.modelInterface.CommPackView;
 import com.yimeinew.network.schedulers.SchedulerProvider;
@@ -69,8 +66,6 @@ public class PackActivity extends BaseActivity implements CommPackView {
     EditText textWeiPack;//未已包装数量
     @BindView(R.id.img_new)
     ImageView img_new;//满箱后新建
-    @BindView(R.id.btn_print)
-    Button printBotton;
     //缓存机制
     private String lotno="";//当前表主键
     String KEY_LOT_NO="KEY_LOT_NO"+TAG_NAME;//主键缓存，下次进入页面重新加载
@@ -80,21 +75,24 @@ public class PackActivity extends BaseActivity implements CommPackView {
     private JSONObject traymo=new JSONObject();//Tray盘号和工单信息
     private HashMap<String,Integer> cache=new HashMap<String,Integer>();
     //定义常亮
-    String KEY_FULL_BOX="KEY_FULL_BOX";//满箱数量
-    String KEY_Tray_QTY="KEY_Tray_QTY";//满盘数量
-    String KEY_SCAN_QTY="KEY_SCAN_QTY";//已扫数量
-    String KEY_Tray_SCAN_QTY="KEY_Tray_SCAN_QTY";//单盘已扫数量
+    String KEY_FULL_BOX="KEY_FULL_BOX"+TAG_NAME;//满箱数量
+    String KEY_Tray_QTY="KEY_Tray_QTY"+TAG_NAME;//满盘数量
+    String KEY_SCAN_QTY="KEY_SCAN_QTY"+TAG_NAME;//已扫数量
+    String KEY_Tray_SCAN_QTY="KEY_Tray_SCAN_QTY"+TAG_NAME;//单盘已扫数量
     ArrayList<ZCInfo> zcInfoList = BaseApplication.zcList;
     private HashMap<String, String> bindSid1 = new HashMap<>();
+    //打印所需的常量
+    String tableName="mes_pklist_prt";//数据库表名
+    String tableKey="lotno";//表ID
+    String insobj="F0028";//对象定义
 
     private String zcno="";//当前制程
     private ZCInfo zCnoInfo;
-    private String GBKEY="MZ_SAO_PEN_MA";
-    IntentFilter intentFilter;
     private CommPackPresenter commPresenter;
     public static final String Title = "模组内装";
     private  boolean b1=false;
     private  boolean b2=false;
+    TextView batnotishi;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -104,18 +102,22 @@ public class PackActivity extends BaseActivity implements CommPackView {
         zcno=zCnoInfo.getId();
         this.setTitle(Title+"->"+zCnoInfo.getName());
 
-
         commPresenter = new CommPackPresenter(this,SchedulerProvider.getInstance());
         initTableView();
         cache.put(KEY_SCAN_QTY,0);//默认已装装箱为0
 
         lotno=CommCL.sharedPreferences.getString(KEY_LOT_NO,"");
+        //lotno="BZ20191022081";//测试
         if(!TextUtils.isEmpty(lotno)){
             //获取这个一整包的信息
             showLoading();
             commPresenter.getPackInfoById(lotno,"F0028",1);
             //showMessage("lotno="+lotno);
         }
+        batnotishi=new TextView(this);
+        batnotishi.setGravity(Gravity.CENTER);
+        batnotishi.setTextSize(24);
+        batnotishi.setTextColor(Color.BLACK);
         //edtTray.setText("MOB18060052-0001");
         //edtSid1.setText("2447620940T-01182320001430000QAB0B51Y");
     }
@@ -179,8 +181,10 @@ public class PackActivity extends BaseActivity implements CommPackView {
             //校验批次号
             //commPresenter.checkQuickLot(sid1,zcno,1);
             if(TextUtils.equals(tray,tray1)) {
-                showLoading();
-                commPresenter.getMarkingInfo(sid1, traymo, 1);
+                if(!CommonUtils.isRepeat("sid1_penma"+TAG_NAME,sid1)) {
+                    showLoading();
+                    commPresenter.getMarkingInfo(sid1, traymo, 1);
+                }
             }else{
                 //showMessage("手输Tray盘号必须回车！");
                 CommonUtils.speak("手输炊盘号必须回车");
@@ -258,9 +262,7 @@ public class PackActivity extends BaseActivity implements CommPackView {
     }
     @Override
     public void onRemoteFailed(String message) {
-
         hideLoading();
-        CommonUtils.canDo(GBKEY);
         CommonUtils.showError(this, "onRemoteFailed="+message);
 
     }
@@ -291,11 +293,13 @@ public class PackActivity extends BaseActivity implements CommPackView {
             setTrayQty(info.getInteger("qty"),info.getInteger("tray_in_qty"));
             CommonUtils.textViewGetFocus(edtSid1);
             hideLoading();
+            CommonUtils.playSound(this,R.raw.sound_di);
         }else{
+            hideLoading();
             CommonUtils.speak(error);
             //showMessage(error);
             CommonUtils.textViewGetFocus(edtTray);
-            hideLoading();
+
         }
     }
 
@@ -306,35 +310,43 @@ public class PackActivity extends BaseActivity implements CommPackView {
 
 
     @Override
-    public void getMarkingCallBack(Boolean bok, JSONObject headinfo,JSONObject info, String error, int key) {
+    public synchronized void getMarkingCallBack(Boolean bok, JSONObject headinfo,JSONObject info, String error, int key) {
         if(bok){
+            String penma=info.getString("allcode");
             //判定Tray号是否回车
             String tray1=edtTray.getText().toString().toUpperCase();
+
             if(!TextUtils.equals(tray1,tray)){
+                hideLoading();
                 //showMessage("手输炊盘号必须回车！");
                 CommonUtils.speak("手输炊盘号必须回车");
-                hideLoading();
+
                 return;
             }
             //判定是否满箱
 
             if(isFullBox()){
+                hideLoading();
                 //showMessage("已满箱");
                 CommonUtils.speak("已满箱");
                 CommonUtils.textViewGetFocus(edtTray);
-                hideLoading();
+
                 return;
             }
             //判定是否满盘
             if(isFullTray()){
+                hideLoading();
                 //showMessage("已满盘");
                 CommonUtils.speak("已满盘");
                 CommonUtils.textViewGetFocus(edtTray);
-                hideLoading();
+
                 return;
             }
-
+            if(CommonUtils.isRepeat("penma_once_save"+TAG_NAME,penma,9000)){return;}//使用同步排重
             if(TextUtils.isEmpty(lotno)) {
+                if(CommonUtils.isRepeat("A_A","A_A",8000)){
+                    return;
+                }
                 //然后保存，第一次保存
                 String slkid=headinfo.getString("sid");
                 String prd_no=headinfo.getString("prd_no");
@@ -364,10 +376,11 @@ public class PackActivity extends BaseActivity implements CommPackView {
             }
 
         }else{
+            hideLoading();
             CommonUtils.speak(error);
             CommonUtils.textViewGetFocus(edtSid1);
             //showMessage(error);
-            hideLoading();
+
         }
     }
 
@@ -388,10 +401,11 @@ public class PackActivity extends BaseActivity implements CommPackView {
             PackInfo packInfo=new PackInfo(lotno,sid1,slkid,tray,minqty);
             commPresenter.savePackInfo(headinfo,packInfo,CommCL.CELL_ID_F0028AWEB,1);
         }else{
+            hideLoading();
             CommonUtils.speak(error);
             CommonUtils.textViewGetFocus(edtSid1);
             //showMessage(error);
-            hideLoading();
+
         }
     }
 
@@ -432,10 +446,11 @@ public class PackActivity extends BaseActivity implements CommPackView {
                 clearFullTray();
             }
         }else{
+            hideLoading();
             CommonUtils.speak(error);
             CommonUtils.textViewGetFocus(edtSid1);
             //showMessage(error);
-            hideLoading();
+
         }
     }
 
@@ -451,17 +466,19 @@ public class PackActivity extends BaseActivity implements CommPackView {
             }
             if(b1&&b2){
                 b1=false;b2=false;
-                hideLoading();
                 if(!TextUtils.isEmpty(currMONO)){
                     commPresenter.getMoInfoById(currMONO,1);
                 }
+                hideLoading();
+                CommonUtils.playSound(this,R.raw.sound_di);
 
             }
         }else{
+            hideLoading();
             CommonUtils.speak(error);
             CommonUtils.textViewGetFocus(edtSid1);
             //showMessage(error);
-            hideLoading();
+
         }
     }
 
@@ -490,7 +507,7 @@ public class PackActivity extends BaseActivity implements CommPackView {
                 //添加缓存去重复
                 String penma=temp.getString("sid1");
                 bindSid1.put(penma,penma);
-                adapter.addRecord(CommonUtils.getJsonObjFromBean(temp));
+                adapter.addRecord(temp);
             }
             if(!TextUtils.isEmpty(currMONO)) {
                 commPresenter.getMoInfoById(currMONO, 1);
@@ -498,10 +515,12 @@ public class PackActivity extends BaseActivity implements CommPackView {
             //showMessage("获取成功"+key);
             hideLoading();
         }else{
+            hideLoading();
+            clearFullBox();
             CommCL.sharedPreferences.edit().putString(KEY_LOT_NO,"").commit();
             lotno="";
             showMessage(error);
-            hideLoading();
+
         }
     }
 
@@ -517,16 +536,50 @@ public class PackActivity extends BaseActivity implements CommPackView {
                     alertWindow1(this, "是否新建箱号");
                 }
             }
-            hideLoading();
         }else{
             showMessage(error);
-            hideLoading();
+            //hideLoading();
         }
+    }
+
+    @Override
+    public void getPrintLableCallBack(Boolean bok, JSONObject info, String error, int key) {
+        if(bok){
+            switch (key){
+                case 1:
+                case 2:
+                    JSONObject hm = info.getJSONObject("info");
+//            showMessage(hm.toJSONString());
+//            showMessage(hm.getString("BoxSN"));
+                    batnotishi.setText(hm.getString("BoxSN"));
+                    break;
+            }
+            //小标签打印
+            if(key!=328){
+                print3();
+            }
+            hideLoading();
+            showSuccess(error);
+        }else{
+            hideLoading();
+            showMessage(error);
+
+        }
+    }
+
+    @Override
+    public void getABPackInfoCallBack(Boolean bok, JSONObject aheadinfo, JSONArray ainfo, JSONObject bheadinfo, JSONArray binfo, String error, int key) {
+
     }
 
     /*---------------alter 弹框----------------*/
     public void alertWindow1(Context context,String title){
         canGetMessage=false;
+        batnotishi.setText("");
+        batnotishi=new TextView(this);
+        batnotishi.setGravity(Gravity.CENTER);
+        batnotishi.setTextSize(24);
+        batnotishi.setTextColor(Color.BLACK);
         LinearLayout layout=new LinearLayout(context);
         layout.setOrientation(LinearLayout.VERTICAL);
         if(!TextUtils.isEmpty(lotno)) {
@@ -553,11 +606,39 @@ public class PackActivity extends BaseActivity implements CommPackView {
             */
             /*二维码*/
             ImageView imgQR = new ImageView(context);
-            Bitmap bitQR = QRUtil.createQRImage(lotno, 550, 550);
+            Bitmap bitQR = QRUtil.createQRImage(lotno, 350, 350);
             imgQR.setImageBitmap(bitQR);
-            layout.addView(text);
-            //layout.addView(imgBat);
-            layout.addView(imgQR);
+            /*添加打印按钮*/
+            Button b1=new Button(this);
+            b1.setText("标签打印");//b1.setBackgroundResource(R.drawable.btn_shape_check_border);
+            b1.setHeight(30);
+            b1.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    print1();
+                }
+            });
+            /*添加复制按钮*/
+            Button b2=new Button(this);
+            b2.setText("标签复制");//b2.setBackgroundResource(R.drawable.btn_shape_check_border);
+            b2.setHeight(30);
+            b2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    print2();
+                }
+            });
+            LinearLayout layoutH=new LinearLayout(context);
+            layoutH.setOrientation(LinearLayout.HORIZONTAL);
+            layoutH.setGravity(Gravity.CENTER);
+            layoutH.addView(b1);layoutH.addView(b2);
+            if(!TextUtils.isEmpty(lotno)) {
+                layout.addView(text);
+                //layout.addView(imgBat);
+                layout.addView(imgQR);
+                layout.addView(batnotishi);
+                layout.addView(layoutH);
+            }
         }
         CommonUtils.confirm(context, title, "", layout, new OnConfirmListener() {
             @Override
@@ -577,64 +658,6 @@ public class PackActivity extends BaseActivity implements CommPackView {
 
         });
 
-//        canGetMessage=false;
-//        lotno="BZ20191021046";
-//        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-//        builder.setTitle(title);
-//        LinearLayout layout=new LinearLayout(context);
-//        layout.setOrientation(LinearLayout.VERTICAL);
-//        if(!TextUtils.isEmpty(lotno)) {
-//            TextView text = new TextView(context);//文本框
-//            text.setTextSize(24);
-//            text.setText(lotno);
-//            text.setGravity(Gravity.CENTER);
-//            text.setOnClickListener(new View.OnClickListener(){
-//                @Override
-//                public void onClick(View v) {
-//                    ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-//                    // 创建普通字符型ClipData
-//                    ClipData mClipData = ClipData.newPlainText("Label", lotno);
-//                    // 将ClipData内容放到系统剪贴板里。
-//                    cm.setPrimaryClip(mClipData);
-//                    Toast.makeText(context, "已复制" , Toast.LENGTH_SHORT).show();
-//                }
-//            });
-//            /*条形码*/
-//            /*
-//            ImageView imgBat=new ImageView(context);
-//            Bitmap bitBat = QRUtil.creatBarcode(context,lotno,550,20,true);
-//            imgBat.setImageBitmap(bitBat);
-//            */
-//            /*二维码*/
-//            ImageView imgQR=new ImageView(context);
-//            Bitmap bitQR = QRUtil.createQRImage(lotno, 550, 550);
-//            imgQR.setImageBitmap(bitQR);
-//            layout.addView(text);
-//            //layout.addView(imgBat);
-//            layout.addView(imgQR);
-//        }
-//        builder.setView(layout);
-//        builder.setPositiveButton("确定", new DialogInterface.OnClickListener()
-//        {
-//            @Override
-//            public void onClick(DialogInterface dialog, int which)
-//            {
-//                canGetMessage=true;
-//                clearFullBox();
-//                Toast.makeText(context, "已新建" , Toast.LENGTH_SHORT).show();
-//            }
-//        });
-//        builder.setNegativeButton("取消", new DialogInterface.OnClickListener()
-//        {
-//
-//            @Override
-//            public void onClick(DialogInterface dialog, int which)
-//            {
-//                canGetMessage=true;
-//                Toast.makeText(context, "取消新建" , Toast.LENGTH_SHORT).show();
-//            }
-//        });
-//        builder.show();
     }
 
     /*------------算法工具函数--------------*/
@@ -724,6 +747,8 @@ public class PackActivity extends BaseActivity implements CommPackView {
         textYiPack.setText("");
         textWeiPack.setText("");
         cache.put(KEY_SCAN_QTY,0);
+        //清理bindSid1缓存
+        bindSid1.clear();
         CommonUtils.textViewGetFocus(edtTray);
     }
 
@@ -733,25 +758,35 @@ public class PackActivity extends BaseActivity implements CommPackView {
     public void clearFullTray(){
         edtSid1.setText("");
         edtTray.setText("");
+        bindSid1.clear();
         CommonUtils.textViewGetFocus(edtTray);
     }
-    public void getMoInfoBySlkid(){
-
+    //标签打印
+    public void print1(){
+        showLoading();
+        String sprn=BaseApplication.currUser.getUserCode();
+        String print_id= SystemSetActivity.getData(SystemSetActivity.PRINT_ID_KEY);
+        HashMap<String, String> hm = ToolUtils.printLable("100","", tableName, tableKey, lotno, insobj, sprn, print_id);
+        hm.put("frompage","PackActivity");//用于区别打印来源页面，然后做特殊操作处理。这个为了自动同步主表已包装数量
+        commPresenter.printLable(hm,1);
     }
-    @OnClick({R.id.btn_print})
-    public void Onclick(View view){
-        int id=view.getId();
-        switch (id){
-            case R.id.btn_print:
-                new Thread(new Runnable() {//创建线程，不然会报错
-                    @Override
-                    public void run() {
-                        PrintModel printModel =ToolUtils.printPack("BZ20200226030","F0028");
-                        String rs = ToolUtils.printLable("D:\\shinecli\\TEMP\\", printModel);
-                        System.out.println("woshi=pls="+rs);
-                    }
-                }).start();
-                break;
-        }
+    //标签复制
+    public void print2(){
+        showLoading();
+        String sprn2=BaseApplication.currUser.getUserCode();
+        String print_id2= SystemSetActivity.getData(SystemSetActivity.PRINT_ID_KEY);
+        HashMap<String, String> hm2 = ToolUtils.printLable("200","", tableName, tableKey, lotno, insobj, sprn2, print_id2);
+        hm2.put("frompage","PackActivity");//用于区别打印来源页面，然后做特殊操作处理。这个为了自动同步主表已包装数量
+        commPresenter.printLable(hm2,2);
+    }
+    //标签复制小标签
+    public void print3(){
+        showLoading();
+        String sprn2=BaseApplication.currUser.getUserCode();
+        String print_id2= SystemSetActivity.getData(SystemSetActivity.PRINT_ID_KEY2);
+        HashMap<String, String> hm2 = ToolUtils.printLable("200",CommCL.TRAY_LAB, tableName, tableKey, lotno, insobj, sprn2, print_id2);
+        hm2.put("frompage","PackActivity");//用于区别打印来源页面，然后做特殊操作处理。这个为了自动同步主表已包装数量
+        hm2.put("prtqty","1");
+        commPresenter.printLable(hm2,328);
     }
 }

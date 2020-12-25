@@ -1,18 +1,15 @@
 package com.yimeinew.activity.deviceproduction.commsub;
 
-import android.content.BroadcastReceiver;
-import android.content.Context;
-import android.content.Intent;
-import android.content.IntentFilter;
+import android.content.*;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
-import android.widget.ArrayAdapter;
-import android.widget.EditText;
-import android.widget.ListView;
+import android.widget.*;
 import butterknife.BindView;
 import butterknife.ButterKnife;
+import butterknife.OnClick;
 import butterknife.OnEditorAction;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
@@ -23,6 +20,7 @@ import com.yimeinew.adapter.tabledataadapter.BaseTableDataAdapter;
 import com.yimeinew.data.MESPRecord;
 import com.yimeinew.data.ZCInfo;
 import com.yimeinew.entity.Pair;
+import com.yimeinew.listener.OnConfirmListener;
 import com.yimeinew.modelInterface.CommBaseView;
 import com.yimeinew.modelInterface.CommFastView;
 import com.yimeinew.network.schedulers.SchedulerProvider;
@@ -66,6 +64,8 @@ public class RepairActivity extends BaseActivity implements CommFastView {
     EditText ngsl;
     @BindView(R.id.wqr)
     EditText wqr;
+    @BindView(R.id.checkBox_is_ng)
+    CheckBox isNG;
 
 
     private String currMONO = "";//当前工单号
@@ -109,6 +109,9 @@ public class RepairActivity extends BaseActivity implements CommFastView {
         initTableView();//表身的布局
         //edtCode.setText("2447620940T-01182330066270000PYB5B02Y");
         edtOPC.setOPAux();
+        if(!TextUtils.equals("NG",zCnoInfo.getBokName())){
+            isNG.setVisibility(View.GONE);
+        }
     }
 
 
@@ -180,9 +183,12 @@ public class RepairActivity extends BaseActivity implements CommFastView {
                 CommonUtils.textViewGetFocus(edtCode);
                 return true;
             }
-
-            commPresenter.selectWxqr(code,1);
-
+            if(TextUtils.equals("NG",zCnoInfo.getBokName())&&!isNG.isChecked()){
+                CommonUtils.speak("同意NG按钮请打勾");
+                CommonUtils.textViewGetFocus(edtCode);
+            }else {
+                commPresenter.selectWxqr(code, 1);
+            }
 
 
         }
@@ -198,18 +204,21 @@ public class RepairActivity extends BaseActivity implements CommFastView {
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        isNG.setChecked(false);
 //        Log.i(TAG_NAME,"销毁我了");
     }
     //退出当前Activity或者跳转到新Activity时被调用
     @Override
     protected void onStop() {
         super.onStop();
+        isNG.setChecked(false);
         //Log.i(TAG, "onStop called.");
     }
     //Activity被覆盖到下面或者锁屏时被调用
     @Override
     protected void onPause() {
         super.onPause();
+        isNG.setChecked(false);
         //Log.i(TAG, "onPause called.");
         //有可能在执行完onPause或onStop后,系统资源紧张将Activity杀死,所以有必要在此保存持久数据
 
@@ -255,7 +264,21 @@ public class RepairActivity extends BaseActivity implements CommFastView {
     public void getQuickLotBack(Boolean bok, JSONObject batchInfo, String error, int key) {
 
         if (bok) {
-//生产报修数量
+            //判断工单
+            String mo_no=batchInfo.getString("mono");
+            if(!TextUtils.isEmpty(mo_no)){
+                if(TextUtils.isEmpty(currMONO)){
+                    currMONO=mo_no;
+                }else {
+                    if(!TextUtils.equals(currMONO,mo_no)){
+                        hideLoading();
+                        CommonUtils.textViewGetFocus(edtCode);
+                        showMessage("当前工单【"+currMONO+"】,扫描工单是【"+mo_no+"】");
+                        return;
+                    }
+                }
+            }
+            //生产报修数量
             if(key==5){
                 num= batchInfo.getString("bxsl");
                 if(TextUtils.isEmpty(num)){
@@ -267,7 +290,6 @@ public class RepairActivity extends BaseActivity implements CommFastView {
 
             }else if(key==6){
                 num2=batchInfo.getString("oksl");
-
                 oksl.setText(num2);
                 String mono=batchInfo.getString("slkid");
                 commPresenter.selectNgsl(mono,7);
@@ -280,7 +302,7 @@ public class RepairActivity extends BaseActivity implements CommFastView {
                 int number3=Integer.parseInt(num3);
                 int number4=number-number2-number3;
                 wqr.setText(number4+"");
-//品质报修数量
+            //品质报修数量
             } else if(key==9){
                 num5= batchInfo.getString("bxsl");
                 if(TextUtils.isEmpty(num5)){
@@ -344,7 +366,7 @@ public class RepairActivity extends BaseActivity implements CommFastView {
                 record.setSort(sort);
                 record.getSmake();
                 record.getMkdate();
-                commPresenter.wxqrRecord(record,batchInfo);//存入记录表
+                commPresenter.wxqrRecord(record,batchInfo,sbuid);//存入记录表
             }
 
         } else {
@@ -359,10 +381,10 @@ public class RepairActivity extends BaseActivity implements CommFastView {
 
     @Override
     public String getCurrMO() {
-        if (dataList != null && dataList.size() > 0) {
+        /*if (dataList != null && dataList.size() > 0) {
             JSONObject jsonObject = dataList.get(0);
             currMONO = jsonObject.getString("slkid");
-        }
+        }*/
         return currMONO;
     }
     //保存记录成功
@@ -509,6 +531,31 @@ public class RepairActivity extends BaseActivity implements CommFastView {
         CommonUtils.canDo(GBKEY);
         CommonUtils.showError(this, "onRemoteFailed="+message);
 
+    }
+    @OnClick({R.id.img_new})
+    public void OnClick(View view){
+        switch (view.getId()){
+            case R.id.img_new:
+                TextView tv=new TextView(this);
+                tv.setText(currMONO);
+                tv.setTextSize(20);
+                tv.setGravity(Gravity.CENTER);
+                CommonUtils.confirm(this, "是否新建", "", tv, new OnConfirmListener() {
+                    @Override
+                    public void OnConfirm(DialogInterface dialog) {
+                        currMONO="";
+                        adapter.clear();
+                        bcode.clear();
+                        showSuccess("新建成功");
+                    }
+
+                    @Override
+                    public void OnCancel(DialogInterface dialog) {
+                        showMessage("取消新建");
+                    }
+                });
+                break;
+        }
     }
 
 }

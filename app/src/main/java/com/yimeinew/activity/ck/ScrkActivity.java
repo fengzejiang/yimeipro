@@ -1,6 +1,5 @@
 package com.yimeinew.activity.ck;
 
-import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.*;
 import android.graphics.Bitmap;
@@ -12,26 +11,22 @@ import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
 import butterknife.OnEditorAction;
-import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSON;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 import com.yimeinew.activity.R;
 import com.yimeinew.activity.base.BaseActivity;
 import com.yimeinew.activity.base.BaseApplication;
-import com.yimeinew.activity.deviceproduction.commsub.CommGJActivity;
 import com.yimeinew.adapter.tabledataadapter.BaseTableDataAdapter;
 import com.yimeinew.data.*;
 import com.yimeinew.modelInterface.CommBaseView;
 import com.yimeinew.network.schedulers.SchedulerProvider;
 import com.yimeinew.presenter.CommBasePresenter;
-import com.yimeinew.presenter.CommOtherPresenter;
 import com.yimeinew.tableui.TablePanelView;
 import com.yimeinew.tableui.entity.HeaderRowInfo;
 import com.yimeinew.utils.*;
 import com.yimeinew.view.AuxText;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class ScrkActivity extends BaseActivity implements CommBaseView {
@@ -191,8 +186,8 @@ public class ScrkActivity extends BaseActivity implements CommBaseView {
                 unUseClick();
                 showLoading();
                 if(dataList==null||dataList.size()==0){
-                    myError("请先扫描入库信息");
                     hideLoading();
+                    myError("请先扫描入库信息");
                     useClick();
                     return;
                 }
@@ -268,7 +263,6 @@ public class ScrkActivity extends BaseActivity implements CommBaseView {
                 edtMMNO.setText(mm_no);//缴库单号
                 edtTFP.setText(""+fill_qty);//满箱数量
                 checkBatNoWeb(bat_no);
-
             }else {
                 myError("没有查询到该缴库单号");
             }
@@ -303,6 +297,9 @@ public class ScrkActivity extends BaseActivity implements CommBaseView {
             hideLoading();
             showMessage(error);
             useClick();
+            if(key==CommCL.COMM_CHK_DO){
+                submitFailure();
+            }
             return;
         }
     }
@@ -310,8 +307,8 @@ public class ScrkActivity extends BaseActivity implements CommBaseView {
     private int chooseIndex = 0;//选择项
     public void checkUp(CeaPars ceaPars, CWorkInfo cWorkInfo) {
         if (cWorkInfo.getList() == null) {
-            showMessage("没有审批节点!");
             hideLoading();
+            showMessage("没有审批节点!");
             return;
         }
         ApprovalFlowObj approvalFlowObj = cWorkInfo.getList().get(0);
@@ -365,6 +362,7 @@ public class ScrkActivity extends BaseActivity implements CommBaseView {
         switch (key){
             case 1:getBatNoCallBack(bok,info,error,key);break;//用batno获取、缴库单号
             case 2:getMMNoCallBack(bok,info,error,key);break;//用mm_no获取、整个缴库单号
+            case 404:getMMStateCallBack(bok,info,error,key);break;
         }
     }
 
@@ -406,6 +404,10 @@ public class ScrkActivity extends BaseActivity implements CommBaseView {
     @Override
     public void onRemoteFailed(String message) {
         hideLoading();
+        if(message!=null&&message.length()>2&&message.substring(0,2).equals("34")){
+            //审核异常
+            submitFailure();
+        }
         CommonUtils.showError(this, "onRemoteFailed="+message);
     }
     @Override
@@ -497,5 +499,37 @@ public class ScrkActivity extends BaseActivity implements CommBaseView {
     }
     public void useClick(){
         button.setEnabled(true);
+    }
+    public void submitFailure(){
+        showLoading();
+        String errMMNO=mm_no;
+        clearCache();
+
+        try {
+            Thread.sleep(5);
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }finally {
+            //重新校验是否提交成功
+            String cont="~mm_no='"+errMMNO+"'";
+            commPresenter.getAssistInfo(CommCL.AID_CK_MM_STATE,cont,404);
+        }
+    }
+    public void getMMStateCallBack(Boolean bok, JSONArray info, String error, int key){
+        if(bok){
+            JSONObject obj=info.getJSONObject(0);
+            String state=obj.getString("state");
+            String errmm_no=obj.getString("mm_no");
+            if(TextUtils.equals(state,"6")){
+                hideLoading();
+                showMessage(errmm_no+"审核通过了，无需重复提交");
+            }else{
+                hideLoading();
+                showMessage(errmm_no+"审核没有通过，请用电脑端审核");
+            }
+        }else{
+            hideLoading();
+            showMessage("系统可能存在死锁，请立刻通知IT。");
+        }
     }
 }

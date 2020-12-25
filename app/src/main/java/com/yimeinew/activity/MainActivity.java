@@ -4,7 +4,10 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.support.annotation.Nullable;
+import android.support.v7.view.menu.MenuView;
+import android.view.ActionMode;
 import android.view.KeyEvent;
+import android.view.MenuItem;
 import android.widget.EditText;
 import android.widget.GridView;
 import android.widget.Toast;
@@ -36,6 +39,17 @@ public class MainActivity extends BaseActivity {
     @Override
     public boolean onEditTextKeyDown(EditText editText) {
         return false;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id=item.getItemId();
+        switch (id){
+            case R.id.action_settings:
+                jumpNextActivity(SystemSetActivity.class);
+                break;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override

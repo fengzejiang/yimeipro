@@ -1,6 +1,7 @@
 package com.yimeinew.activity.deviceproduction.commsub;
 
 import android.content.IntentFilter;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
@@ -35,7 +36,6 @@ import java.util.List;
 public class FastMzTYActivity extends BaseActivity implements CommFastView {
     private final String TAG_NAME = CommGJActivity.class.getSimpleName();
 
-
     //数据表格
     @BindView(R.id.table_view)
     TablePanelView tableView;
@@ -45,10 +45,24 @@ public class FastMzTYActivity extends BaseActivity implements CommFastView {
     BaseTableDataAdapter adapter;
     @BindView(R.id.edt_op)
     EditText edtOP;//作业员
+    @BindView(R.id.edt_qty)
+    EditText edtQty;//数量
     @BindView(R.id.edt_sid1)
     EditText edtSid1;//批次号
-    private String currMONO = "";//当前工单号
+    //提示
+    @BindView(R.id.text_jishu)
+    EditText textJiShu;//计数
+    @BindView(R.id.text_jishu_qty)
+    EditText textJiShuQty;//一摞已扫数
 
+    @BindView(R.id.text_totalqty)
+    EditText textTotalQty;//总数量
+    @BindView(R.id.text_guozhan_qty)
+    EditText textGuoZhanQty;//已过站数量
+    @BindView(R.id.text_weiguozhan_qty)
+    EditText textWeiGuoZhanQty;//计数
+
+    private String currMONO = "";//当前工单号
     ArrayAdapter<Pair> zcAdapter;
     private List<Pair> zcAdapterData = new ArrayList<>();
     ArrayList<ZCInfo> zcInfoList = BaseApplication.zcList;
@@ -56,27 +70,26 @@ public class FastMzTYActivity extends BaseActivity implements CommFastView {
 
     private String zcno="";//当前制程
     private ZCInfo zCnoInfo;
-    private String GBKEY="kuaiguozhan_MZ";
     IntentFilter intentFilter;
     private CommFastPresenter commPresenter;
 
     public static final String Title = "快速过站";
-
+    int qty=0;
+    int theQty=0;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_fast);
+        setContentView(R.layout.activity_fast_ty);
         ButterKnife.bind(this);
         zCnoInfo = (ZCInfo) getIntent().getSerializableExtra(CommCL.COMM_ZC_INFO_FLD);
         zcno=zCnoInfo.getId();
         this.setTitle(Title+"->"+zCnoInfo.getName());
-
         commPresenter = new CommFastPresenter(this,SchedulerProvider.getInstance());
         initTableView();
     }
 
 
-    @OnEditorAction({R.id.edt_op,  R.id.edt_sid1})
+    @OnEditorAction({R.id.edt_op, R.id.edt_qty, R.id.edt_sid1})
     public boolean OnEditorAction(EditText editText) {
         return onEditTextKeyDown(editText);
     }
@@ -99,8 +112,27 @@ public class FastMzTYActivity extends BaseActivity implements CommFastView {
             return true;
         }
         if (id == R.id.edt_op) {
+            CommonUtils.textViewGetFocus(edtQty);
+            return false;
+        }
+        int qtyV=CommonUtils.parseInt(edtQty.getText().toString());
+        if(qtyV==0){
+            CommonUtils.textViewGetFocus(edtQty);
+            return false;
+        }
+        if(id==R.id.edt_qty){
+            qty=qtyV;
+            theQty=qtyV;
+            adapter.clear();
+            setJiShu(qty);
             CommonUtils.textViewGetFocus(edtSid1);
             return false;
+        }
+        if(theQty!=qtyV){
+            qty=qtyV;
+            theQty=qtyV;
+            adapter.clear();
+            setJiShu(qty);
         }
         if (id == R.id.edt_sid1) {
             String sid1 = edtSid1.getText().toString().toUpperCase();
@@ -122,7 +154,7 @@ public class FastMzTYActivity extends BaseActivity implements CommFastView {
             if(!CommonUtils.isRepeat("ks_saomao_sid1",sid1)) {
                 showLoading();
                 //校验批次号
-                commPresenter.checkQuickLot(sid1,zcno,1);
+                commPresenter.checkQuickLot(sid1,zcno,null,1);
              }
         }
         return false;
@@ -150,7 +182,6 @@ public class FastMzTYActivity extends BaseActivity implements CommFastView {
         super.onPause();
         //Log.i(TAG, "onPause called.");
         //有可能在执行完onPause或onStop后,系统资源紧张将Activity杀死,所以有必要在此保存持久数据
-
     }
 
     /***
@@ -217,7 +248,6 @@ public class FastMzTYActivity extends BaseActivity implements CommFastView {
             commPresenter.makeProRecord(record);
         } else {
             hideLoading();
-            CommonUtils.canDo(GBKEY);
             showMessage(error);
         }
     }
@@ -239,12 +269,18 @@ public class FastMzTYActivity extends BaseActivity implements CommFastView {
             bindSid1.put(record.getSid1(), record.getSid1());
             // 添加到数据列表
             adapter.addRecord(CommonUtils.getJsonObjFromBean(record));
+            if(qty==0) {
+                int qtyV=CommonUtils.parseInt(edtQty.getText().toString());
+                qty=qtyV-1;
+            }else {
+                qty--;
+            }
+            setJiShu(qty);
             //更改批次状态
             //commPresenter.changeRecordStateOneByOne(record, CommCL.BATCH_STATUS_IN);
             commPresenter.changeLotStateOneByOne(record, CommCL.BATCH_STATUS_DONE);
         } else {
             hideLoading();
-            CommonUtils.canDo(GBKEY);
             showMessage(error);
         }
     }
@@ -266,37 +302,29 @@ public class FastMzTYActivity extends BaseActivity implements CommFastView {
 
     @Override
     public void getAssistInfoBack(Boolean bok, JSONArray info, String error, int key) {
-
+        switch (key){
+            case 1:
+                if(bok){
+                    if(info==null||info.size()==0){return;}
+                    JSONObject obj = info.getJSONObject(0);
+                    if(obj.containsKey("totalqty")) {
+                        setMoInfo(obj.getInteger("totalqty"), obj.getInteger("qty"));
+                    }
+                };break;
+        }
     }
 
     @Override
     public void changeRecordStateBack(boolean bok, Object record2, String error) {
         if (bok) {
             hideLoading();
-            int key = -1;
-            MESPRecord record = (MESPRecord) record2;
-            for (int i = 0; i < dataList.size(); i++) {
-                MESPRecord record1 = JSONObject.parseObject(dataList.get(i).toJSONString(), MESPRecord.class);
-                if (record1.getSid().equals(record.getSid())) {
-                    key = i;
-                    break;
-                }
-            }
-
-            if (key == -1) {
-                bindSid1.put(record.getSid1(), record.getSid1());
-                adapter.addRecord(CommonUtils.getJsonObjFromBean(record));
-            } else {
-                dataList.set(key, CommonUtils.getJsonObjFromBean(record));
-                adapter.notifyDataSetChanged();
-            }
             CommonUtils.textViewGetFocus(edtSid1);
-            CommonUtils.canDo(GBKEY);
-
-
+            MESPRecord record= (MESPRecord) record2;
+            //加载工单信息
+            String cont="~sid='"+record.getSlkid()+"' and zcno='"+zcno+"'";
+            commPresenter.getAssistInfo(CommCL.AID_SLKID_QTY,cont,1);
         } else {
             hideLoading();
-            CommonUtils.canDo(GBKEY);
             showMessage(error);
             CommonUtils.textViewGetFocus(edtSid1);
         }
@@ -309,10 +337,28 @@ public class FastMzTYActivity extends BaseActivity implements CommFastView {
 
     @Override
     public void onRemoteFailed(String message) {
-
         hideLoading();
-        CommonUtils.canDo(GBKEY);
         CommonUtils.showError(this, "onRemoteFailed="+message);
-
+    }
+    public void setJiShu(int ji_shu){
+        textJiShu.setText(""+ji_shu);
+        //计数不为0时，设置已扫数量
+        int tempqty=0;
+        for(JSONObject obj:dataList){
+            int tqty=obj.getInteger("qty");
+            tempqty+=tqty;
+        }
+        textJiShuQty.setText(""+tempqty);
+        if(ji_shu==0){
+            textJiShu.setTextColor(Color.GREEN);
+            adapter.clear();//计数为0时，情况数据
+        }else {
+            textJiShu.setTextColor(Color.RED);
+        }
+    }
+    public void setMoInfo(int totalQty,int qty){
+        textTotalQty.setText(""+totalQty);
+        textGuoZhanQty.setText(""+qty);
+        textWeiGuoZhanQty.setText(""+(totalQty-qty));
     }
 }

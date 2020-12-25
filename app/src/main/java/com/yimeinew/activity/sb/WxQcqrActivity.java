@@ -321,8 +321,10 @@ public class WxQcqrActivity extends BaseActivity implements CommBaseView {
                 adapter.clear();
                 String ws=GETZCWXYY+"";
                 String time="2019-01-01";
-                String cont="~wxstate='"+ws+"' and  mkdate>'"+time+"'";
-                commPresenter.getAssistInfo(CommCL.AID_SBWXQR2, cont, GETZCKEY);
+                String sorg= BaseApplication.currUser.getDeptCode();
+                String sorgCont=(TextUtils.equals(sorg,"0"))?"":" and sorg='"+sorg+"'";
+                String cont="~wxstate='"+ws+"' and  mkdate>'"+time+"'"+sorgCont;
+                commPresenter.getAssistInfo(CommCL.AID_SBWXQR3, cont, GETZCKEY);
                 num=0;
 
             }

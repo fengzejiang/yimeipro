@@ -14,6 +14,8 @@ import android.content.Intent;
 import android.net.Uri;
 import android.os.*;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.FileProvider;
+import android.text.TextUtils;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 
 
@@ -107,7 +109,7 @@ public class DownloadAPK extends AsyncTask<String, Integer, String> {
 			StrictMode.setVmPolicy(builder.build());
 		}
 		//android8安装
-		if (Build.VERSION.SDK_INT >= 26) {
+		if (android.os.Build.VERSION.SDK_INT >= 26) {
 			boolean hasInstallPermission = mContext.getPackageManager().canRequestPackageInstalls();
 			if (!hasInstallPermission) {
 				//请求安装未知应用来源的权限
@@ -118,12 +120,30 @@ public class DownloadAPK extends AsyncTask<String, Integer, String> {
 			if (!file.exists()) {
 				CommonUtils.showError(mContext,"存储权限没有获取成功，请到设置-》应用-》易美工具1.3-》权限");
 			}else {
-				Intent intent = new Intent(Intent.ACTION_VIEW);
-				intent.setDataAndType(Uri.fromFile(file),
-						"application/vnd.android.package-archive");
-				mContext.startActivity(intent);
+//				Intent intent = new Intent(Intent.ACTION_VIEW);
+//				intent.setDataAndType(Uri.fromFile(file),"application/vnd.android.package-archive");
+//				mContext.startActivity(intent);
+				installApk(mContext,file);
+
 			}
 		}
+	}
+	public static void installApk(Context context,File file) {
+		try {
+			Intent intent = new Intent(Intent.ACTION_VIEW);
+			intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) { // 7.0+以上版本
+				Uri apkUri = FileProvider.getUriForFile(context, context.getApplicationInfo().packageName+".fileprovider", file); //与manifest中定义的provider中的authorities="cn.wlantv.kznk.fileprovider"保持一致
+				intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+				intent.setDataAndType(apkUri, "application/vnd.android.package-archive");
+			} else {
+				intent.setDataAndType(Uri.fromFile(file), "application/vnd.android.package-archive");
+			}
+			context.startActivity(intent);
+		}catch (IllegalArgumentException e){
+
+		}
+
 	}
 
 
@@ -161,14 +181,18 @@ public class DownloadAPK extends AsyncTask<String, Integer, String> {
 			@Override
 			public void run() {
 				String json=ToolUtils.getUrl(CommCL.URi+"version.json");//获取服务器版本号
-				JSONObject obj = JSONObject.parseObject(json);
-				String version=obj.getString("VERSION");
-				int ci=CommCL.SHOW_VERSION.compareTo(version);
-				if(ci<0){
-					Message msg=Message.obtain();
-					msg.what=2019002;
-					msg.obj="open";
-					handler.sendMessage(msg);
+				try {
+					JSONObject obj = JSONObject.parseObject(json);
+					String version=obj.getString("VERSION");
+					int ci=CommCL.SHOW_VERSION.compareTo(version);
+					if(ci<0){
+						Message msg=Message.obtain();
+						msg.what=2019002;
+						msg.obj="open";
+						handler.sendMessage(msg);
+					}
+				}catch (Exception e){
+
 				}
 			}
 		});

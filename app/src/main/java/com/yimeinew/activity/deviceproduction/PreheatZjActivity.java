@@ -170,6 +170,7 @@ public class PreheatZjActivity extends BaseActivity implements CommBaseView {
     //设备查询返回
     public void getEquipmentInfoCallBack(Boolean bok, JSONArray info, String error, int key){
         if(bok){
+            hideLoading();
             if(info.size()>0){
                 equinfo=JSONObject.parseObject(info.getJSONObject(0).toJSONString(),EquipmentInfo.class);
                 CommonUtils.textViewGetFocus(edtProNo);
@@ -177,7 +178,6 @@ public class PreheatZjActivity extends BaseActivity implements CommBaseView {
                 showMessage("没有查询到设备号");
                 CommonUtils.textViewGetFocus(edtEquNo);
             }
-            hideLoading();
         }else{
             hideLoading();
             showMessage(error);
@@ -224,18 +224,18 @@ public class PreheatZjActivity extends BaseActivity implements CommBaseView {
                 String equ = edtEquNo.getText().toString().toUpperCase();
                 String op=edtOP.getText().toString().toUpperCase();
                 if(state==1){
-                    showMessage("该料盒号没有解绑");
                     hideLoading();
+                    showMessage("该料盒号没有解绑");
                     CommonUtils.textViewGetFocus(edtMbox);return;
                 }
                 if(TextUtils.isEmpty(prd_no)){
-                    showMessage("该料盒号没有料号绑支架");
                     hideLoading();
+                    showMessage("该料盒号没有料号绑支架");
                     CommonUtils.textViewGetFocus(edtMbox);return;
                 }
                 if(!TextUtils.isEmpty(program)||!TextUtils.isEmpty(sbid)){
-                    showMessage("该料盒号已经绑定过烘箱和程式，无法再次除湿");
                     hideLoading();
+                    showMessage("该料盒号已经绑定过烘箱和程式，无法再次除湿");
                     CommonUtils.textViewGetFocus(edtMbox);return;
                 }
                 MESPRecord mp=new MESPRecord();
@@ -260,8 +260,8 @@ public class PreheatZjActivity extends BaseActivity implements CommBaseView {
                     }
 
                 }else{
-                    showMessage("该料盒号绑定的支架是"+gmc+"使用的程式是"+mzhij);
                     hideLoading();
+                    showMessage("该料盒号绑定的支架是"+gmc+"使用的程式是"+mzhij);
                     CommonUtils.textViewGetFocus(edtMbox);return;
                 }
 

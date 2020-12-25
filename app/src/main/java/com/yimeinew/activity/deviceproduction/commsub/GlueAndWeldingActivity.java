@@ -260,13 +260,9 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                     showMessage(err+"料盒没有解绑");
                     CommonUtils.textViewGetFocus(key == 0 ? editTextBox : editTextBox1);
                     return false;
-                }else{
-                    cache.put(currBox1,CommCL.BOX_STATE_WORKING);
                 }
                 break;
         }
-
-
         return true;
 
     }
@@ -472,14 +468,14 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                 hideLoading();
                 CommonUtils.canDo(GBKEY);
                 CommonUtils.textViewGetFocus(editTextBox1);
-                showMessage("手输料盒号需要回车,或者信息未返回！");
+                showMessage("手输料盒号需要回车！");
                 return;
             }
             if(!TextUtils.equals(currBox,editTextBox.getText().toString().toUpperCase())){
                 hideLoading();
                 CommonUtils.canDo(GBKEY);
                 CommonUtils.textViewGetFocus(editTextBox);
-                showMessage("手输料盒号需要回车,或者信息未返回！");
+                showMessage("手输料盒号需要回车！");
                 return;
             }
             if(!checkBoxState(currBox1,1)){
@@ -488,8 +484,8 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                 return;
             }
             if(TextUtils.equals(currBox,currBox1)){
-                showMessage("两个料盒一样无法倒料盒！");
                 hideLoading();
+                showMessage("两个料盒一样无法倒料盒！");
                 CommonUtils.canDo(GBKEY);
                 return;
             }
@@ -504,12 +500,10 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                     return;
                 }
             }
-            /*
             if(!checkBoxState(currBox,0)){
                 hideLoading();
                 return;
             }
-            */
             //保存生产记录
             String op = editTextOp.getText().toString().toUpperCase();//操作员
             String mono = batchInfo.getString("sid");
@@ -827,14 +821,23 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                                 break;
                             }
                         }
+                        String op=editTextOp.getText().toString().toUpperCase();
+                        String opv = CommCL.sharedPreferences.getString(op, "");
+                        if(TextUtils.isEmpty(opv)){
+                            showMessage("请输入正确操作员");
+                            return;
+                        }
+                        for(MESPRecord mp:startList){
+                            mp.setOp(op);
+                        }
                         MESPRecord record = startList.get(0);
                         if (record.getFirstchk() == 1) {
                             int bf = currEquipMent.getFirstchk();
                             if (bf == 1 && currEquipMent.getPrdno().equals(record.getPrd_no())) {
-                                if(TextUtils.equals(zcInfo.getId(),"31")){//点胶校验胶水是否过期，再调用开工代码
+                                if(CommonUtils.contentEquals("31,32",zcInfo.getId(),",")){//点胶校验胶水是否过期，再调用开工代码
                                     showLoading();
                                     //commStationZCPresenter.changeRecordStateBatch(startList, CommCL.BATCH_STATUS_WORKING);
-                                    commStationZCPresenter.getMachineGlueInfo(record.getSbid(),record.getSlkid(),startList);
+                                    commStationZCPresenter.getMachineGlueInfo(record.getSbid(),record.getSlkid(),startList,editTextOp.getText().toString().toUpperCase());
                                 }else {
                                     showLoading();
                                     commStationZCPresenter.changeRecordStateBatch(startList, CommCL.BATCH_STATUS_WORKING);
@@ -876,6 +879,15 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                     showMessage("请选择记录");
                     return;
                 }
+                String op=editTextOp.getText().toString().toUpperCase();
+                String opv = CommCL.sharedPreferences.getString(op, "");
+                if(TextUtils.isEmpty(opv)){
+                    showMessage("请输入正确操作员");
+                    return;
+                }
+                for(MESPRecord mp:outList){
+                    mp.setOp(op);
+                }
                 if (!TextUtils.isEmpty(error)) {
                     showMessage(error + "，不能出站！！");
                 } else {
@@ -901,6 +913,7 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                         }
                         if (doDone) {
                             showLoading();
+
                             commStationZCPresenter.changeRecordStateBatch(outList, CommCL.BATCH_STATUS_DONE);
                             return ;
                         }
@@ -931,8 +944,8 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
 
                     List<MESPRecord> list = commChoice.getSelectItem();
                     MESPRecord record = list.get(0);
-                    String op = editTextOp.getText().toString().toUpperCase();//操作员
-                    alertWindow(this,record,op);
+                    String op1 = editTextOp.getText().toString().toUpperCase();//操作员
+                    alertWindow(this,record,op1);
                 } else {
                     showMessage("请选择一条记录，执行数量修改！");
                 }
@@ -1042,109 +1055,18 @@ public class GlueAndWeldingActivity extends BaseActivity implements BaseStationB
                     clearChoice();
                     break;
                 case R.id.id_menu_charging:
-                    selectNum = dataListViewContent.getCheckedItemCount();
-                    if (selectNum == 1) {
-                        //上料
-                        List<MESPRecord> list = getSelectItem();
-                        MESPRecord record = list.get(0);
-                        HashMap<String, Serializable> map = new HashMap<>();
-                        map.put(CommCL.COMM_ZC_INFO_FLD, zcInfo);
-                        map.put(CommCL.COMM_OP_FLD, currOP);
-                        map.put(CommCL.COMM_RECORD_FLD, record);
-                        map.put(CommCL.COMM_SBID_FLD, currEquipMent.getId());
-                        myUnregisterReceiver(barcodeReceiver);
-                        jumpNextActivity(ChargingActivity.class, map);
-                    } else {
-                        showMessage("请选择一条记录上料！");
-                    }
+
                     break;
                 case R.id.id_menu_start:
                     //开工
-                    List<MESPRecord> startList = getSelectItem();
-                    if (!TextUtils.isEmpty(error)) {
-                        showMessage(error + "，不能开工！！");
-                        break;
-                    } else {
-                        currState = startList.get(0).getState1();
-                        if (currState.equals(CommCL.BATCH_STATUS_IN) || currState.equals(CommCL.BATCH_STATUS_CHARGING)) {
-                            //只有在01入站或者是02上料的状态才可以开工
-                            int start = zcInfo.getStartnum();
-                            if (start > 0) {
-                                int canStartNum = zcInfo.getStartnum() - getStartCount();
-                                if (canStartNum <= 0) {
-                                    showMessage("制成" + zcInfo.getId() + "最多可开工数为【" + zcInfo.getStartnum() + "】");
-                                    break;
-                                }
-                                if (startList.size() > canStartNum) {
-                                    showMessage("制成" + zcInfo.getId() + "最多可开工数为【" + zcInfo.getStartnum() + "】还可以开工:【" + canStartNum + "】");
-                                    break;
-                                }
-                            }
-                            MESPRecord record = startList.get(0);
-                            if (record.getFirstchk() == 1) {
-                                int bf = currEquipMent.getFirstchk();
-                                if (bf == 1 && currEquipMent.getPrdno().equals(record.getPrd_no())) {
-                                    showLoading();
-                                    commStationZCPresenter.changeRecordStateBatch(startList, CommCL.BATCH_STATUS_WORKING);
-                                    break;
-                                } else {
-                                    showMessage("设备：" + currEquipMent.getId() + "没有做首件检验！");
-                                    break;
-                                }
-                            } else {
-                                showLoading();
-                                commStationZCPresenter.changeRecordStateBatch(startList, CommCL.BATCH_STATUS_WORKING);
-                                break;
-                            }
-                        } else {
-                            showMessage("选中的记录不可以开工!");
-                            break;
-                        }
-                    }
+
+                    break;
                 case R.id.id_menu_done:
                     //完工出站
-                    List<MESPRecord> outList = getSelectItem();
-                    if (!TextUtils.isEmpty(error)) {
-                        showMessage(error + "，不能出站！！");
-                    } else {
-                        currState = outList.get(0).getState1();
-                        if (CommCL.BATCH_STATUS_WORKING.equals(currState)) {
-                            //校验出站时间
-                            boolean doDone = true;
-                            String errStr = "";
-                            if (zcInfo.getPtime() > 0) {
-                                for (int i = 0; i < outList.size(); i++) {
-                                    MESPRecord cr = outList.get(i);
-                                    int key = DateUtil.subDate(DateUtil.getCurrDateTime(ICL.DF_YMDT), cr.getHpdate(), 4);
-                                    if (key < zcInfo.getPtime() && key > 0&&!CommCL.isTest) {
-                                        doDone = false;
-                                        errStr = cr.getSid1() + "已开工:" + key + "分钟，需要等待" + zcInfo.getPtime() + "分钟，不能出站！";
-                                        break;
-                                    }
-                                }
-                            }
-                            if (!TextUtils.isEmpty(errStr)) {
-                                showMessage(errStr);
-                                return false;
-                            }
-                            if (doDone) {
-                                showLoading();
-                                commStationZCPresenter.changeRecordStateBatch(outList, CommCL.BATCH_STATUS_DONE);
-                                return true;
-                            }
-                        } else {
-                            showMessage("选中记录的状态不是生产中，不可以出站");
-                            break;
-                        }
-                    }
-
+                    break;
                 case R.id.id_menu_gluing:
                     //加胶
-                    HashMap<String, Serializable> map = new HashMap<>();
-                    map.put(CommCL.COMM_OP_FLD, currOP);
-                    map.put(CommCL.COMM_SBID_FLD, currEquipMent.getId());
-                    myUnregisterReceiver(barcodeReceiver);
-                    jumpNextActivity(AddGluingActivity.class, map);
+
                     break;
             }
             return false;

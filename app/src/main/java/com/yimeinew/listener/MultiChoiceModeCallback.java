@@ -7,8 +7,10 @@ import android.widget.*;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 import com.yimeinew.activity.R;
 import com.yimeinew.activity.base.BaseActivity;
+import com.yimeinew.utils.CommCL;
 import com.yimeinew.utils.CommonUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -19,7 +21,7 @@ public class MultiChoiceModeCallback implements AbsListView.MultiChoiceModeListe
     public static final String TAG_NAME = MultiChoiceModeCallback.class.getSimpleName();
     private BaseActivity baseActivity;
     private ListView dataListViewContent;
-    private List<JSONObject> dataList;
+    public List<JSONObject> dataList;
     private View actionBarView;
     private TextView tv_selectedCount;
 
@@ -48,6 +50,12 @@ public class MultiChoiceModeCallback implements AbsListView.MultiChoiceModeListe
             MenuItem item = menu.findItem(R.id.id_menu_charging);
 //            item.setVisible(false);
         }
+        //隐藏按钮
+
+        menu.findItem(R.id.id_menu_charging).setVisible(false);
+        menu.findItem(R.id.id_menu_start).setVisible(false);
+        menu.findItem(R.id.id_menu_done).setVisible(false);
+        menu.findItem(R.id.id_menu_gluing).setVisible(false);
         mode.setCustomView(actionBarView);
         return true;
     }
@@ -121,5 +129,41 @@ public class MultiChoiceModeCallback implements AbsListView.MultiChoiceModeListe
         int selectedCount = dataListViewContent.getCheckedItemCount();
         tv_selectedCount.setText(String.valueOf(selectedCount));
         ((ArrayAdapter) dataListViewContent.getAdapter()).notifyDataSetChanged();
+    }
+    public int getSelectCount(){
+        int count=0;
+        for (int i = 0; i < dataList.size(); i++) {
+            if (dataListViewContent.isItemChecked(i)) {
+                count++;
+            }
+        }
+        return count;
+    }
+    public List<Integer> getSelectIndex(){
+        List<Integer> selectIndex=new ArrayList<>();
+        for (int i = 0; i < dataList.size(); i++) {
+            if (dataListViewContent.isItemChecked(i)) {
+                selectIndex.add(i);
+            }
+        }
+        return selectIndex;
+    }
+    public ArrayList<JSONObject> getSelectItem(){
+        ArrayList<JSONObject> al=new ArrayList<>();
+        for (int i = 0; i < dataList.size(); i++) {
+            if (dataListViewContent.isItemChecked(i)) {
+                al.add(dataList.get(i));
+            }
+        }
+        return al;
+    }
+    public void clearChoice() {
+        for (int i = 0; i < dataListViewContent.getAdapter().getCount(); i++) {
+            if (dataListViewContent.isItemChecked(i))
+                dataListViewContent.setItemChecked(i, false);
+        }
+    }
+    public void setItemChecked(int i){
+        dataListViewContent.setItemChecked(i,true);
     }
 }

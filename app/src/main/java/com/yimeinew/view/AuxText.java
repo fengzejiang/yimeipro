@@ -187,10 +187,13 @@ public class AuxText extends android.support.v7.widget.AppCompatEditText {
     }
     public boolean containsValue(String value){
         boolean b=false;
-        for(String v:aux.values()){
-            if(!TextUtils.isEmpty(v)&&!TextUtils.isEmpty(value)&&value.contains(v)){
-                b=true;
-            }
+        if(aux!=null&&!TextUtils.isEmpty(value)) {
+            b=aux.values().contains(value);
+//            for (String v : aux.values()) {
+//                if (!TextUtils.isEmpty(v) && !TextUtils.isEmpty(value) && v.contains(value)) {
+//                    b = true;
+//                }
+//            }
         }
         return b;
     }

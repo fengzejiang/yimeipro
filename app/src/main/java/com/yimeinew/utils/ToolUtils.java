@@ -1,12 +1,26 @@
 package com.yimeinew.utils;
 
+import android.app.Activity;
+import android.content.Context;
+import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.RectF;
+import android.net.Uri;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.support.v4.content.FileProvider;
+import android.support.v4.print.PrintHelper;
 import android.text.TextUtils;
-import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSON;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
-import com.yimeinew.entity.PrintModel;
+
+import com.yimeinew.activity.R;
 import okhttp3.*;
 
-import java.util.HashMap;
+import java.io.*;
+import java.text.SimpleDateFormat;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -14,6 +28,9 @@ import java.util.regex.Pattern;
  * 这个类放置与android无关 或者与UI关系不大的工具类
  */
 public class ToolUtils {
+    private int sourceVersion=0;
+    private int targetVersion=0;
+
     /**判断是否是Integer类型*/
     public static boolean isInteger(String str){
         if(str!=null&&!"".equals(str.trim())){
@@ -33,7 +50,13 @@ public class ToolUtils {
         }
         return true;
     }
-
+    public static boolean isDouble(String str) {
+        if (null == str || "".equals(str)) {
+            return false;
+        }
+        Pattern pattern = Pattern.compile("^[-\\+]?[.\\d]*$");
+        return pattern.matcher(str).matches();
+    }
     /**
      * MES系统定义的常量格式转换
      * @param cons
@@ -112,28 +135,180 @@ public class ToolUtils {
         }
         return "";
     }
-    public static String printLable(String path,String fileName,String[] data,int num){
-        HashMap<String, String> datahm=new HashMap<>();
-        datahm.put("assist","print");
-        datahm.put("fullName",fileName);
-        datahm.put("num",""+num);
-        datahm.put("path",path);
-        datahm.put("attr", JSON.toJSONString(data));
-        return ToolUtils.postUrl("http://192.168.6.14:8091/api?attr=sid",datahm);
-    }
-    public static PrintModel printPack(String lotno,String insobj){
-        String url="http://192.168.6.14:8090/api?assist=100&insobj="+insobj+"&tableName=mes_pklist_prt&key=lotno&id="+lotno;
-        String str=getUrl(url);
-        return JSON.parseObject(str, PrintModel.class);
-    }
-    public static String printLable(String path,PrintModel printModel){
-        HashMap<String, String> moban = printModel.getMoban();
-        String[] data=new String[moban.size()];
-        int i=0;
-        for(String key:moban.keySet()){
-            data[i]=key+":"+moban.get(key);
-            i++;
+    public static String uploadFile(String url,File file) {
+
+            OkHttpClient client = new OkHttpClient();
+            RequestBody requestBody = new MultipartBody.Builder()
+                    .setType(MultipartBody.FORM)
+                    .addFormDataPart("file", file.getName(),
+                            RequestBody.create(MediaType.parse("multipart/form-data"), file))
+                    .build();
+
+            Request request = new Request.Builder()
+                    .header("Authorization", "Client-ID " + UUID.randomUUID())
+                    .url(url)
+                    .post(requestBody)
+                    .build();
+        try {
+            Response response = client.newCall(request).execute();
+            if (!response.isSuccessful()) throw new IOException("Unexpected code " + response);
+
+            return response.body().string();
+
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        return printLable(path,printModel.getFileName(),data,printModel.getNum());
+
+        return "";
     }
+    public static void openPhoto(Activity activity, String path,int REQ_CODE) {
+        File cameraPhoto = new File(path);
+        Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        Uri photoUri = FileProvider.getUriForFile(
+                activity.getApplicationContext(),
+                activity.getPackageName() + ".fileprovider",
+                cameraPhoto);
+        intent.putExtra(MediaStore.EXTRA_OUTPUT, photoUri);
+        activity.startActivityForResult(intent, REQ_CODE);
+    }
+
+    /**
+     * 缩放图片
+     * @param imgpath
+     * @param zoompath
+     */
+    public static void zoomImage(String imgpath,String zoompath) {
+        File originFile = new File(imgpath);
+        Bitmap bitmap = BitmapFactory.decodeFile(originFile.getAbsolutePath());
+        //设置缩放比
+        int radio = 2;
+        int w=bitmap.getWidth();
+        if(w>=1500){radio=3;}else if (w>=2000){radio=4;}
+        Bitmap result = Bitmap.createBitmap(bitmap.getWidth() / radio, bitmap.getHeight() / radio, Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(result);
+        RectF rectF = new RectF(0, 0, bitmap.getWidth() / radio, bitmap.getHeight() / radio);
+        //将原图画在缩放之后的矩形上
+        canvas.drawBitmap(bitmap, null, rectF, null);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        result.compress(Bitmap.CompressFormat.JPEG, 100, bos);
+        try {
+            FileOutputStream fos = new FileOutputStream(new File(zoompath));
+            fos.write(bos.toByteArray());
+            fos.flush();
+            fos.close();
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    /**
+     * 打印数据传值
+     * @param assist 100标签打印，200标签复制，300标签重置
+     *               700批量模板打印，800批量模板复制，900批量模板重置
+     *               701批量id【记录】异步打印
+     * @param sid  打印模板ID（可空）
+     * @param tableName  主表数据库表名
+     * @param key  主表数据库主键字段名
+     * @param id   主表主键值
+     * @param insobj 主表对象定义
+     * @param sprn  打印人
+     * @param print_id  打印机id-用于选择打印  为空时使用默认打印机
+     * @return
+     */
+    public static HashMap<String, String> printLable(String assist,String sid,String tableName,String key,String id,String insobj,String sprn,String print_id){
+        HashMap<String, String> datahm=CommonUtils.commPrintDataMap(assist);
+        datahm.put("sid",sid);
+        datahm.put("tableName",tableName);
+        datahm.put("key",key);
+        datahm.put("id", id);
+        datahm.put("insobj", insobj);
+        datahm.put("sprn", sprn);
+        datahm.put("print_id", print_id);
+        datahm.put(CommCL.COMM_MSG_ID,getTimeSid()+tableName);//用于区分请求的消息id
+        return datahm;
+    }
+    public static HashMap<String,String> printNum(String msg_id){
+        String assist = "702";
+        HashMap<String, String> datahm=CommonUtils.commPrintDataMap(assist);
+        datahm.put(CommCL.COMM_MSG_ID,msg_id);
+        return datahm;
+    }
+    public static boolean containValue(String[] strings,String str){
+        for(String s1:strings){
+            if(TextUtils.equals(s1,str)){
+                return true;
+            }
+        }
+        return false;
+    }
+    public static void testPrintimg(Context context){
+        PrintHelper ph=new PrintHelper(context);
+        ph.setScaleMode(PrintHelper.SCALE_MODE_FIT);
+    }
+    public static boolean isInList(List<JSONObject> al, String key, String value){
+        for(JSONObject obj:al){
+            if(TextUtils.equals(obj.getString(key),value)){
+                return true;
+            }
+        }
+        return false;
+    }
+    public synchronized static String getTimeSid(){
+        SimpleDateFormat sdf=new SimpleDateFormat("yyyyMMdd_HHmm_ss");
+        return sdf.format(new Date(DateUtil.getCurrDateTimeLong()));
+    }
+    private static int myid=0;
+    public static int getMyid(){//全局自动递增id。用于view id赋值
+        if(myid>14748364){
+            myid=0;
+        }
+        myid++;
+        return myid;
+    }
+
+    /**
+     * 源版本++
+     */
+    public void addVersion(){
+        sourceVersion++;
+    }
+
+    /**
+     * 本地升级
+     */
+    public void updateVersion(){
+        targetVersion=sourceVersion;
+    }
+
+    /**
+     * 判断是否需要升级
+     * @return
+     */
+    public boolean needUpdate(){
+        if(sourceVersion>targetVersion){
+            return true;
+        }else{
+            return false;
+        }
+    }
+    public static JSONObject getListJSONObj(ArrayList<JSONObject> list,HashMap<String,String> keys){
+        for(JSONObject obj:list){
+            boolean b=true;
+            for(String key:keys.keySet()){
+                if(!TextUtils.equals(keys.get(key),obj.getString(key))){
+                    b=false;
+                    break;
+                }
+            }
+            if(b){
+                return obj;
+            }
+        }
+        return null;
+    }
+
+
+
 }

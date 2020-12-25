@@ -1,5 +1,6 @@
 package com.yimeinew.presenter;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.text.TextUtils;
@@ -7,10 +8,7 @@ import android.util.Log;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 
-import com.yimeinew.data.CWorkInfo;
-import com.yimeinew.data.CeaPars;
-import com.yimeinew.data.EquipmentInfo;
-import com.yimeinew.data.MESPRecord;
+import com.yimeinew.data.*;
 import com.yimeinew.data.qc.QCBatchInfo;
 import com.yimeinew.listener.OnConfirmListener;
 import com.yimeinew.model.impl.CommZCModel;
@@ -45,6 +43,7 @@ public class BianDaiPresenter {
      * @param sid1 批次号
      * @param zcNo 制成号
      */
+    @SuppressLint("CheckResult")
     public void getBatchInfo(String sid1, String zcNo, EquipmentInfo currEquipment, Context context) {
         baseModel.getBatchRecordByLotNoAndZcNo(sid1, zcNo).compose(ResponseTransformer.handleResult())
                 .compose(schedulerProvider.applySchedulers()).subscribe(
@@ -80,18 +79,24 @@ public class BianDaiPresenter {
                                 return;
                             }
                             String state1 = jsonObject.getString("state2");
+
                             if (CommCL.BATCH_STATUS_WORKING.equals(state1)) {
-                                baseView.checkSidCallBack(false, null, "该批次【" + sid1 + "】正在生产中,不能再次入站！");
+                                baseView.checkSidCallBack(false, jsonObject, "该批次【" + sid1 + "】正在生产中,不能再次入站！");
                                 return;
                             }
                             if (CommCL.BATCH_STATUS_CHARGING.equals(state1)) {
-                                baseView.checkSidCallBack(false, null, "该批次【" + sid1 + "】已经上料,不能再次入站！");
+                                baseView.checkSidCallBack(false, jsonObject, "该批次【" + sid1 + "】已经上料,不能再次入站！");
                                 return;
                             }
                             if (CommCL.BATCH_STATUS_IN.equals(state1)) {
-                                baseView.checkSidCallBack(false, null, "该批次【" + sid1 + "】已经别的机台入站,不能再次入站！");
+                                baseView.checkSidCallBack(false, jsonObject, "该批次【" + sid1 + "】已经别的机台入站,不能再次入站！");
                                 return;
                             }
+                            if(CommCL.BATCH_STATUS_CHECKING.equals(state1)){
+                                baseView.checkSidCallBack(false, null, "该批次【" + sid1 + "】该批次处于待检，不能再次入站！");
+                                return;
+                            }
+
                             //校验状态
 
                             if (TextUtils.equals(CommCL.LOT_STATUS_BIANDAI,stateValue)) {
@@ -102,7 +107,10 @@ public class BianDaiPresenter {
                                 baseView.checkSidCallBack(false, null, "该批次【" + sid1 + "】已出站但是lotstate还没有处理完请稍后再试！");
                                 return;
                             }
-
+                            if(!(CommCL.BATCH_STATUS_READY.equals(state1)||CommCL.BATCH_STATUS_READY1.equals(state1))){
+                                baseView.checkSidCallBack(false, null, "该批次【" + sid1 + "】该批次处于"+stateValue+"，不是准备状态不能入站！");
+                                return;
+                            }
                             String currMO = baseView.getCurrMO();
                             String sid = jsonObject.getString("sid");
                             if (currMO.length() > 0) {
@@ -111,24 +119,49 @@ public class BianDaiPresenter {
                                     return;
                                 }
                             }
+                            if(jsonObject.getInteger("qty")>jsonObject.getInteger("maxrollqty")){
+                                baseView.checkSidCallBack(false, null, "标签数量超出范围，禁止加工");
+                                return;
+                            }
 
                             //编带机种校验，bincode校验
+                            String bincode=jsonObject.getString("bincode");
                             List<JSONObject> dataList=baseView.getDataList();
+                            //空bin不能加工
+                            if(TextUtils.isEmpty(bincode)){
+                                baseView.checkSidCallBack(false, null, "BinCode为空，是不良品。不能编带！");
+                                return;
+                            }
                             if(dataList!=null&&dataList.size()>0){
                                 JSONObject jsonObj=dataList.get(0);//获取最后一个
                                 String d_prd_no=jsonObj.getString("prd_no");
                                 String d_bincode=jsonObj.getString("bincode");
                                 String prd_no=jsonObject.getString("prd_no");
-                                String bincode=jsonObject.getString("bincode");
+
                                 if(!TextUtils.equals(d_prd_no,prd_no)){
-                                    baseView.checkSidCallBack(true, jsonObject, "当前的机种是：【"+d_prd_no+"】，扫描的机种是：【"+prd_no+"】，两者不一致");
+                                    baseView.checkSidCallBack(false, jsonObject, "当前的机种是：【"+d_prd_no+"】，扫描的机种是：【"+prd_no+"】，两者不一致");
                                     return;
                                 }
                                 if(!TextUtils.equals(d_bincode,bincode)){
-                                    baseView.checkSidCallBack(true, jsonObject, "当前的Bincode是：【"+d_bincode+"】，扫描的Bincode是：【"+bincode+"】，两者不一致");
+                                    baseView.checkSidCallBack(false, jsonObject, "当前的Bincode是：【"+d_bincode+"】，扫描的Bincode是：【"+bincode+"】，两者不一致");
                                     return;
                                 }
                             }
+                            //当前面的 货品，和bincode出站了，那么换bin时提示清机
+                            if(!TextUtils.isEmpty(currEquipment.getPrd_mark())&&!TextUtils.equals(currEquipment.getPrd_mark(),bincode)){
+                                CommonUtils.confirm(context, "更换BinCode", "之前Bin:"+currEquipment.getPrd_mark()+"，现在Bin:"+bincode+"。换bin,请确认是否【清机】完毕", null, new OnConfirmListener() {
+                                    @Override
+                                    public void OnConfirm(DialogInterface dialog) {
+                                        baseView.checkSidCallBack(true, jsonObject, null);
+                                    }
+                                    @Override
+                                    public void OnCancel(DialogInterface dialog) {
+                                        baseView.checkSidCallBack(false, null, "取消入站");
+                                    }
+                                });
+                                return;
+                            }
+
                             if(jsonObject.getInteger("qty")<=jsonObject.getInteger("rollqty")){
                                 CommonUtils.confirm(context, "不是整卷", "此卷物料不是整卷数量是否加工【" + jsonObject.getInteger("qty")+"】", null, new OnConfirmListener() {
                                     @Override
@@ -140,6 +173,7 @@ public class BianDaiPresenter {
                                         baseView.checkSidCallBack(false, null, "取消入站");
                                     }
                                 });
+                                return;
                             }else {
                                 baseView.checkSidCallBack(true, jsonObject, null);
                             }
@@ -556,32 +590,6 @@ public class BianDaiPresenter {
         });
     }
 
-    /***
-     * 检验发起原因查询，根据制成编码获取发起原因
-     * @param zcId 制程代号
-     */
-    public void getLaunchingReasons(String zcId) {
-        String cont = "~id='" + zcId + "'";
-        baseModel.getAssistInfo(CommCL.AID_ZC_QCREASON, cont).compose(ResponseTransformer.handleResult())
-                .compose(schedulerProvider.applySchedulers())
-                .subscribe(jsonObject -> {
-                    if (jsonObject.getIntValue(CommCL.RTN_ID) == -1) {//调用返回失败
-                        baseView.onRemoteFailed(jsonObject.toJSONString());
-                    } else {
-                        JSONObject msg = jsonObject.getJSONObject(CommCL.RTN_DATA);//response里面的data，存放的是查询记录
-                        JSONObject rtnMap = (JSONObject) msg.get(CommCL.RTN_DATA);//获取实际的查询结果
-                        if (rtnMap.getInteger(CommCL.RTN_CODE) == 0) {
-                            //没有获取到数据
-                            baseView.loadReasonsBack(false, null, "制程【" + zcId + "】没有查询到发起原因");
-                        } else {
-                            //有发起原因
-                            baseView.loadReasonsBack(true, rtnMap.getJSONArray(CommCL.RTN_VALUES), null);
-                        }
-                    }
-                }, throwable -> {
-                    baseView.onRemoteFailed(throwable.getMessage());
-                });
-    }
 
     /***
      * 根据制程代号，检验标志，获取检验项目
@@ -777,7 +785,49 @@ public class BianDaiPresenter {
                     }
                 });
     }
+    //通用更新
+    public void updateData(String insObject,Object record,int key){
+        baseModel.comUpdateData(record,insObject).compose(ResponseTransformer.handleResult())
+                .compose(schedulerProvider.applySchedulers()).subscribe(
+                carBeans -> {
+                    if (carBeans.getIntValue(CommCL.RTN_ID) != 0) {
+                        baseView.commonBack(false, null,"获取服务器信息失败" + carBeans.toString(), key);
+                    }else if (carBeans.getIntValue(CommCL.RTN_ID) == 0) {
+                        Log.i(TAG_NAME, carBeans.toJSONString());
+                        if (carBeans.getIntValue(CommCL.RTN_ID) != 0) {
+                            baseView.commonBack(false, null,"记录更新失败", key);
+                        } else if (carBeans.getIntValue(CommCL.RTN_ID) == 0) {
+                            JSONArray array=new JSONArray();
+                            array.add(record);
+                            baseView.commonBack(true,array,"",key);
+                        }
+                    }
+                },throwable -> {
+                    baseView.onRemoteFailed(throwable.getMessage());
+                });
+    }
+    //插入生产异常表
+    public void saveMESPerrLog(MESPRecord record,String reason){
+        MESPerrLog perrLog=new MESPerrLog(record);
+        perrLog.setReason(reason);
+        JSONObject jsonObject=CommonUtils.getJsonObjFromBean(perrLog);
+        jsonObject.put(CommCL.SAVE_DATA_STATE,3);
+        Log.i(TAG_NAME,jsonObject.toJSONString());
+        baseModel.saveData(jsonObject,CommCL.CELL_ID_D0074W).compose(ResponseTransformer.handleResult())
+                .compose(schedulerProvider.applySchedulers()).subscribe(
+                carBeans -> {
+                    if (carBeans.getIntValue(CommCL.RTN_ID) != 0) {
+                        baseView.getMultiRecordBack(false,null,"添加生产异常表失败",31);
+                    }else if (carBeans.getIntValue(CommCL.RTN_ID) == 0) {
+                        //JSONObject msg = carBeans.getJSONObject(CommCL.RTN_DATA);//response里面的data，存放的是查询记录
+                        //JSONObject rtnMap = (JSONObject) msg.get(CommCL.RTN_DATA);//获取实际的查询结果
+                        //JSONArray jsonArray=new JSONArray();
 
+                        //jsonArray.add(record);
+                        //baseView.getMultiRecordBack(true,null,"",3);
+                    }
+                });
+    }
     //------------contains-------------
     public boolean contains(String str1,String str2){
         if(TextUtils.isEmpty(str1)||TextUtils.isEmpty(str2)){

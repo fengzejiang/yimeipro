@@ -58,7 +58,7 @@ public class ResponseTransformer {
         public ObservableSource<T> apply(Response<T> tResponse) {
             int code = tResponse.getId();
             String message = tResponse.getMessage();
-            Log.i("service",message);
+            Log.i("service","服务器消息："+message);
             if (code>=-1&&code<=1) {
                 JSONObject jsonObject = new JSONObject();
                 jsonObject.put("id",tResponse.getId());

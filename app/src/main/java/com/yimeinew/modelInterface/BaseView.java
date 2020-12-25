@@ -14,7 +14,10 @@ public interface BaseView {
      * 显示Loading界面
      */
     void showLoading();
-
+    /***
+     * 显示Loading界面
+     */
+    void showLoading(String message);
     /***
      * 隐藏Loading界面
      */
@@ -35,7 +38,7 @@ public interface BaseView {
     /***
      * 跳转页面
      */
-    void jumpNextActivity(Class<?> descClass);
+    void jumpNextActivity( Class<?> descClass);
     void jumpNextActivity(Context srcContent, Class<?> descClass);
 
     /***

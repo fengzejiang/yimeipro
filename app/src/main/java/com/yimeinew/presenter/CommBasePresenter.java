@@ -12,6 +12,7 @@ import com.yimeinew.network.response.ResponseTransformer;
 import com.yimeinew.network.schedulers.SchedulerProvider;
 import com.yimeinew.utils.CommCL;
 import com.yimeinew.utils.CommonUtils;
+import com.yimeinew.utils.ToolUtils;
 
 import java.util.HashMap;
 
@@ -40,7 +41,7 @@ public class CommBasePresenter {
                 .compose(schedulerProvider.applySchedulers()).subscribe(
                 carBeans -> {
                     if (carBeans.getIntValue(CommCL.RTN_ID) != 0) {
-                        baseView.getAssistInfoBack(false, null,"获取服务器信息失败" + carBeans.toString(), 0);
+                        baseView.getAssistInfoBack(false, null,"获取服务器信息失败" + carBeans.toString(), key);
                     }else if (carBeans.getIntValue(CommCL.RTN_ID) == 0) {
                         JSONObject msg = carBeans.getJSONObject(CommCL.RTN_DATA);//response里面的data，存放的是查询记录
                         JSONObject rtnMap = (JSONObject) msg.get(CommCL.RTN_DATA);//获取实际的查询结果
@@ -61,7 +62,7 @@ public class CommBasePresenter {
                 .compose(schedulerProvider.applySchedulers()).subscribe(
                 carBeans -> {
                     if (carBeans.getIntValue(CommCL.RTN_ID) != 0) {
-                        baseView.saveDataBack(false, null,record,"获取服务器信息失败" + carBeans.toString(), 0);
+                        baseView.saveDataBack(false, null,record,"获取服务器信息失败" + carBeans.toString(), key);
                     }else if (carBeans.getIntValue(CommCL.RTN_ID) == 0) {
                         JSONObject msg = carBeans.getJSONObject(CommCL.RTN_DATA);//response里面的data，存放的是查询记录
                         //JSONObject rtnMap = (JSONObject) msg.get(CommCL.RTN_DATA);//获取实际的查询结果
@@ -84,7 +85,7 @@ public class CommBasePresenter {
                 .compose(schedulerProvider.applySchedulers()).subscribe(
                 carBeans -> {
                     if (carBeans.getIntValue(CommCL.RTN_ID) != 0) {
-                        baseView.updateDataBack(false, null,"获取服务器信息失败" + carBeans.toString(), 0);
+                        baseView.updateDataBack(false, null,"获取服务器信息失败" + carBeans.toString(), key);
                     }else if (carBeans.getIntValue(CommCL.RTN_ID) == 0) {
                         Log.i(TAG_NAME, carBeans.toJSONString());
                         if (carBeans.getIntValue(CommCL.RTN_ID) != 0) {
@@ -174,7 +175,11 @@ public class CommBasePresenter {
      * 提交审核流程
      * @param ceaPars
      */
-    public void checkActionUp(CeaPars ceaPars) {
+    public synchronized void checkActionUp(CeaPars ceaPars) {
+        //重复提交拦截
+        if(CommonUtils.isRepeat("shenhe"+ceaPars.getSid(),"shenhe"+ceaPars.getSid(),8000)){
+            return;
+        }
         baseModel.getCeaCheckInfo(CommonUtils.getJsonObjFromBean(ceaPars).toJSONString(), CommCL.COMM_CHK_DO)
                 .compose(ResponseTransformer.handleResult()).compose(schedulerProvider.applySchedulers())
                 .subscribe(jsonObject -> {
@@ -184,15 +189,69 @@ public class CommBasePresenter {
                         JSONObject data = jsonObject.getJSONObject(CommCL.RTN_DATA);
                         Log.i(TAG_NAME,jsonObject.toString());
                         String chkInfo = data.getString("info");
-
                         baseView.checkActionBack(true,CommCL.COMM_CHK_DO,ceaPars,null,chkInfo);
                     }
                 }, throwable -> {
-                    baseView.onRemoteFailed(throwable.getLocalizedMessage());
+                    baseView.onRemoteFailed("34"+throwable.getLocalizedMessage());
                 });
     }
 
+    public void printLable(HashMap<String,String> hm,int key){
+        if(TextUtils.isEmpty(hm.get("print_id"))){
+            baseView.commCallBack(false, null,"请设置打印机", key);
+            return;
+        }
+        baseModel.doPrintServer(hm).compose(ResponseTransformer.handleResult())
+                .compose(schedulerProvider.applySchedulers()).subscribe(
+                carBeans -> {
+                    if (carBeans.getIntValue(CommCL.RTN_ID) != 0) {
+                        baseView.commCallBack(false, null,"获取信息失败21", key);
+                    }else if (carBeans.getIntValue(CommCL.RTN_ID) == 0) {
+                        JSONObject msg = carBeans.getJSONObject(CommCL.RTN_DATA);//response里面的data，存放的是查询记录
+                        JSONObject rtnMap = msg.getJSONObject(CommCL.RTN_DATA);//获取实际的查询结果
+                        System.out.println("woshi"+rtnMap.toJSONString());
+                        baseView.commCallBack(rtnMap.getBoolean("bok"),rtnMap.getJSONObject("info"),rtnMap.getString("error"),key);
+                    }
+                });
+    }
+    public void printNum(HashMap<String,String> hm,int num,int key){
+        baseModel.doPrintServer(hm).compose(ResponseTransformer.handleResult())
+                .compose(schedulerProvider.applySchedulers()).subscribe(
+                carBeans -> {
+                    if (carBeans.getIntValue(CommCL.RTN_ID) != 0) {
+                        baseView.commCallBack(false, null,"获取打印数量失败", key);
+                        int printnum = 1;
+                        getNextPrintNum(hm,num,key,printnum);
+                    }else if (carBeans.getIntValue(CommCL.RTN_ID) == 0) {
+                        JSONObject msg = carBeans.getJSONObject(CommCL.RTN_DATA);//response里面的data，存放的是查询记录
+                        JSONObject rtnMap = msg.getJSONObject(CommCL.RTN_DATA);//获取实际的查询结果
+                        JSONObject info = rtnMap.getJSONObject("info");
+                        int printnum = CommonUtils.parseInt(info.getString("printnum"));
+                        baseView.commCallBack(rtnMap.getBoolean("bok"), info, rtnMap.getString("error"), key);
+                        getNextPrintNum(hm,num,key,printnum);
+                    }
+                });
+    }
 
+    public void getNextPrintNum(HashMap<String,String> hm,int num,int key,int printnum) {
+        if (printnum < num) {
+            Thread thread = new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    try {
+//                        int m = (num - printnum) / 2;
+//                        m = (m > 0) ? m : 2;
+                        int m=2;
+                        Thread.sleep(1000 * m);
+                        printNum(hm, num, key);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
 
+                }
+            });
+            thread.start();
+        }
+    }
 
 }

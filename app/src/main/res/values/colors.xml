@@ -13,4 +13,6 @@
     <color name="text_color">#333333</color>
     <color name="table_header_color">#809aea</color>
     <color name="white">#99ffffff</color>
+    <color name="colorNeed">#C5142B</color>
+    <color name="color_bg_bai_se">#f0f0f0</color>
 </resources>

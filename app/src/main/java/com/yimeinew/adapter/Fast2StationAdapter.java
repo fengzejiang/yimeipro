@@ -9,6 +9,7 @@ import android.widget.BaseAdapter;
 import com.yimeinew.activity.R;
 import com.yimeinew.activity.databinding.MainCommStationItemBinding;
 import com.yimeinew.activity.deviceproduction.commsub.Fast2Activity;
+import com.yimeinew.activity.deviceproduction.commsub.Fast2MachineActivity;
 import com.yimeinew.activity.deviceproduction.commsub.FastActivity;
 import com.yimeinew.data.ZCInfo;
 import com.yimeinew.modelInterface.BaseView;
@@ -65,7 +66,7 @@ public class Fast2StationAdapter extends BaseAdapter {
         gjzc = CommonUtils.getZCInfoById("311");
 //        gjzc.setStartNum(2);
         gjzc.setImgIndex(R.drawable.qj_djcs2);
-        gjzc.setClazz(Fast2Activity.class);
+        gjzc.setClazz(Fast2MachineActivity.class);
         attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
         gjzc.setAttr(attr);
         zCnoInfos.add(gjzc);

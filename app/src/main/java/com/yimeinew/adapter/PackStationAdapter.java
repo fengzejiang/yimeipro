@@ -11,7 +11,7 @@ import com.yimeinew.activity.R;
 import com.yimeinew.activity.base.BaseApplication;
 import com.yimeinew.activity.databinding.MainCommStationItemBinding;
 import com.yimeinew.activity.deviceproduction.commsub.FastActivity;
-import com.yimeinew.activity.pack.PackActivity;
+import com.yimeinew.activity.pack.*;
 import com.yimeinew.data.ZCInfo;
 import com.yimeinew.modelInterface.BaseView;
 import com.yimeinew.presenter.CommStationPresenter;
@@ -57,11 +57,58 @@ public class PackStationAdapter extends BaseAdapter {
             int attr = 0;
             attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
             gjzc.setAttr(attr);
-
-            System.out.println("部门："+sorg+gjzc.getName());
+            gjzc.setName("扫码内装");
             zCnoInfos.add(gjzc);
-
-
+            //AB料装箱
+            gjzc = new ZCInfo("S21");
+            gjzc.setImgIndex(R.drawable.mz_pk_ab_saoma);
+            gjzc.setClazz(PackABActivity.class);
+            //gjzc.setStartNum(2);
+            attr = 0;
+            attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+            gjzc.setAttr(attr);
+            gjzc.setName("扫码内装");
+            zCnoInfos.add(gjzc);
+            //AB料尾数装箱
+            gjzc = new ZCInfo("S21");
+            gjzc.setImgIndex(R.drawable.mz_pk_ab_tail);
+            gjzc.setClazz(PackABTailActivity.class);
+            //gjzc.setStartNum(2);
+            attr = 0;
+            attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+            gjzc.setAttr(attr);
+            gjzc.setName("扫码内装");
+            zCnoInfos.add(gjzc);
+            //尾数装箱
+            gjzc = new ZCInfo("S21");
+            gjzc.setImgIndex(R.drawable.mz_pack_wsspm);
+            gjzc.setClazz(PackTailActivity.class);
+            //gjzc.setStartNum(2);
+            attr = 0;
+            attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+            gjzc.setAttr(attr);
+            gjzc.setName("扫码内装");
+            zCnoInfos.add(gjzc);
+            //备品装箱
+            gjzc = new ZCInfo("S21");
+            gjzc.setImgIndex(R.drawable.mz_pk_bp);
+            gjzc.setClazz(PackSpareActivity.class);
+            //gjzc.setStartNum(2);
+            attr = 0;
+            attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+            gjzc.setAttr(attr);
+            gjzc.setName("扫码内装");
+            zCnoInfos.add(gjzc);
+            //侧入式装箱
+            gjzc = new ZCInfo("S21");
+            gjzc.setImgIndex(R.drawable.mz_pk_side);
+            gjzc.setClazz(PackSideActivity.class);
+            //gjzc.setStartNum(2);
+            attr = 0;
+            attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+            gjzc.setAttr(attr);
+            gjzc.setName("侧入式装箱");
+            zCnoInfos.add(gjzc);
         }
 
     }

@@ -16,7 +16,7 @@ public interface CommFastView extends BaseView{
     public void saveRecordBack(boolean bok, Object record, String error);
     public void saveMoCallBack(Boolean bok, JSONObject batchInfo, String error);
     public void saveMarkingCallBack(Boolean bok, JSONObject batchInfo, String error);
-    public void getPackInfoCallBack(Boolean bok, JSONObject headinfo, JSONArray info, String error, int key);
+    public void getPackInfoCallBack(Boolean bok,JSONObject headinfo, JSONArray info, String error, int key);
     public void  getAssistInfoBack(Boolean bok, JSONArray info, String error, int key);
     /***
      * 更改状态，返回处理
@@ -25,6 +25,6 @@ public interface CommFastView extends BaseView{
      * @param error 如果失败，返回当前错误信息
      */
     void changeRecordStateBack(boolean bok, Object record, String error);
-    void updateCallBack(boolean bok, Object record, String error, int key);
+    void updateCallBack(boolean bok, Object record, String error,int key);
 
 }

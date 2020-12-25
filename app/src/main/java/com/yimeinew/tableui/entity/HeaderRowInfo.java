@@ -1,5 +1,7 @@
 package com.yimeinew.tableui.entity;
 
+import com.yimeinew.adapter.qc.TableItemEvent;
+
 import java.util.HashMap;
 
 /**
@@ -11,11 +13,15 @@ public class HeaderRowInfo {
     private String name;//列名称
     private int width=120;//列的宽度
     private int height=100;//列的高度
+    private int display=0;//区分显示类型 0:文本,1:NGOK,2:点击弹框  当=1，=2时，表格初始化时，必须指定isKey
 
+    private String backgroundColor;
+    private String textColor;
+    private TableItemEvent tableItemEvent;
+    private boolean key;//数据key用来区分数据，key=1时表示这个字段是key。可以指定多个字段为key。目前主要用于，因为android表格itemview重用机制导致数据混乱
     public int getAttr() {
         return attr;
     }
-
     public void setAttr(int attr) {
         this.attr = attr;
     }
@@ -41,8 +47,6 @@ public class HeaderRowInfo {
     private HashMap<String,String> contrastMap;
 
     private HashMap<String,String> contrastColors;
-
-
     public HeaderRowInfo(){}
     public HeaderRowInfo(String id,String name){
         this.id = id;
@@ -60,6 +64,7 @@ public class HeaderRowInfo {
         this.width =width;
         this.height = height;
     }
+
     public String getId() {
         return id;
     }
@@ -90,5 +95,42 @@ public class HeaderRowInfo {
 
     public void setHeight(int height) {
         this.height = height;
+    }
+    public int getDisplay() {
+        return display;
+    }
+    public void setDisplay(int display) {
+        this.display = display;
+    }
+    public TableItemEvent getTableItemEvent() {
+        return tableItemEvent;
+    }
+
+    public void setTableItemEvent(TableItemEvent tableItemEvent) {
+        this.tableItemEvent = tableItemEvent;
+    }
+
+    public String getBackgroundColor() {
+        return backgroundColor;
+    }
+
+    public void setBackgroundColor(String backgroundColor) {
+        this.backgroundColor = backgroundColor;
+    }
+
+    public String getTextColor() {
+        return textColor;
+    }
+
+    public void setTextColor(String textColor) {
+        this.textColor = textColor;
+    }
+
+    public boolean isKey() {
+        return key;
+    }
+
+    public void setKey(boolean isKey) {
+        this.key = isKey;
     }
 }

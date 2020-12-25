@@ -24,6 +24,7 @@ import com.yimeinew.listener.OnConfirmListener;
 import com.yimeinew.modelInterface.BaseStationBindingView;
 import com.yimeinew.network.schedulers.SchedulerProvider;
 import com.yimeinew.presenter.BianDaiPresenter;
+import com.yimeinew.tableui.CommMultiChoiceModeCallBack;
 import com.yimeinew.tableui.TablePanelView;
 import com.yimeinew.tableui.entity.HeaderRowInfo;
 import com.yimeinew.utils.*;
@@ -75,7 +76,7 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
     private HashMap<String, String> bindBox = new HashMap<>();
     private HashMap<String, String> bindSid1 = new HashMap<>();
     private EquipmentInfo currEquipment;
-    private CommMultiChoiceModeCallback commChoice;
+    private CommMultiChoiceModeCallBack commChoice;
     private String GBKEY="broadcastReceiverBD";
     //private String mbox;
     @Override
@@ -85,8 +86,7 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
         setContentView(R.layout.activity_bian_dai);
         this.setTitle(Title );
 
-        zCnoInfo = new ZCInfo();
-        zCnoInfo.setId("71");
+        zCnoInfo = CommonUtils.getZCInfoById("71");
         /*
         entity = new GJViewEntity();
         entity.setZcno(zCnoInfo.getId());
@@ -99,7 +99,6 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
         //activityCommGjBinding.setZcInf(entity);
         */
         ButterKnife.bind(this);
-
 
         initTableView();
         //生成假数据
@@ -148,7 +147,7 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
         dataList = new ArrayList();
         List<HeaderRowInfo> header = CommonUtils.getRowDataListBD();
         dataListViewContent.setChoiceMode(ListView.CHOICE_MODE_MULTIPLE_MODAL);
-        commChoice = new CommMultiChoiceModeCallback();
+        commChoice = new CommMultiChoiceModeCallBack(this,dataListViewContent,dataList);
         dataListViewContent.setMultiChoiceModeListener(commChoice);
         adapter = new BaseTableDataAdapter(this, tableView, dataListViewContent, dataList, header);
         adapter.setTitle("项次");
@@ -245,7 +244,7 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
 
             String sid = edtSid1.getText().toString().toUpperCase();
             if(CommonUtils.isRepeat(TAG_NAME+"edt_sid1",sid)){
-                //CommonUtils.textViewGetFocus(edtSid1);
+                CommonUtils.textViewGetFocus(edtSid1);
                 return true;
             }
             if (TextUtils.isEmpty(sid)) {
@@ -254,9 +253,12 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
                 return true;
             }
 
-            if (bindSid1.containsKey(sid)) {
+            if (bindSid1.containsKey(sid)||hasLotNO(sid)) {
+                /*
                 showMessage("该批次号【" + sid + "】已经扫描过");
                 CommonUtils.textViewGetFocus(edtSid1);
+                 */
+                panduanchuzhan(sid);
                 return true;
             }
 
@@ -355,45 +357,69 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
 //            hideLoading();
             //如果error不为空就弹出提示页面
             if(!TextUtils.isEmpty(error)){
-                CommonUtils.showOK(this,"提示",error);
-            }
+                CommonUtils.confirm(this, "提示", error, null, new OnConfirmListener() {
+                    @Override
+                    public void OnConfirm(DialogInterface dialog) {
+                        addRecord(bok,batchInfo,error);
+                    }
 
-            //生成生产记录
-            Log.i(TAG_NAME, batchInfo.toJSONString());
-            String op = edtOP.getText().toString().toUpperCase();//操作员
-            //String mBox = edtBox.getText().toString().toUpperCase();//料盒号
-            String sbId = edtSbid.getText().toString().toUpperCase();//设备号
-            //String sid1 = edtSid1.getText().toString().toUpperCase();//批次号
-            String sid1 = batchInfo.getString("sid1");//批次号
-            String mono = batchInfo.getString("sid");
-            String zcno1 = batchInfo.getString("zcno1");
-            String remark = batchInfo.getString("remark");
-            int qty = batchInfo.getInteger("qty");
-            String prd_no = batchInfo.getString("prd_no");
-            String prd_name = batchInfo.getString("prd_name");
-            int fircheck = batchInfo.getInteger("fircheck");
-            String lotno=batchInfo.getString("lotno");
-            String bincode=batchInfo.getString("bincode");
-            MESPRecord record = new MESPRecord(sid1, mono, zCnoInfo.getId(), sbId);
-            //record.setMbox(mBox);
-            record.setOp(op);
-            record.setZcno1(zcno1);
-            record.setRemark(remark);
-            record.setState1("01");
-            record.setQty(qty);
-            record.setPrd_no(prd_no);
-            record.setPrd_name(prd_name);
-            record.setFirstchk(fircheck);
-            record.setLotno(lotno);
-            record.setBincode(bincode);
-            commPresenter.makeProRecord(record);
+                    @Override
+                    public void OnCancel(DialogInterface dialog) {
+                        showMessage("取消入站");
+                    }
+                });
+            }else {
+                addRecord(bok,batchInfo,error);
+            }
         } else {
             hideLoading();
             CommonUtils.canDo(GBKEY);
-            showMessage(error);
             CommonUtils.textViewGetFocus(edtSid1);
+            //抛出异常
+            if(batchInfo!=null){
+                String msg=batchInfo.getString("lotno")+"不在"+edtSbid.getText().toString().toUpperCase()+"机台上，在别的机台:状态为"+batchInfo.getString("state2");
+                CommonUtils.alert(this,"错误信息",msg,null,null);
+                //异常数据保存
+                MESPRecord record=JSONObject.parseObject(batchInfo.toJSONString(),MESPRecord.class);
+                record.setSbid(currEquipment.getId());
+                record.setOp(edtOP.getText().toString().toUpperCase());
+                commPresenter.saveMESPerrLog(record,msg);
+            }else{
+                showMessage(error);
+            }
         }
 
+    }
+    public void addRecord(boolean bok, JSONObject batchInfo, String error){
+        //生成生产记录
+        Log.i(TAG_NAME, batchInfo.toJSONString());
+        String op = edtOP.getText().toString().toUpperCase();//操作员
+        //String mBox = edtBox.getText().toString().toUpperCase();//料盒号
+        String sbId = edtSbid.getText().toString().toUpperCase();//设备号
+        //String sid1 = edtSid1.getText().toString().toUpperCase();//批次号
+        String sid1 = batchInfo.getString("sid1");//批次号
+        String mono = batchInfo.getString("sid");
+        String zcno1 = batchInfo.getString("zcno1");
+        String remark = batchInfo.getString("remark");
+        int qty = batchInfo.getInteger("qty");
+        String prd_no = batchInfo.getString("prd_no");
+        String prd_name = batchInfo.getString("prd_name");
+        int fircheck = batchInfo.getInteger("fircheck");
+        String lotno = batchInfo.getString("lotno");
+        String bincode = batchInfo.getString("bincode");
+        MESPRecord record = new MESPRecord(sid1, mono, zCnoInfo.getId(), sbId);
+        //record.setMbox(mBox);
+        record.setOp(op);
+        record.setZcno1(zcno1);
+        record.setRemark(remark);
+        record.setState1("01");
+        record.setQty(qty);
+        record.setPrd_no(prd_no);
+        record.setPrd_name(prd_name);
+        record.setFirstchk(fircheck);
+        record.setLotno(lotno);
+        record.setBincode(bincode);
+        commPresenter.makeProRecord(record);
     }
 
     /***
@@ -463,6 +489,16 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
             //放到扫描的列表中
             MESPRecord record = (MESPRecord) records;
             bindSid1.put(record.getSid1(), record.getSid1());
+            //加入第一条的时候更新bincode
+            if(dataList.size()==0&&!TextUtils.equals(record.getBincode(),currEquipment.getPrd_mark())){
+                //更新设备的在产bincode
+                JSONObject obj=new JSONObject();
+                obj.put("id",currEquipment.getId());
+                obj.put("prd_mark",record.getBincode());
+                currEquipment.setPrd_mark(record.getBincode());
+                commPresenter.updateData(CommCL.LOT_QJ_BIANDAI_SB_BINCODE,obj,1);
+            }
+
             // 添加到数据列表
             adapter.addRecord(CommonUtils.getJsonObjFromBean(record));
             //更改批次状态280
@@ -529,6 +565,7 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
     @Override
     public void changeMultiRecordStateBack(boolean bok, List<MESPRecord> recordList, String error) {
         hideLoading();
+        CommonUtils.textViewGetFocus(edtSid1);
         if(bok){
 
             List<Integer> selectIndex = commChoice.selectIndex;
@@ -540,6 +577,7 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
                     commChoice.clearChoice();
                     adapter.notifyDataSetChanged();
                 }else{
+                    bindSid1.clear();
                     commChoice.clearChoice();
                     dataList.clear();
                     adapter.notifyDataSetChanged();
@@ -647,7 +685,7 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
         int selectNum = 0;
         String currstate = "";
         String currOP = edtOP.getText().toString().toUpperCase();
-        String error = commChoice.error;
+        String error = "";
 
         switch (v.getId()) {
 
@@ -656,7 +694,7 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
 
                 if (selectNum == 1) {
                     //上料
-                    List<MESPRecord> list = commChoice.getSelectList();
+                    List<MESPRecord> list = JSONArray.parseArray(JSON.toJSONString(commChoice.getSelectList()),MESPRecord.class);;
                     MESPRecord record = list.get(0);
                     HashMap<String, Serializable> map = new HashMap<>();
                     map.put(CommCL.COMM_ZC_INFO_FLD,zCnoInfo);
@@ -670,7 +708,7 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
                 }
                 break;
             case R.id.gujing_kaigong:
-                List<MESPRecord> startList = commChoice.getSelectList();
+                List<MESPRecord> startList = JSONArray.parseArray(JSON.toJSONString(commChoice.getSelectList()),MESPRecord.class);;
                 selectNum = dataListViewContent.getCheckedItemCount();
                 if(selectNum<=0){
                     showMessage("请选择记录");
@@ -680,11 +718,12 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
                 if (!TextUtils.isEmpty(error)) {
                     showMessage(error+"，不能开工！！");
                 } else {
+
                     currstate = startList.get(0).getState1();
                     if ("00".equals(currstate)||currstate.equals(CommCL.BATCH_STATUS_IN) || currstate.equals(CommCL.BATCH_STATUS_CHARGING)) {
                         //只有在01入站或者是02上料的状态才可以开工
                         if(zCnoInfo.getStartnum()>0){
-                            int canStartNum = zCnoInfo.getStartnum()-commChoice.getStartCount();
+                            int canStartNum = zCnoInfo.getStartnum()-getStartCount();
                             if(canStartNum<=0){
                                 showMessage("制成"+zCnoInfo.getId()+"最多可开工数为【"+zCnoInfo.getStartnum()+"】");
                                 break;
@@ -694,8 +733,17 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
                                 break;
                             }
                         }
+                        String op=edtOP.getText().toString().toUpperCase();
+                        String opv = CommCL.sharedPreferences.getString(op, "");
+                        if(TextUtils.isEmpty(opv)){
+                            showMessage("请输入正确操作员");
+                            return;
+                        }
+                        for(MESPRecord mp:startList){
+                            mp.setOp(op);
+                        }
                         MESPRecord cr = startList.get(0);//获取其中的一条记录，判断是否有首件检验标志
-                        if(cr.getFirstchk()==1){//需要首件检验
+                        if(cr.getFirstchk()==1&&!CommCL.isTest){//需要首件检验
                             if(currEquipment.getFirstchk()==1 && currEquipment.getPrdno().equals(cr.getPrd_no())){
 
                                 showLoading();
@@ -740,10 +788,19 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
                     showMessage("请选择记录");
                     return;
                 }
-                List<MESPRecord> outList = commChoice.getSelectList();
+                List<MESPRecord> outList = JSONArray.parseArray(JSON.toJSONString(commChoice.getSelectList()),MESPRecord.class);
                 if (!TextUtils.isEmpty(error)) {
                     showMessage(error+"，不能出站！！");
                 } else {
+                    String op=edtOP.getText().toString().toUpperCase();
+                    String opv = CommCL.sharedPreferences.getString(op, "");
+                    if(TextUtils.isEmpty(opv)){
+                        showMessage("请输入正确操作员");
+                        return;
+                    }
+                    for(MESPRecord mp:outList){
+                        mp.setOp(op);
+                    }
                     currstate = outList.get(0).getState1();
                     if (CommCL.BATCH_STATUS_WORKING.equals(currstate)) {
                         //校验出站时间
@@ -782,7 +839,7 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
 
                 if (selectNum == 1) {
                     //编带数量修改
-                    List<MESPRecord> list = commChoice.getSelectList();
+                    List<MESPRecord> list = JSONArray.parseArray(JSON.toJSONString(commChoice.getSelectList()),MESPRecord.class);
                     MESPRecord record = list.get(0);
                     String op = edtOP.getText().toString().toUpperCase();//操作员
                     alertWindow(BianDaiActivity.this,record,op);
@@ -841,231 +898,52 @@ public class BianDaiActivity extends BaseActivity implements BaseStationBindingV
         builder.show();
     }
 
-    private class CommMultiChoiceModeCallback implements AbsListView.MultiChoiceModeListener {
-
-        private View actionBarView;
-        private TextView tv_selectedCount;
-
-        public List<Integer> selectIndex = new ArrayList<>();
-        String error = "";
-        @Override
-        public void onItemCheckedStateChanged(ActionMode mode, int position, long id, boolean checked) {
-            int selectedCount = dataListViewContent.getCheckedItemCount();
-            tv_selectedCount.setText(String.valueOf(selectedCount));
-            ((ArrayAdapter) dataListViewContent.getAdapter()).notifyDataSetChanged();
-        }
-
-
-        @Override
-        public boolean onCreateActionMode(ActionMode mode, Menu menu) {
-            // menu
-            getMenuInflater().inflate(R.menu.menu_multichoice, menu);
-            // actionBar
-            if (actionBarView == null) {
-                actionBarView = LayoutInflater.from(BianDaiActivity.this).inflate(R.layout.actionbar_listviewmultichoice, null);
-                tv_selectedCount = actionBarView.findViewById(R.id.id_tv_selectedCount);
+    private int getStartCount() {
+        int count=0;
+        for(int i=0;i<dataList.size();i++){
+            MESPRecord record = JSONObject.parseObject(dataList.get(i).toJSONString(),MESPRecord.class);
+            if(CommCL.BATCH_STATUS_WORKING.equals(record.getState1())){
+                count++;
             }
-            if ((zCnoInfo.getAttr() & CommCL.ZC_ATTR_CHARGING) == 0)
-                menu.findItem(R.id.id_menu_charging).setVisible(false);
-            if ((zCnoInfo.getAttr() & CommCL.ZC_ATTR_START) == 0)
-                menu.findItem(R.id.id_menu_start).setVisible(false);
-            if ((zCnoInfo.getAttr() & CommCL.ZC_ATTR_DONE) == 0)
-                menu.findItem(R.id.id_menu_done).setVisible(false);
-            if ((zCnoInfo.getAttr() & CommCL.ZC_ATTR_GLUING) == 0)
-                menu.findItem(R.id.id_menu_gluing).setVisible(false);
-            mode.setCustomView(actionBarView);
-            return true;
         }
-
-        @Override
-        public boolean onPrepareActionMode(ActionMode mode, Menu menu) {
-            return false;
+        return count;
+    }
+    private boolean hasLotNO(String lot_no){
+        for(JSONObject jobj:dataList) {
+            if (TextUtils.equals(lot_no, jobj.getString("lotno"))) {
+                return true;
+            }
         }
-
-        @Override
-        public boolean onActionItemClicked(ActionMode mode, MenuItem item) {
-            int selectNum = 0;
-            String currstate = "";
-            String currOP = edtOP.getText().toString().toUpperCase();
-            error = "";
-            switch (item.getItemId()) {
-                case R.id.id_menu_selectAll:
-                    for (int i = 0; i < dataListViewContent.getAdapter().getCount(); i++) {
-                        dataListViewContent.setItemChecked(i, true);
-                    }
-                    tv_selectedCount.setText(String.valueOf(dataListViewContent.getAdapter().getCount()));
-                    break;
-                case R.id.id_menu_cancel:
-                    clearChoice();
-                    break;
-                case R.id.id_menu_charging:
-                    selectNum = dataListViewContent.getCheckedItemCount();
-
-                    if (selectNum == 1) {
-                        //上料
-                        List<MESPRecord> list = getSelectList();
-                        MESPRecord record = list.get(0);
-                        HashMap<String, Serializable> map = new HashMap<>();
-                        map.put(CommCL.COMM_ZC_INFO_FLD,zCnoInfo);
-                        map.put(CommCL.COMM_OP_FLD,currOP);
-                        map.put(CommCL.COMM_RECORD_FLD,record);
-                        map.put(CommCL.COMM_SBID_FLD,currEquipment.getId());
-                        //unregisterReceiver(barcodeReceiver);
-                        //jumpNextActivity(ChargingActivity.class,map);
-                    } else {
-                        showMessage("请选择一条记录，执行上料！");
-                    }
-                    break;
-                case R.id.id_menu_start:
-                    List<MESPRecord> startList = getSelectList();
-                    //开工
-                    if (!TextUtils.isEmpty(error)) {
-                        showMessage(error+"，不能开工！！");
-                    } else {
-                        currstate = startList.get(0).getState1();
-                        if (currstate.equals(CommCL.BATCH_STATUS_IN) || currstate.equals(CommCL.BATCH_STATUS_CHARGING)) {
-                            //只有在01入站或者是02上料的状态才可以开工
-                            if(zCnoInfo.getStartnum()>0){
-                                int canStartNum = zCnoInfo.getStartnum()-getStartCount();
-                                if(canStartNum<=0){
-                                    showMessage("制成"+zCnoInfo.getId()+"最多可开工数为【"+zCnoInfo.getStartnum()+"】");
-                                    break;
-                                }
-                                if(startList.size()>canStartNum){
-                                    showMessage("制成"+zCnoInfo.getId()+"最多可开工数为【"+zCnoInfo.getStartnum()+"】还可以开工:【"+canStartNum+"】");
-                                    break;
-                                }
-                            }
-                            MESPRecord cr = startList.get(0);//获取其中的一条记录，判断是否有首件检验标志
-                            if(cr.getFirstchk()==1){//需要首件检验
-                                if(currEquipment.getFirstchk()==1 && currEquipment.getPrdno().equals(cr.getPrd_no())){
-                                    showLoading();
-                                    commPresenter.changeRecordStateBatch(startList,CommCL.BATCH_STATUS_WORKING);
-                                    break;
-                                }else{
-                                    MESPRecord record = startList.get(0);
-                                    CommonUtils.showOKCancel(BianDaiActivity.this, "开工首检", "设备："+currEquipment.getId()+"没有做首件检验,是否打开首检界面", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialog, int which) {
-                                            HashMap<String, Serializable> map = new HashMap<>();
-                                            map.put(CommCL.COMM_ZC_INFO_FLD,zCnoInfo);
-                                            map.put(CommCL.COMM_OP_FLD,currOP);
-                                            map.put(CommCL.COMM_RECORD_FLD,record);
-                                            map.put(CommCL.COMM_SBID_FLD,currEquipment);
-                                            myUnregisterReceiver(barcodeReceiver);
-                                            jumpNextActivity(FirstInspectionActivity.class,map);
-                                        }
-                                    });
-                                    break;
-                                }
-                            }else {
-                                showLoading();
-                                commPresenter.changeRecordStateBatch(startList,CommCL.BATCH_STATUS_WORKING);
-                                break;
-                            }
-                        } else {
-                            showMessage("选中记录的状态不是上料或者是入站，不可以开工");
-                            break;
+        return false;
+    }
+    private void panduanchuzhan(String lot_no){
+        for(JSONObject jobj:dataList){
+            if(TextUtils.equals(lot_no,jobj.getString("lotno"))){
+                if(TextUtils.equals(CommCL.BATCH_STATUS_WORKING,jobj.getString("state1"))){
+                    //调用出站代码
+                    if(zCnoInfo.getPtime()>0&&!CommCL.isTest){
+                        String hpdate = jobj.getString("hpdate");
+                        int key = DateUtil.subDate(DateUtil.getCurrDateTime(ICL.DF_YMDT),hpdate,4);
+                        if(key<zCnoInfo.getPtime()&&key>=0){
+                            String err = jobj.getString("lotno")+"已开工:"+key+"分钟，需要等待"+zCnoInfo.getPtime()+"分钟，不能出站！";
+                            showMessage(err);
+                            CommonUtils.textViewGetFocus(edtSid1);
+                            return;
                         }
                     }
-                    break;
-                case R.id.id_menu_done:
                     //出站
-                    List<MESPRecord> outList = getSelectList();
-                    if (!TextUtils.isEmpty(error)) {
-                        showMessage(error+"，不能出站！！");
-                    } else {
-                        currstate = outList.get(0).getState1();
-                        if (CommCL.BATCH_STATUS_WORKING.equals(currstate)) {
-                            //校验出站时间
-                            boolean canout = true;
-                            String err = "";
-                            if(zCnoInfo.getPtime()>0){
-                                for(int i=0;i<outList.size();i++){
-                                    MESPRecord record = outList.get(i);
-                                    String hpdate = record.getHpdate();
-                                    int key = DateUtil.subDate(DateUtil.getCurrDateTime(ICL.DF_YMDT),hpdate,4);
-                                    if(key<zCnoInfo.getPtime()&&key>0){
-                                        canout = false;
-                                        err = record.getSid1()+"已开工:"+key+"分钟，需要等待"+zCnoInfo.getPtime()+"分钟，不能出站！";
-                                        break;
-                                    }
-                                }
-                            }
-                            if(err.length()>0){
-                                showMessage(err);
-                                return false;
-                            }
-                            //执行出站操作
-                            if(canout){
-                                showLoading();
-                                commPresenter.changeRecordStateBatch(outList,CommCL.BATCH_STATUS_DONE);
-                            }
-                        }else{
-                            showMessage("选中记录的状态不是生产中，不可以出站");
-                            break;
-                        }
-                    }
-                    break;
-            }
-            return true;
-        }
-
-
-        /***
-         * 获取正在生产的数量
-         * @return
-         */
-        private int getStartCount() {
-            int count=0;
-            for(int i=0;i<dataList.size();i++){
-                MESPRecord record = JSONObject.parseObject(dataList.get(i).toJSONString(),MESPRecord.class);
-                if(CommCL.BATCH_STATUS_WORKING.equals(record.getState1())){
-                    count++;
+                    showLoading();
+                    ArrayList<MESPRecord> outList=new ArrayList<>();
+                    outList.add(JSONObject.parseObject(jobj.toJSONString(),MESPRecord.class));
+                    commPresenter.changeRecordStateBatch(outList,CommCL.BATCH_STATUS_DONE);
+                }else{
+                    //提示
+                    showMessage("当前状态为"+jobj.getString("state1")+" 无法出站！");
                 }
+                break;
             }
-            return count;
-        }
-
-        public void clearChoice() {
-            for (int i = 0; i < dataListViewContent.getAdapter().getCount(); i++) {
-                if (dataListViewContent.isItemChecked(i))
-                    dataListViewContent.setItemChecked(i, false);
-            }
-        }
-
-        @Override
-        public void onDestroyActionMode(ActionMode mode) {
-            dataListViewContent.clearChoices();
-        }
-
-        public List<MESPRecord> getSelectList() {
-            String currstate = "";
-            error = "";
-            List<MESPRecord> selectList = new ArrayList<>();
-            //获取选中列表
-            selectIndex.clear();
-            for (int i = 0; i < dataList.size(); i++) {
-                if (dataListViewContent.isItemChecked(i)) {
-                    MESPRecord mespRecord = JSONObject.parseObject(dataList.get(i).toJSONString(), MESPRecord.class);
-                    if (currstate.length() == 0) {
-                        currstate = mespRecord.getState1();
-                    }
-                    if (currstate.equals(mespRecord.getState1())){//判断两个选中的状态是否一致
-                        selectList.add(mespRecord);
-                        selectIndex.add(i);
-                    }
-                    else {
-                        error = ("选中的记录，状态不一致");
-                        break;
-                    }
-                }
-            }
-            return selectList;
         }
     }
-
-
 
 
 }

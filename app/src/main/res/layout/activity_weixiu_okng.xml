@@ -6,7 +6,6 @@
         android:orientation="vertical">
     <ScrollView android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-
                 android:id="@+id/tab_ui_sc">
         <TableLayout android:layout_width="match_parent"
                      android:layout_height="wrap_content"
@@ -15,29 +14,48 @@
                      android:stretchColumns="1"
                      android:id="@+id/tab_ui">
 
-            <TableRow android:layout_width="match_parent" android:paddingTop="8dp">
+            <TableRow android:layout_width="match_parent" android:paddingTop="3dp">
+
                 <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/yimei_opc"
                         android:textSize="16sp"
-                        android:paddingBottom="2dp"/>
-
-                <com.yimeinew.view.AuxText
-                        android:id="@+id/edt_opc"
+                        android:paddingBottom="0dp"/>
+                <LinearLayout
+                        android:orientation="horizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginEnd="5dp"
-                        android:enabled="true"
-                        android:imeOptions="actionDone"
-                        android:inputType="text"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_color"
-                        android:nextFocusDown="@id/edt_opc"
-                        android:hint="@string/yimei_opc"
-                        android:tag="@string/yimei_opc"
-                        android:layout_span="3"/>
+                        android:layout_height="wrap_content">
+                    <com.yimeinew.view.AuxText
+                            android:id="@+id/edt_opc"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="5dp"
+                            android:layout_marginEnd="5dp"
+                            android:enabled="true"
+                            android:imeOptions="actionDone"
+                            android:inputType="text"
+                            android:textSize="16sp"
+                            android:textColor="@color/text_color"
+                            android:nextFocusDown="@id/edt_opc"
+                            android:hint="@string/yimei_opc"
+                            android:tag="@string/yimei_opc"
+                            android:layout_weight="1"
+                            android:layout_span="3"/>
+
+                    <CheckBox
+                            android:text="@string/yimei_is_ng"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:textColor="#ff0000"
+                            android:id="@+id/checkBox_is_ng"/>
+                    <ImageView
+                            android:layout_width="35dp"
+                            android:layout_height="35dp"
+                            android:src="@drawable/new_bn"
+                            android:id="@+id/img_new"/>
+                </LinearLayout>
+
 
             </TableRow>
             <TableRow android:layout_width="match_parent" android:paddingTop="8dp">

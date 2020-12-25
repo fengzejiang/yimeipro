@@ -4,6 +4,7 @@ import android.text.TextUtils;
 import android.util.Log;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
+import com.yimeinew.data.EquipmentInfo;
 import com.yimeinew.data.MESPRecord;
 import com.yimeinew.data.ZCInfo;
 import com.yimeinew.model.impl.CommZCModel;
@@ -43,7 +44,7 @@ public class CommFastPresenter {
      * @param zcno
      * @param key
      */
-    public void checkQuickLot(String sid1,String zcno,int key) {
+    public void checkQuickLot(String sid1, String zcno, EquipmentInfo currEquipment,int key) {
 
         baseModel.getQuickLot(sid1,zcno).compose(ResponseTransformer.handleResult())
                 .compose(schedulerProvider.applySchedulers()).subscribe(
@@ -88,11 +89,22 @@ public class CommFastPresenter {
                                 baseView.getQuickLotBack(false, null, "该批次【" + sid1 + "】已经别的机台入站,不能再次入站！",key);
                                 return;
                             }
+                            if(CommCL.BATCH_STATUS_CHECKING.equals(stateValue)){
+                                baseView.getQuickLotBack(false, null, "该批次【" + sid1 + "】该批次处于待检，不能再次入站！",key);
+                                return;
+                            }
+                            if(!(CommCL.BATCH_STATUS_READY.equals(stateValue)||CommCL.BATCH_STATUS_READY1.equals(stateValue))){
+                                baseView.getQuickLotBack(false, null, "该批次【" + sid1 + "】该批次处于"+stateValue+"，不是准备状态不能入站！",key);
+                                return;
+                            }
                             String currMO = baseView.getCurrMO();
                             String sid = jsonObject.getString("sid");
-                            if (currMO.length() > 0) {
-                                if (!currMO.equals(sid)&&!"41".equals(zcno)&&!"1A".equals(zcno)&&!"1B".equals(zcno)) {
-                                    baseView.getQuickLotBack(false, null, "当前工单是【" + currMO + "】,扫描的工单是【" + sid + "】",key);
+                            //支架预热
+                            if(CommonUtils.contentEquals(zcno,"311",",")) {
+                                String stents=currEquipment.getStents();
+                                String mzhij=jsonObject.getString("mzhij");
+                                if(!TextUtils.isEmpty(stents)&&!CommonUtils.contentEquals(stents,mzhij,";")) {
+                                    baseView.getQuickLotBack(false, null, "烤箱支架【"+stents+"】,当前批次支架【"+mzhij+"】不一致无法入烤！",key);
                                     return;
                                 }
                             }
@@ -336,7 +348,7 @@ public class CommFastPresenter {
                             if(sort.equals("B")){
                                 flag=true;
                             }
-                            if(!TextUtils.isEmpty(jsonObject.getString("scdate"))||scstate!=null){
+                            if(!TextUtils.isEmpty(jsonObject.getString("scdate"))||scstate!=0){
                                 if(!flag){
                                     baseView.getQuickLotBack(false, null, "生产已检验",key);
                                     return;
@@ -354,7 +366,7 @@ public class CommFastPresenter {
                             }
                             //判断该喷码品质是否已经检验
                             if(flag){
-                                if(!TextUtils.isEmpty(jsonObject.getString("qcdate"))||jsonObject.getInteger("qcstate")!=null){
+                                if(!TextUtils.isEmpty(jsonObject.getString("qcdate"))||jsonObject.getInteger("qcstate")!=0){
                                     baseView.getQuickLotBack(false, null, "品质已检验",key);
                                     return;
 
@@ -554,8 +566,8 @@ public class CommFastPresenter {
      * 维修确认保存（确定对象定义）
      */
 
-    public void   wxqrRecord(MESPRecord record,JSONObject batchInfo){
-        baseModel.comSaveData(record,CommCL.CELL_ID_D5080).compose(ResponseTransformer.handleResult())
+    public void   wxqrRecord(MESPRecord record,JSONObject batchInfo,String insObject){
+        baseModel.comSaveData(record,insObject).compose(ResponseTransformer.handleResult())
                 .compose(schedulerProvider.applySchedulers()).subscribe(
                 jsonValues -> {
                     Log.i(TAG_NAME, jsonValues.toJSONString());
@@ -737,6 +749,7 @@ public class CommFastPresenter {
                     baseView.onRemoteFailed(throwable.getMessage());
                 });
     }
+
 
 
 

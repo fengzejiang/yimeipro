@@ -17,6 +17,7 @@ import butterknife.OnEditorAction;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 import com.yimeinew.activity.R;
+import com.yimeinew.activity.base.BaseActivity;
 import com.yimeinew.adapter.tabledataadapter.BaseTableDataAdapter;
 import com.yimeinew.data.*;
 import com.yimeinew.modelInterface.BaseStationBindingView;
@@ -38,7 +39,7 @@ import java.util.List;
  * @Auther: fengzejiang1987@163.com
  * @Date : 2019/1/3 14:30
  */
-public class AddGluingActivity extends AppCompatActivity implements BaseStationBindingView {
+public class AddGluingActivity extends BaseActivity implements BaseStationBindingView {
 
     //绑定xml布局文件中的输入框
     @BindView(R.id.edt_op)
@@ -90,7 +91,6 @@ public class AddGluingActivity extends AppCompatActivity implements BaseStationB
             gluingPresenter.getLatelyMesRecord(currSbId);
         }
 
-        registerReceiver(barcodeReceiver,new IntentFilter(CommCL.INTENT_ACTION_SCAN_RESULT));
 
 
     }
@@ -98,14 +98,11 @@ public class AddGluingActivity extends AppCompatActivity implements BaseStationB
     @Override
     protected void onResume() {
         super.onResume();
-        registerReceiver(barcodeReceiver,new IntentFilter(
-                CommCL.INTENT_ACTION_SCAN_RESULT));
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unregisterReceiver(barcodeReceiver);
     }
 
     private void initView() {
@@ -245,6 +242,7 @@ public class AddGluingActivity extends AppCompatActivity implements BaseStationB
                 CommonUtils.textViewGetFocus(editTextGluingNo);
                 return;
             }
+            //混胶超过20分钟不能加胶
             if(gluingInfo.getMixtime()>gluingInfo.getFr_add_time()){
                 showMessage("胶杯号【"+gluingInfo.getPrtno()+"】,已超过"+gluingInfo.getFr_add_time()+"分钟，请联系工程人员！");
                 CommonUtils.textViewGetFocus(editTextGluingNo);
@@ -310,6 +308,11 @@ public class AddGluingActivity extends AppCompatActivity implements BaseStationB
     }
 
     @Override
+    public void showLoading(String message) {
+
+    }
+
+    @Override
     public void hideLoading() {
         if(zLoadingView!=null)
             zLoadingView.dismiss();
@@ -358,39 +361,6 @@ public class AddGluingActivity extends AppCompatActivity implements BaseStationB
 
     }
 
-    /***
-     * 注册广播事件，监听PDA扫描
-     */
-    private BroadcastReceiver barcodeReceiver = new BroadcastReceiver() {
-
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            if(CommCL.INTENT_ACTION_SCAN_RESULT.equals(intent.getAction())){
-                View rootView = getCurrentFocus();//获取光标当前所在组件
-                Object tag = rootView.findFocus().getTag();
-                String barCodeData = null;
-                if(TextUtils.isEmpty(intent.getStringExtra(CommCL.SCN_CUST_HONEY))){
-                    barCodeData = intent.getStringExtra(CommCL.SCN_CUST_EX_SCODE);
-                }else{
-                    barCodeData = intent.getStringExtra(CommCL.SCN_CUST_HONEY);
-                }
-                barCodeData = barCodeData.toUpperCase();
-                int id = rootView.getId();
-                if(id == R.id.edt_op){
-                    editTextOP.setText(barCodeData);
-                    onEditTextKeyDown(editTextOP);
-                }
-                if(id == R.id.edt_equipment_no){
-                    editTextSbId.setText(barCodeData);
-                    onEditTextKeyDown(editTextSbId);
-                }
-                if(id == R.id.edt_gluing_no){
-                    editTextGluingNo.setText(barCodeData);
-                    onEditTextKeyDown(editTextGluingNo);
-                }
-            }
-        }
-    };
 
     @OnEditorAction({R.id.edt_op,R.id.edt_equipment_no,R.id.edt_gluing_no})
     public  boolean onEditTextKeyDown(EditText editText) {
@@ -441,8 +411,10 @@ public class AddGluingActivity extends AppCompatActivity implements BaseStationB
                 CommonUtils.textViewGetFocus(editTextGluingNo);
                 return false;
             }
-            showLoading();
-            gluingPresenter.getGluingInfo(str);
+            if(!CommonUtils.isRepeat("qj_add_js_key",str,8000)) {
+                showLoading();
+                gluingPresenter.getGluingInfo(str);
+            }
             return true;
         }
         return true;

@@ -11,21 +11,19 @@
         <TableLayout android:layout_width="match_parent"
                      android:layout_height="wrap_content"
                      android:padding="10dp"
-                     android:paddingTop="5dp"
-                     android:stretchColumns="1"
+                     android:paddingTop="1dp"
                      android:id="@+id/tab_ui">
 
-            <TableRow android:layout_width="match_parent" android:paddingTop="4dp">
+            <TableRow android:layout_width="match_parent" android:paddingTop="4dp" android:gravity="center">
                 <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/yimei_opc"
-                        android:textSize="16sp"
-                        android:paddingBottom="2dp"/>
-                <LinearLayout android:layout_height="wrap_content" android:layout_width="match_parent" android:orientation="horizontal">
+                        android:textSize="16sp"/>
+
                 <EditText
                         android:id="@+id/edt_op"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="5dp"
                         android:layout_marginEnd="5dp"
@@ -37,27 +35,25 @@
                         android:nextFocusDown="@id/edt_op"
                         android:hint="@string/yimei_opc"
                         android:tag="@string/yimei_opc"
-                        android:layout_weight="1"
-                        android:layout_span="3"/>
+                        android:layout_weight="1"/>
                     <ImageView
                             android:layout_width="35dp"
                             android:layout_height="35dp"
                             android:id="@+id/img_new"
                             android:src="@drawable/new_bn"/>
-                </LinearLayout>
+
             </TableRow>
 
-
-            <TableRow android:layout_width="match_parent" android:paddingTop="4dp">
+            <TableRow android:layout_width="match_parent" android:paddingTop="4dp" android:gravity="center">
                 <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/yimei_lab_sidw"
+                        android:text="@string/yimei_tray"
                         android:textSize="16sp"/>
-                <LinearLayout android:layout_height="wrap_content" android:layout_width="match_parent" android:orientation="horizontal">
+
                 <EditText
-                        android:id="@+id/edt_sidw"
-                        android:layout_width="match_parent"
+                        android:id="@+id/edt_tray"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="5dp"
                         android:layout_marginEnd="5dp"
@@ -66,28 +62,51 @@
                         android:inputType="text"
                         android:textSize="16sp"
                         android:textColor="@color/text_color"
-                        android:hint="@string/yimei_lab_sidw"
-                        android:tag="@string/yimei_lab_sidw"
-                        android:layout_weight="1"
-                        android:layout_span="3"/>
-                <ImageView
-                        android:layout_width="35dp"
-                        android:layout_height="35dp"
-                        android:id="@+id/img_qrw"
-                        android:src="@drawable/qr_bt"/>
-                </LinearLayout>
+                        android:hint="@string/yimei_tray"
+                        android:tag="@string/yimei_tray"
+                        android:layout_weight="1"/>
+
+
             </TableRow>
 
-            <TableRow android:layout_width="match_parent" android:paddingTop="4dp">
+            <TableRow android:layout_width="match_parent" android:paddingTop="4dp" android:gravity="center">
+                <TextView
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="@string/yimei_lab_sid2"
+                        android:textSize="16sp"/>
+
+                    <EditText
+                            android:id="@+id/edt_sid1"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="5dp"
+                            android:layout_marginEnd="5dp"
+                            android:enabled="true"
+                            android:imeOptions="actionDone"
+                            android:inputType="text"
+                            android:textSize="16sp"
+                            android:textColor="@color/text_color"
+                            android:hint="@string/yimei_lab_sid2"
+                            android:tag="@string/yimei_lab_sid2"
+                            android:layout_weight="1"/>
+                    <ImageView
+                            android:layout_width="35dp"
+                            android:layout_height="35dp"
+                            android:id="@+id/img_view"
+                            android:src="@drawable/img_view_yanjin"/>
+
+            </TableRow>
+            <TableRow android:layout_width="match_parent" android:paddingTop="4dp" android:gravity="center">
                 <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:text="@string/yimei_lab_sidn"
                         android:textSize="16sp"/>
-                <LinearLayout android:layout_height="wrap_content" android:layout_width="match_parent" android:orientation="horizontal">
+
                 <EditText
                         android:id="@+id/edt_sidn"
-                        android:layout_width="match_parent"
+                        android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_marginStart="5dp"
                         android:layout_marginEnd="5dp"
@@ -98,47 +117,43 @@
                         android:textColor="@color/text_color"
                         android:hint="@string/yimei_lab_sidn"
                         android:tag="@string/yimei_lab_sidn"
-                        android:layout_weight="1"
-                        android:layout_span="3"/>
+                        android:layout_weight="1"/>
                 <ImageView
                         android:layout_width="35dp"
                         android:layout_height="35dp"
                         android:id="@+id/img_qrn"
                         android:src="@drawable/qr_bt"/>
-                </LinearLayout>
+
             </TableRow>
 
-            <TableRow android:layout_width="match_parent" android:paddingTop="4dp">
+            <TableRow android:layout_width="match_parent" android:paddingTop="4dp" android:gravity="center">
                 <TextView
                         android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
-                        android:text="@string/yimei_lab_sid2"
+                        android:text="@string/yimei_lab_sidw"
                         android:textSize="16sp"/>
-                <LinearLayout android:layout_height="wrap_content" android:layout_width="match_parent" android:orientation="horizontal">
-                <EditText
-                        android:id="@+id/edt_sid1"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginStart="5dp"
-                        android:layout_marginEnd="5dp"
-                        android:enabled="true"
-                        android:imeOptions="actionDone"
-                        android:inputType="text"
-                        android:textSize="16sp"
-                        android:textColor="@color/text_color"
-                        android:hint="@string/yimei_lab_sid2"
-                        android:tag="@string/yimei_lab_sid2"
-                        android:layout_weight="1"
-                        android:layout_span="3"/>
+
+                    <EditText
+                            android:id="@+id/edt_sidw"
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:layout_marginStart="5dp"
+                            android:layout_marginEnd="5dp"
+                            android:enabled="true"
+                            android:imeOptions="actionDone"
+                            android:inputType="text"
+                            android:textSize="16sp"
+                            android:textColor="@color/text_color"
+                            android:hint="@string/yimei_lab_sidw"
+                            android:tag="@string/yimei_lab_sidw"
+                            android:layout_weight="1"/>
                     <ImageView
                             android:layout_width="35dp"
                             android:layout_height="35dp"
-                            android:id="@+id/img_view"
-                            android:src="@drawable/img_view_yanjin"/>
-                </LinearLayout>
+                            android:id="@+id/img_qrw"
+                            android:src="@drawable/qr_bt"/>
+
             </TableRow>
-
-
 
             <TableRow android:layout_width="match_parent" android:paddingTop="8dp">
                 <TextView
@@ -146,8 +161,9 @@
                         android:layout_height="wrap_content"
                         android:id="@+id/text_okng"
                         android:text="@string/yimei_lab_result"
-                        android:layout_span="2"
+                        android:layout_span="4"
                         android:gravity="center"
+                        android:layout_weight="1"
                         android:textSize="20sp"/>
             </TableRow>
 

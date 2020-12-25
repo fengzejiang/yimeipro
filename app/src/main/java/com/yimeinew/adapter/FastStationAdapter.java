@@ -6,9 +6,12 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
+import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSON;
+import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 import com.yimeinew.activity.R;
 import com.yimeinew.activity.databinding.MainCommStationItemBinding;
 import com.yimeinew.activity.deviceproduction.LookBeltFastActivity;
+import com.yimeinew.activity.deviceproduction.LookBeltSpotActivity;
 import com.yimeinew.activity.deviceproduction.commsub.*;
 import com.yimeinew.data.ZCInfo;
 import com.yimeinew.modelInterface.BaseView;
@@ -73,7 +76,17 @@ public class FastStationAdapter extends BaseAdapter {
             gjzc = CommonUtils.getZCInfoById("311");
 //        gjzc.setStartNum(2);
             gjzc.setImgIndex(R.drawable.qj_djcs1);
-            gjzc.setClazz(FastActivity.class);
+            gjzc.setClazz(FastMachineActivity.class);
+            attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+            gjzc.setAttr(attr);
+            zCnoInfos.add(gjzc);
+
+            //外观
+            gjzc = CommonUtils.getZCInfoById("51");
+            gjzc.setImgIndex(R.drawable.mz_gw);
+            gjzc.setClazz(FastMachineActivity.class);
+//        gjzc.setStartNum(2);
+            attr = 0;
             attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
             gjzc.setAttr(attr);
             zCnoInfos.add(gjzc);
@@ -82,16 +95,24 @@ public class FastStationAdapter extends BaseAdapter {
             gjzc = CommonUtils.getZCInfoById("31B");
 //        gjzc.setStartNum(2);
             gjzc.setImgIndex(R.drawable.qj_djlx);
-            gjzc.setClazz(FastActivity.class);
+            gjzc.setClazz(FastMachineActivity.class);
             attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
             gjzc.setAttr(attr);
             zCnoInfos.add(gjzc);
 
-            //看带快速过站
+            //看带全检快速过站
             gjzc = CommonUtils.getZCInfoById("81");
 //        gjzc.setStartNum(2);
             gjzc.setImgIndex(R.drawable.qj_kandai);
             gjzc.setClazz(LookBeltFastActivity.class);
+            attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+            gjzc.setAttr(attr);
+            zCnoInfos.add(gjzc);
+            //看带抽检快速过站
+            gjzc = JSONObject.parseObject(JSON.toJSONString(CommonUtils.getZCInfoById("81")),ZCInfo.class);
+//        gjzc.setStartNum(2);
+            gjzc.setImgIndex(R.drawable.qi_kandai_sopt);
+            gjzc.setClazz(LookBeltSpotActivity.class);
             attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
             gjzc.setAttr(attr);
             zCnoInfos.add(gjzc);
@@ -156,6 +177,16 @@ public class FastStationAdapter extends BaseAdapter {
             gjzc = CommonUtils.getZCInfoById("S23");
             gjzc.setImgIndex(R.drawable.mz_hx);
             gjzc.setClazz(FastMzTYActivity.class);
+//        gjzc.setStartNum(2);
+            attr = 0;
+            attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+            gjzc.setAttr(attr);
+            zCnoInfos.add(gjzc);
+
+            //模组批次打印
+            gjzc = new ZCInfo();
+            gjzc.setImgIndex(R.drawable.mz_tray_print);
+            gjzc.setClazz(PrintMZCPActivity.class);
 //        gjzc.setStartNum(2);
             attr = 0;
             attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;

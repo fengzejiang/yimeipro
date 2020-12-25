@@ -13,6 +13,7 @@ import butterknife.*;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 import com.yimeinew.activity.R;
+import com.yimeinew.activity.SystemSetActivity;
 import com.yimeinew.activity.base.BaseActivity;
 import com.yimeinew.activity.base.BaseApplication;
 import com.yimeinew.adapter.SpinnerAdapterImpl;
@@ -22,7 +23,9 @@ import com.yimeinew.data.EquipmentInfo;
 import com.yimeinew.data.MESPRecord;
 import com.yimeinew.data.ZCInfo;
 import com.yimeinew.entity.Pair;
+import com.yimeinew.listener.OnConfirmListener;
 import com.yimeinew.modelInterface.BaseStationBindingView;
+import com.yimeinew.modelInterface.CommBaseView;
 import com.yimeinew.modelInterface.CommFastView;
 import com.yimeinew.network.schedulers.SchedulerProvider;
 import com.yimeinew.presenter.CommBasePresenter;
@@ -37,7 +40,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
-public class RepairBadActivity extends BaseActivity implements CommFastView,BaseStationBindingView{
+public class RepairBadActivity extends BaseActivity implements CommFastView,BaseStationBindingView, CommBaseView {
     private final String TAG_NAME = CommGJActivity.class.getSimpleName();
 
     //数据表格
@@ -90,6 +93,9 @@ public class RepairBadActivity extends BaseActivity implements CommFastView,Base
     private CommBasePresenter commBPresenter;
     CommStationZCPresenter commZcPresenter;
     public static final String Title = "不良品送修";
+    String tableName="mes_precord";
+    String tableKey="sid";
+    String insobj="D5064";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -102,8 +108,8 @@ public class RepairBadActivity extends BaseActivity implements CommFastView,Base
 //        causeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, causeAdapterData);
 //        spReanson.setAdapter(causeAdapter);
         commPresenter = new CommFastPresenter (this,SchedulerProvider.getInstance(),zCnoInfo);
-        //commBPresenter=new CommBasePresenter(this,SchedulerProvider.getInstance());
-
+        commBPresenter=new CommBasePresenter(this,SchedulerProvider.getInstance());
+        initTableView();
         //edtCode.setText("2447620940T-01182320022980000QAB0B51Y");
         commZcPresenter = new CommStationZCPresenter(this,SchedulerProvider.getInstance());
         //不良原因查找
@@ -180,25 +186,22 @@ public class RepairBadActivity extends BaseActivity implements CommFastView,Base
             CommonUtils.textViewGetFocus(edtCode);
             return false;
         }
+        String code = edtCode.getText().toString().toUpperCase();
+        if (TextUtils.isEmpty(code)) {
+            //showMessage("请输入喷码");
+            CommonUtils.speak("请输入喷码");
+            CommonUtils.textViewGetFocus(edtCode);
+            return true;
+        }
         if (id == R.id.edt_code) {
-            String code = edtCode.getText().toString().toUpperCase();
-            if (TextUtils.isEmpty(code)) {
-                //showMessage("请输入喷码");
-                CommonUtils.speak("请输入喷码");
-                CommonUtils.textViewGetFocus(edtCode);
-                return true;
-            }
             if (bcode.containsKey(code)) {
                 //showMessage("该喷码【" + code + "】已getQuickLotBack经扫描过");
                 CommonUtils.speak("已扫描");
                 CommonUtils.textViewGetFocus(edtCode);
                 return true;
             }
-
             CommonUtils.textViewGetFocus(edtPosition);
             return true;
-
-
         }
 
         //位置
@@ -215,10 +218,13 @@ public class RepairBadActivity extends BaseActivity implements CommFastView,Base
                 CommonUtils.textViewGetFocus(edtPosition);
                 return true;
             }
-            String code = edtCode.getText().toString().toUpperCase();
+            //String code = edtCode.getText().toString().toUpperCase();
             //第一次查询
-            commPresenter.selectBlpsx(code,1);
-            CommonUtils.textViewGetFocus(edtCode);
+
+            if(!CommonUtils.isRepeat(code,code,8000)) {
+                //showLoading();
+                commPresenter.selectBlpsx(code, 1);
+            }
             return true;
         }
         return false;
@@ -230,6 +236,7 @@ public class RepairBadActivity extends BaseActivity implements CommFastView,Base
         super.onResume();
         Log.i(TAG_NAME,"onResume");
         lotno=CommCL.sharedPreferences.getString(KEY_LOT_NO,"");
+        //lotno="SQA19110600006";
         if(!TextUtils.isEmpty(lotno)) {
             //获取这个一整包的信息
             commPresenter.getPackInfoById(lotno, 2);
@@ -325,7 +332,7 @@ public class RepairBadActivity extends BaseActivity implements CommFastView,Base
             String sid1=batchInfo.getString("sid1");//批次号
             MESPRecord record = new MESPRecord(sid1, mono, zcno,"");
             if(TextUtils.isEmpty(lotno)) {
-                //保存记录
+                //保存记录表头
                 //String remark = batchInfo.getString("remark");
                 int qty=batchInfo.getInteger("qty");
                 String prd_no = batchInfo.getString("prd_no");
@@ -351,11 +358,12 @@ public class RepairBadActivity extends BaseActivity implements CommFastView,Base
                 record.getSmake();
                 record.setHpdate(record.getMkdate());
                 record.setZcno(zcno);
+                record.setPrintid(batchInfo.getString("printid"));
                 batchInfo.put("mono",mono);
                 commPresenter.blpsxRecord(record,batchInfo);//存入记录表
 
             }else{
-
+                //保存表身
                 String snrem=batchInfo.getString("allcode");
                 spc_no=spReanson.getText().toString();//不良品原因
                 String position =edtPosition.getText().toString();//维修位置
@@ -436,7 +444,7 @@ public class RepairBadActivity extends BaseActivity implements CommFastView,Base
     public void saveMarkingCallBack(Boolean bok, JSONObject batchInfo, String error) {
         if(bok){
             //添加喷码缓存
-            bcode.put(batchInfo.getString("allcode"),batchInfo.getString("allcode"));
+            bcode.put(batchInfo.getString("snrem"),batchInfo.getString("snrem"));
             // 添加到数据列表
             adapter.addRecord(batchInfo);
             wxngqty++;
@@ -480,49 +488,43 @@ public class RepairBadActivity extends BaseActivity implements CommFastView,Base
 
     /*---------------alter 弹框----------------*/
     public void alertWindow1(Context context,String title){
-        canGetMessage=false;
-        AlertDialog.Builder builder = new AlertDialog.Builder(context);
-        builder.setTitle(title);
         LinearLayout layout=new LinearLayout(context);
         layout.setOrientation(LinearLayout.VERTICAL);
-        if(!TextUtils.isEmpty(lotno)) {
-            TextView text = new TextView(context);//文本框
-            text.setTextSize(24);
-            text.setText(lotno);
-            text.setGravity(Gravity.CENTER);
-            text.setOnClickListener(new View.OnClickListener(){
+        layout.setGravity(Gravity.CENTER);
+        if(!TextUtils.isEmpty(lotno)){
+            TextView tv1=new TextView(context);
+            tv1.setText(lotno);
+            tv1.setTextSize(16);
+            tv1.setGravity(Gravity.CENTER);
+            layout.addView(tv1);
+            LinearLayout lay1=new LinearLayout(context);
+            lay1.setOrientation(LinearLayout.HORIZONTAL);
+            lay1.setGravity(Gravity.CENTER);
+            Button bn1=new Button(context);
+            bn1.setText("打印标签");
+            bn1.setGravity(Gravity.CENTER);
+            bn1.setOnClickListener(new View.OnClickListener() {
                 @Override
                 public void onClick(View v) {
-                    ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
-                    // 创建普通字符型ClipData
-                    ClipData mClipData = ClipData.newPlainText("Label", lotno);
-                    // 将ClipData内容放到系统剪贴板里。
-                    cm.setPrimaryClip(mClipData);
-                    Toast.makeText(context, "已复制" , Toast.LENGTH_SHORT).show();
+                    print1();
                 }
             });
-            /*条形码*/
-            /*
-            ImageView imgBat=new ImageView(context);
-            Bitmap bitBat = QRUtil.creatBarcode(context,lotno,550,20,true);
-            imgBat.setImageBitmap(bitBat);
-            */
-            /*二维码*/
-            ImageView imgQR=new ImageView(context);
-            Bitmap bitQR = QRUtil.createQRImage(lotno, 550, 550);
-            imgQR.setImageBitmap(bitQR);
-            layout.addView(text);
-            //layout.addView(imgBat);
-            layout.addView(imgQR);
+            Button bn2=new Button(context);
+            bn2.setText("复制标签");
+            bn2.setGravity(Gravity.CENTER);
+            bn2.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    print2();
+                }
+            });
+            lay1.addView(bn1);
+            lay1.addView(bn2);
+            layout.addView(lay1);
         }
-        builder.setView(layout);
-        builder.setPositiveButton("确定", new DialogInterface.OnClickListener()
-        {
+        CommonUtils.confirm(context, title, "", layout, new OnConfirmListener() {
             @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
-                canGetMessage=true;
-                //clearFullBox();
+            public void OnConfirm(DialogInterface dialog) {
                 lotno="";
                 CommCL.sharedPreferences.edit().putString(KEY_LOT_NO,"").commit();
                 edtCode.setText("");
@@ -531,22 +533,100 @@ public class RepairBadActivity extends BaseActivity implements CommFastView,Base
                 cid=0;
                 currMONO="";
                 adapter.clear();
-                Toast.makeText(context, "已新建" , Toast.LENGTH_SHORT).show();
+                showSuccess("已新建");
             }
-        });
-        builder.setNegativeButton("取消", new DialogInterface.OnClickListener()
-        {
-
             @Override
-            public void onClick(DialogInterface dialog, int which)
-            {
-                canGetMessage=true;
-                Toast.makeText(context, "取消新建" , Toast.LENGTH_SHORT).show();
+            public void OnCancel(DialogInterface dialog) {
+                showMessage("取消新建");
             }
         });
-        builder.show();
+
+
+//        canGetMessage=false;
+//        AlertDialog.Builder builder = new AlertDialog.Builder(context);
+//        builder.setTitle(title);
+//        LinearLayout layout=new LinearLayout(context);
+//        layout.setOrientation(LinearLayout.VERTICAL);
+//        if(!TextUtils.isEmpty(lotno)) {
+//            TextView text = new TextView(context);//文本框
+//            text.setTextSize(24);
+//            text.setText(lotno);
+//            text.setGravity(Gravity.CENTER);
+//            text.setOnClickListener(new View.OnClickListener(){
+//                @Override
+//                public void onClick(View v) {
+//                    ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+//                    // 创建普通字符型ClipData
+//                    ClipData mClipData = ClipData.newPlainText("Label", lotno);
+//                    // 将ClipData内容放到系统剪贴板里。
+//                    cm.setPrimaryClip(mClipData);
+//                    Toast.makeText(context, "已复制" , Toast.LENGTH_SHORT).show();
+//                }
+//            });
+//            /*条形码*/
+//            /*
+//            ImageView imgBat=new ImageView(context);
+//            Bitmap bitBat = QRUtil.creatBarcode(context,lotno,550,20,true);
+//            imgBat.setImageBitmap(bitBat);
+//            */
+//            /*二维码*/
+//            ImageView imgQR=new ImageView(context);
+//            Bitmap bitQR = QRUtil.createQRImage(lotno, 550, 550);
+//            imgQR.setImageBitmap(bitQR);
+//            layout.addView(text);
+//            //layout.addView(imgBat);
+//            layout.addView(imgQR);
+//        }
+//        builder.setView(layout);
+//        builder.setPositiveButton("确定", new DialogInterface.OnClickListener()
+//        {
+//            @Override
+//            public void onClick(DialogInterface dialog, int which)
+//            {
+//                canGetMessage=true;
+//                //clearFullBox();
+//                lotno="";
+//                CommCL.sharedPreferences.edit().putString(KEY_LOT_NO,"").commit();
+//                edtCode.setText("");
+//                textJishu.setText("0");
+//                wxngqty=0;
+//                cid=0;
+//                currMONO="";
+//                adapter.clear();
+//                Toast.makeText(context, "已新建" , Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//        builder.setNegativeButton("取消", new DialogInterface.OnClickListener()
+//        {
+//
+//            @Override
+//            public void onClick(DialogInterface dialog, int which)
+//            {
+//                canGetMessage=true;
+//                Toast.makeText(context, "取消新建" , Toast.LENGTH_SHORT).show();
+//            }
+//        });
+//        builder.show();
     }
 
+    //标签打印
+    public void print1(){
+        showLoading();
+        String sprn=BaseApplication.currUser.getUserCode();
+        String print_id= SystemSetActivity.getData(SystemSetActivity.PRINT_ID_KEY);
+        HashMap<String, String> hm = ToolUtils.printLable("100","", tableName, tableKey, lotno, insobj, sprn, print_id);
+        hm.put("frompage","RepairBadActivity");//用于区别打印来源页面，然后做特殊操作处理。这个为了自动同步主表已包装数量
+        commBPresenter.printLable(hm,1);
+    }
+    //标签复制
+    public void print2(){
+        showLoading();
+        String sprn2=BaseApplication.currUser.getUserCode();
+        String print_id2= SystemSetActivity.getData(SystemSetActivity.PRINT_ID_KEY);
+        HashMap<String, String> hm2 = ToolUtils.printLable("200","", tableName, tableKey, lotno, insobj, sprn2, print_id2);
+        hm2.put("frompage","RepairBadActivity");//用于区别打印来源页面，然后做特殊操作处理。这个为了自动同步主表已包装数量
+        commBPresenter.printLable(hm2,2);
+    }
 
 
 
@@ -582,10 +662,8 @@ public class RepairBadActivity extends BaseActivity implements CommFastView,Base
                 adapter.addRecord(CommonUtils.getJsonObjFromBean(temp));
             }
             hideLoading();
-
-
         }else{
-            showMessage(error);
+
             //mei查询到信息就自动新建
             lotno="";
             CommCL.sharedPreferences.edit().putString(KEY_LOT_NO,"").commit();
@@ -596,6 +674,7 @@ public class RepairBadActivity extends BaseActivity implements CommFastView,Base
             currMONO="";
             adapter.clear();
             hideLoading();
+            showMessage(error);
         }
 
     }
@@ -626,6 +705,36 @@ public class RepairBadActivity extends BaseActivity implements CommFastView,Base
         }
     }
 
+    @Override
+    public void saveDataBack(Boolean bok, JSONArray info, JSONObject record, String error, int key) {
+
+    }
+
+    @Override
+    public void updateDataBack(Boolean bok, JSONArray info, String error, int key) {
+
+    }
+
+    @Override
+    public void changeRecordStateBack(Boolean bok, JSONArray info, String error, int key) {
+
+    }
+
+    @Override
+    public void commCallBack(Boolean bok, JSONObject info, String error, int key) {
+        hideLoading();
+        if(bok){
+            showSuccess("打印成功");
+        }else{
+            showMessage(error);
+        }
+    }
+
+    @Override
+    public void commCallBack(Boolean bok, JSONObject info, String error, String key) {
+
+    }
+
 
     /***
      * 获取发起原因回调事件
@@ -637,7 +746,7 @@ public class RepairBadActivity extends BaseActivity implements CommFastView,Base
     public void loadReasonsBack(boolean bok, Object recordList, String error) {
         if (bok) {
             jar = (JSONArray) recordList;
-            initTableView();
+
             spReanson.setAuxArray(jar,"spc_no","name");
 
 //            for (int i = 0; i < jar.size(); i++) {

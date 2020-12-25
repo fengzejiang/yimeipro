@@ -168,6 +168,7 @@ public class WxsqActivity extends BaseActivity implements CommBaseView {
             ngInfo.put("sbid",sbid);
             ngInfo.put("sopr",sopr);
             ngInfo.put("zcno",zcno);
+            //ngInfo.put("state",6);
             String reason=((Pair) wxSpinner.getSelectedItem()).getValue();
             ngInfo.put("reason",reason);
         }

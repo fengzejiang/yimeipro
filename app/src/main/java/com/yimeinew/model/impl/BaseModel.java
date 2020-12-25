@@ -4,9 +4,11 @@ import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fast
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 import com.yimeinew.data.MESPRecord;
 import com.yimeinew.network.NetWorkManager;
+import com.yimeinew.network.NetWorkPrintManager;
 import com.yimeinew.network.response.Response;
 import com.yimeinew.utils.CommCL;
 import com.yimeinew.utils.CommonUtils;
+import com.yimeinew.utils.ToolUtils;
 import io.reactivex.Observable;
 
 import java.util.HashMap;
@@ -150,7 +152,12 @@ public class BaseModel {
     public Observable<Response<JSONObject>> getBatchRecordBySid1AndZcNo(String sid1,String zcNo) {
 //        HashMap<String,String> params = CommonUtils.getAsistsReqHashMap();
 //        params.put(CommCL.PARAM_ASSIST_FLD, CommCL.AID_QJ_BATCH_RECORD_QUERY);
-        String cont = "~sid1='"+sid1+"' and zcno='"+zcNo+"'";
+          String cont;
+          if(CommCL.BAKE_USE_MBOX&& ToolUtils.containValue(CommCL.isBake,zcNo)){
+              cont = "~ml_mbox='"+sid1+"' and zcno='"+zcNo+"'";//按料料盒查询
+          }else {
+              cont = "~sid1='"+sid1+"' and zcno='"+zcNo+"'";//按批次查询
+          }
 //        params.put(CommCL.PARAM_CONT_FLD, cont);
         return getAssistInfo(CommCL.AID_QJ_BATCH_RECORD_QUERY,cont);
     }
@@ -275,10 +282,9 @@ public class BaseModel {
         return doServer(params);
     }
 
-
-
-
-
+    public static Observable<Response<JSONObject>> doPrintServer(HashMap<String,String> params){
+        return NetWorkPrintManager.getRequest().getAssistServer(params);
+    }
 
 
 }

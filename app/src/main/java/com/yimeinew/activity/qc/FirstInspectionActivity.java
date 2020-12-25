@@ -54,8 +54,12 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
     EditText edtSbId;
     @BindView(R.id.edt_sid1)
     EditText edtSid1;
-    @BindView(R.id.edt_prd_no)
-    EditText edtPrdName;
+    @BindView(R.id.edt_gjj)
+    TextView edtGjj;
+    @BindView(R.id.edt_gule)
+    EditText edtGule;
+    @BindView(R.id.edt_prd_no)//产品名称
+             EditText edtPrdName;
 
     ArrayList<ZCInfo> zcInfoList = BaseApplication.zcList;
     CommStationZCPresenter commPresenter;
@@ -63,6 +67,8 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
     private ZCInfo zcInfo;
     private EquipmentInfo currSbInfo;
     private QCBatchInfo qcBatchInfo;//扫描批次后获取到的记录
+    private String sid; //获取扫描批次所对应的工单号
+    String gule;//获取扫描的胶水号（材料号）
 
     ArrayAdapter<String> zcAdapter;
     ArrayAdapter<CheckReason> causeAdapter;
@@ -97,23 +103,27 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
         causeAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, causeAdapterData);
         zcCause.setAdapter(causeAdapter);
         initCheck(okNg.isChecked());
+        okNg.setEnabled(false);
         commPresenter = new CommStationZCPresenter(this, SchedulerProvider.getInstance());
         initTableView();
         //从Intent中获取数据
-        ZCInfo zcInfo1 = (ZCInfo) getIntent().getSerializableExtra(CommCL.COMM_ZC_INFO_FLD);//制成信息
+        ZCInfo zcInfo1=new ZCInfo();
+        if(getIntent().hasExtra(CommCL.COMM_OP_FLD)) {//为了防止从主页面跳转过来报错
+            zcInfo1= (ZCInfo) getIntent().getSerializableExtra(CommCL.COMM_ZC_INFO_FLD);//制成信息
+        }
         String op = (String) getIntent().getSerializableExtra(CommCL.COMM_OP_FLD);//操作员
         infoOther = (EquipmentInfo) getIntent().getSerializableExtra(CommCL.COMM_SBID_FLD);//设备
         recordOther = (MESPRecord) getIntent().getSerializableExtra(CommCL.COMM_RECORD_FLD);//生产记录
-        if(!TextUtils.isEmpty(op)){
+        if (!TextUtils.isEmpty(op)) {
             edtOP.setText(op);
         }
         if (zcInfoList != null) {
             showLoading();
-            zcInfo = zcInfo1==null?zcInfoList.get(0):zcInfo1;
+            zcInfo = zcInfo1 == null ? zcInfoList.get(0) : zcInfo1;
             int key = 0;
-            if(zcInfo1!=null){
-                for(int i=0;i<zcInfoList.size();i++){
-                    if(zcInfoList.get(i).getId().equals(zcInfo.getId())){
+            if (zcInfo1 != null) {
+                for (int i = 0; i < zcInfoList.size(); i++) {
+                    if (zcInfoList.get(i).getId().equals(zcInfo.getId())) {
                         key = i;
                         break;
                     }
@@ -123,10 +133,11 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
             commPresenter.getLaunchingReasons(zcInfo.getId());
         }
 
-        if(infoOther!=null){
+        if (infoOther != null) {
             edtSbId.setText(infoOther.getId());
             currSbInfo = infoOther;
         }
+
 
     }
 
@@ -169,6 +180,7 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
         return rowList;
     }
 
+    //制程列表
     private void getZCAdapterData() {
         if (zcInfoList == null) {
             return;
@@ -218,6 +230,15 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
             CommonUtils.textViewGetFocus(edtSid1);
             return;
         }
+        String zcno = zcInfo.getId();
+        if (zcno.equals("11") || zcno.equals("12") || zcno.equals("13") || zcno.equals("14")) {
+            if (gule == null) {
+                showMessage("请输入固晶胶！");
+                CommonUtils.textViewGetFocus(edtGule);
+                return;
+            }
+        }
+
         boolean bok = true;
         for (int i = 0; i < dataList.size(); i++) {
             JSONObject jsonObject = dataList.get(i);
@@ -237,7 +258,7 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
         }
         currRecord = new MESQCRecord();
         currRecord.setBok(bok ? 0 : 1);
-        currRecord.setCaused(currCheckReason.getId());
+        currRecord.setCaused(currCheckReason.getFid());
         currRecord.setChtype(CommCL.COMM_CHECK_FIRST);
         currRecord.setPrd_no(qcBatchInfo.getPrd_no());
         currRecord.setPrd_name(qcBatchInfo.getPrd_name());
@@ -250,7 +271,8 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
         currRecord.setSbid(currSbInfo.getId());
         currRecord.setZcno(zcInfo.getId());
         currRecord.setState(0);
-        currRecord.setState1("07");
+        currRecord.setState1("01");
+        currRecord.setGule(gule);//固晶胶
         JSONObject saveJ = CommonUtils.getJsonObjFromBean(currRecord);
         saveJ.put("Q00101A", dataList);
         showLoading();
@@ -284,14 +306,40 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
         if (id == R.id.sp_zc_list) {
             zcInfo = zcInfoList.get(position);
             showLoading();
+            switch (zcInfo.getId()) {
+                case "11":
+                case "12":
+                case "13":
+                case "14":
+                    edtGule.setVisibility(View.VISIBLE);//可视化
+                    edtGjj.setVisibility(View.VISIBLE);
+                    break;
+                default:
+                    edtGule.setVisibility(View.GONE);
+                    edtGjj.setVisibility(View.GONE);
+                    break;
+
+            }
+            //制程变化、清空设备信息---和制令信息
+            if(currSbInfo==null||!TextUtils.equals(zcInfo.getId(),currSbInfo.getZcno())) {
+                edtSbId.setText("");
+                currSbInfo = null;
+                edtPrdName.setText("");
+                edtSid1.setText("");
+                qcBatchInfo=null;
+            }
             commPresenter.getLaunchingReasons(zcInfo.getId());
+
         }
         if (id == R.id.sp_cause) {
             currCheckReason = causeAdapterData.get(position);
+
+
+
         }
     }
 
-    @OnEditorAction({R.id.edt_sid1, R.id.edt_op, R.id.edt_equipment_no})
+    @OnEditorAction({R.id.edt_sid1, R.id.edt_op, R.id.edt_equipment_no, R.id.edt_prd_no, R.id.edt_gule})
     public boolean OnEditorAction(EditText editText) {
         //无论哪个输入框的输入完成，首先判断操作员输入框是否有值，如果有值，则继续往下
         //如果操作员输入框没有值,则跳转到操作员输入框，
@@ -336,17 +384,32 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
         String sid1 = edtSid1.getText().toString().toUpperCase();
         if (TextUtils.isEmpty(sid1)) {
             showMessage("批次号不能为空!!");
+            CommonUtils.textViewGetFocus(edtSid1);
             return false;
-        } else {
+        }
+        if (key == R.id.edt_sid1) {
             showLoading();
             boolean bhd = CommCL.houDuan.containsKey(zcInfo.getId());
             commPresenter.getQCBatchInfo(sid1, zcInfo.getId(), bhd);
+            CommonUtils.textViewGetFocus(edtGule);
             return true;
         }
+        gule = edtGule.getText().toString().toUpperCase();
+        if (TextUtils.isEmpty(gule)) {
+            showMessage("固晶胶不能为空!!");
+            //CommonUtils.textViewGetFocus(edtGule);
+            return false;
+        }
+        if (key == R.id.edt_gule) {
+            commPresenter.getGuleInfo(sid, 2);
+        }
+
+        return true;
     }
 
     @Override
-    public void checkMboxCallBack(boolean bok, String error,int key) {
+    public void checkMboxCallBack(boolean bok, String error, int key) {
+
 
     }
 
@@ -376,10 +439,12 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
     public String getCurrMO() {
         return null;
     }
+
     @Override
     public List<JSONObject> getDataList() {
         return dataList;
     }
+
     /***
      *
      * @param bok  是否成功
@@ -433,7 +498,7 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
                 causeAdapterData.add(checkReason);
             }
             causeAdapter.notifyDataSetChanged();
-            currCheckReason = causeAdapterData.get(0);
+            currCheckReason = causeAdapterData.get(0);//进入页面时给发起原因赋值
 //            Log.d(TAG_NAME,array.toJSONString());
             dataList.clear();
             tableAdapter.notifyDataSetChanged();
@@ -467,17 +532,17 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
             dataList.clear();
             for (int i = 0; i < array.size(); i++) {
                 CheckProjectInfo info = JSONObject.parseObject(array.getJSONObject(i).toJSONString(), CheckProjectInfo.class);
-                if(!checkProjectList.contains(info)){
+                if (!checkProjectList.contains(info)) {
                     checkProjectList.add(info);
                     dataList.add(CommonUtils.getJsonObjFromBean(info));
                 }
             }
 //            tableAdapter.notifyDataSetChanged();
             Log.d(TAG_NAME, array.toJSONString());
-            if(recordOther != null){
+            if (recordOther != null) {
                 showLoading();
                 boolean bhd = CommCL.houDuan.containsKey(zcInfo.getId());
-                String sid1 = bhd?recordOther.getLotno():recordOther.getSid1();
+                String sid1 = bhd ? recordOther.getLotno() : recordOther.getSid1();
                 CommonUtils.textViewGetFocus(edtSid1);
                 edtSid1.setText(sid1);
                 commPresenter.getQCBatchInfo(sid1, zcInfo.getId(), bhd);
@@ -516,10 +581,12 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
                     return;
                 }
                 if (CommCL.BATCH_STATUS_READY.equals(qcBatchInfo.getState()) || CommCL.BATCH_STATUS_IN.equals(qcBatchInfo.getState()) || CommCL.BATCH_STATUS_CHARGING.equals(qcBatchInfo.getState()) || CommCL.BATCH_STATUS_WORKING.equals(qcBatchInfo.getState())
-                        || CommCL.BATCH_STATUS_CHECKING.equals(qcBatchInfo.getState()) || CommCL.BATCH_STATUS_ABNORMAL.equals(qcBatchInfo.getState()) ) {
+                        || CommCL.BATCH_STATUS_CHECKING.equals(qcBatchInfo.getState()) || CommCL.BATCH_STATUS_ABNORMAL.equals(qcBatchInfo.getState())) {
 //                    edtSid1.setText(qcBatchInfo.getSid1());
                     CommonUtils.textViewGetFocus(edtPrdName);
                     edtPrdName.setText(qcBatchInfo.getPrd_name());
+                    sid = qcBatchInfo.getSid();//获取当前该批次的工单号
+                    CommonUtils.textViewGetFocus(edtGule);
                     return;
                 } else {
                     showMessage("该批次【" + qcBatchInfo.getSid1() + "】异常!!");
@@ -539,8 +606,30 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
         }
     }
 
+    //回传固晶胶水信息
     @Override
     public void commonBack(boolean bok, Object recordList, String error, int key) {
+        boolean flag = false;
+        if (bok) {
+            JSONArray array = (JSONArray) recordList;
+            for (int i = 0; i < array.size(); i++) {
+                JSONObject rea = array.getJSONObject(i);
+                if (TextUtils.equals(rea.getString("prd_no"), gule)) {
+                    flag = true;
+                    CommonUtils.showSuccess(this, "用胶正确 ");
+                    break;
+                }
+
+            }
+            if (!flag) {
+                gule = null;
+                showMessage("用胶错误");
+                CommonUtils.textViewGetFocus(edtGule);
+                return;
+
+            }
+
+        }
 
     }
 
@@ -572,13 +661,13 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
             if (key == CommCL.COMM_CHK_LIST) {
                 //弹出dialog，并
                 checkUp(ceaPars, cWorkInfo);
-            }else {
-                CommonUtils.showMessage(this,"提交成功");
+            } else {
+                CommonUtils.showMessage(this, "提交成功");
                 CommonUtils.textViewGetFocus(edtSid1);
                 currRecord = null;
                 dataList.clear();
                 tableAdapter.notifyDataSetChanged();
-                for(int i=0;i<checkProjectList.size();i++)
+                for (int i = 0; i < checkProjectList.size(); i++)
                     dataList.add(CommonUtils.getJsonObjFromBean(checkProjectList.get(i)));
                 tableAdapter.notifyDataSetChanged();
             }
@@ -618,8 +707,7 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
                     chooseIndex = which;
                 }
             });
-            builder.setPositiveButton("确定", new DialogInterface.OnClickListener()
-            {
+            builder.setPositiveButton("确定", new DialogInterface.OnClickListener() {
                 @Override
                 public void onClick(DialogInterface dialog, int which) {
                     ceaPars.setStateto(Integer.parseInt(approvalFlowObj.getStateId()));
@@ -631,8 +719,6 @@ public class FirstInspectionActivity extends BaseActivity implements BaseStation
             builder.show();
         }
     }
-
-
 
 
 }

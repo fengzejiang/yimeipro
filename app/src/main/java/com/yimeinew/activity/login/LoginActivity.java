@@ -49,6 +49,7 @@ public class LoginActivity extends AppCompatActivity implements BaseView {
             Manifest.permission.MOUNT_UNMOUNT_FILESYSTEMS,
             Manifest.permission.INTERNET,
             Manifest.permission.INSTALL_PACKAGES,
+            Manifest.permission.CAMERA
     };
 
     @BindView(R.id.userName)
@@ -106,11 +107,15 @@ public class LoginActivity extends AppCompatActivity implements BaseView {
         int id = editText.getId();
         if(TextUtils.isEmpty(user.getUserCode())){
             CommonUtils.textViewGetFocus(edtUser);
-            return false;
+            return true;
         }
 
         if(id == R.id.userName){
             CommonUtils.textViewGetFocus(pwd);
+            return true;
+        }
+        if(id == R.id.userPassword){
+            showMessage("我回车了");
             return true;
         }
         return false;
@@ -121,6 +126,11 @@ public class LoginActivity extends AppCompatActivity implements BaseView {
         if(zLoadingView==null)
          zLoadingView = CommonUtils.loginLoadingView(LoginActivity.this);
         zLoadingView.show();
+    }
+
+    @Override
+    public void showLoading(String message) {
+
     }
 
     @Override
@@ -236,11 +246,14 @@ public class LoginActivity extends AppCompatActivity implements BaseView {
     /*动态获取权限*/
     public void getStoragePermissions(){
         if (Build.VERSION.SDK_INT>=Build.VERSION_CODES.LOLLIPOP) {   //判断是否android6.0以上
-            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            int stotage=ActivityCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE);//存储权限
+            int camera=ActivityCompat.checkSelfPermission(this, Manifest.permission.CAMERA);//相机权限
+            if ( stotage!= PackageManager.PERMISSION_GRANTED||camera!= PackageManager.PERMISSION_GRANTED) {
                 ActivityCompat.requestPermissions(this, PERMISSIONS_STORAGE, REQUEST_PERMISSION_CODE);
             }
             for(int i=0;i<PERMISSIONS_STORAGE.length;i++){
                 int result=ActivityCompat.checkSelfPermission(this, PERMISSIONS_STORAGE[i]);
+                System.out.println("woshi="+PERMISSIONS_STORAGE[i]+"  ="+result);
                 //Log.i(SyncStateContract.Constants.TAG,"执行完"+PERMISSIONS_STORAGE[i]+"权限为--》"+result);
             }
         }

@@ -18,13 +18,13 @@ import java.util.Map;
 public interface Request {
 
     @POST(CommCL.API)
-    Observable<Response<JSONObject>> login(@QueryMap Map<String, String> requestBody);
+    Observable<Response<JSONObject>> login(@QueryMap Map<String,String> requestBody);
 
     @POST(CommCL.API)
-    Observable<Response<JSONObject>> getAssistServer(@QueryMap Map<String, String> requestBody);
+    Observable<Response<JSONObject>> getAssistServer(@QueryMap Map<String,String> requestBody);
 
     @POST(CommCL.API)
-    Observable<Response<JSONObject>> getServerTime(@QueryMap Map<String, String> requestBody);
+    Observable<Response<JSONObject>> getServerTime(@QueryMap Map<String,String> requestBody);
     @POST(CommCL.API)
     Observable<Response<JSONObject>> saveData(@QueryMap HashMap<String, String> params);
     @POST(CommCL.API)

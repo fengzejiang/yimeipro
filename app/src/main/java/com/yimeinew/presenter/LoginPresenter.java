@@ -55,6 +55,7 @@ public class LoginPresenter implements LoginModelI {
 
     private void getMenusAndUser(JSONObject rtnJsonObj) {
         JSONArray bb = (JSONArray) rtnJsonObj.get("menulist");
+        bb.addAll(CommCL.addMenus);
         //初始化菜单列表
         ArrayList<Menu> menuList = new ArrayList<>();
         for(int i=0;i<bb.size();i++){
@@ -95,6 +96,7 @@ public class LoginPresenter implements LoginModelI {
                                 BaseApplication.currUser = user;
                                 getMenusAndUser((JSONObject) carBeans.get(CommCL.RTN_DATA));
                                 getZCInfo();//登录成功以后获取制成信息
+                                ServicesTimeThread.getServiceTimeOK();//登录成功同步时间
                                 loginSuccess();
                             }
                         },

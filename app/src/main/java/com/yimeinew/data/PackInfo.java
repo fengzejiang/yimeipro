@@ -16,6 +16,8 @@ public class PackInfo implements Serializable {
     private int qty=1;//数量
     private String tray;//tray批次号
     private int minqty;//单盘数量
+
+    private String tray1;//合盘tray
     public PackInfo(){};
     public PackInfo(String lotno,String sid1,String slkid,String tray,int minqty){
         this.lotno=lotno;
@@ -72,4 +74,13 @@ public class PackInfo implements Serializable {
     public void setMinqty(int minqty) {
         this.minqty = minqty;
     }
+
+    public String getTray1() {
+        return tray1;
+    }
+
+    public void setTray1(String tray1) {
+        this.tray1 = tray1;
+    }
+
 }

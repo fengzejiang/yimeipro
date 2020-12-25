@@ -152,24 +152,7 @@ public class BaseTableDataAdapter extends AbstractTableViewAdapter {
                     textView.setHeight(headerRowInfo.getHeight());
                     textView.setPadding(0, 0, 0, 0);
                     textView.setGravity(Gravity.CENTER);
-//                    String values = data.containsKey(headerRowInfo.getId())?data.getString(headerRowInfo.getId()):"";
-//                    int attr = headerRowInfo.getAttr();
-//                    if((attr& ICL.DATA_ATTR_MAP)>0){
-//                        Map<String,String> maps = headerRowInfo.getContrastMap();
-//                        if(maps!=null){
-//                            values = maps.get(values);
-//                            values= values==null?"":values;
-//                        }
-//                    }
-//                    textView.setText(values);
-//                    if((attr&ICL.DATA_ATTR_COLOR)>0){
-//                        Map<String,String> maps = headerRowInfo.getContrastColors();
-//                        if(maps!=null){
-//                            String colorStr = maps.get(values);
-//                            if(colorStr!=null)
-//                                textView.setBackgroundColor(Color.parseColor(colorStr));
-//                        }
-//                    }
+//
 
                     viewList.add(textView);
                     ((CheckableLinearLayout) itemView).addView(textView,i);

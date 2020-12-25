@@ -1,13 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
-<layout xmlns:app="http://schemas.android.com/apk/res-auto" xmlns:android="http://schemas.android.com/apk/res/android">
+<layout  xmlns:android="http://schemas.android.com/apk/res/android">
 
     <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:background="@color/mainBKColor"
     >
-
-
         <RelativeLayout android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:id="@+id/container_scroll">
@@ -20,8 +18,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:shrinkColumns="0,1,2"
-                        android:paddingStart="8dp"
-                        android:paddingEnd="5dp">
+                        android:paddingStart="5dp"
+                        android:paddingEnd="3dp">
                     <TableRow android:paddingTop="5dp">
 
                         <TextView
@@ -58,7 +56,7 @@
                         <ImageView
                                 android:layout_width="35dp"
                                 android:layout_height="35dp"
-                                app:srcCompat="@drawable/new_bn"
+                                android:src="@drawable/new_bn"
                                 android:id="@+id/img_new"/>
                     </TableRow>
                     <TableRow android:paddingTop="5dp">
@@ -123,7 +121,7 @@
                 android:id="@+id/tips_linearLayout"
                 android:paddingLeft="8dp"
                 android:paddingRight="8dp"
-                android:paddingTop="5dp"
+                android:paddingTop="3dp"
                 android:layout_below="@id/container_scroll">
 
             <TextView
@@ -235,31 +233,16 @@
                     android:layout_weight="1"/>
 
         </LinearLayout>
-        <LinearLayout
-                android:orientation="horizontal"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@id/tips_linearLayout2"
-                android:paddingLeft="8dp"
-                android:paddingRight="8dp"
-                android:id="@+id/tips_linearLayout3">
 
-            <Button
-                    android:text="打印标签"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:id="@+id/btn_print"
-                    android:layout_weight="1"/>
-        </LinearLayout>
 
         <!--扫描结果展示区域-->
         <LinearLayout android:layout_width="match_parent"
                       android:layout_height="wrap_content"
-                      android:layout_below="@id/tips_linearLayout3"
+                      android:layout_below="@id/tips_linearLayout2"
                       android:layout_centerHorizontal="true"
                       android:paddingLeft="10dp"
                       android:paddingRight="10dp"
-                      android:paddingTop="10dp">
+                      android:paddingTop="5dp">
             <com.yimeinew.tableui.TablePanelView
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"

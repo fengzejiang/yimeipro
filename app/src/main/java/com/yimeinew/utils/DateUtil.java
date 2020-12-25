@@ -120,9 +120,15 @@ public class DateUtil {
      */
     public static int subDate(String d1, String d2, int key) {
         SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        SimpleDateFormat df2 = new SimpleDateFormat("yyyy-MM-dd");
         try {
             Date date1 = df.parse(d1);
-            Date date2 = df.parse(d2);
+            Date date2 =null;
+            if(d2.length()<11){
+                date2=df2.parse(d2);
+            }else {
+                date2=df.parse(d2);
+            }
             long diff = date1.getTime() - date2.getTime();
             int k1 = 0;
             switch (key){
@@ -151,8 +157,42 @@ public class DateUtil {
         }
         return 0;
     }
+
+    /**
+     * 获取两个时间间隔的秒数
+     * @param d1
+     * @param d2
+     * @return
+     */
     public static int subSecond(String d1, String d2){
         return subDate(d1,d2,5);
     }
+    public static int getTimeZone(){//获取时区
+        Date date=new Date();
+        return date.getTimezoneOffset();
+    }
 
+    /**
+     *
+     * @param d1
+     * @param d2
+     * @return 如果d1大于d2那么返回1，如果d1小于d2那么返回-1，相等返回0
+     */
+    public static int compare(String d1, String d2){
+        SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        try {
+            Date date1 = df.parse(d1);
+            Date date2 = df.parse(d2);
+            if(date1.getTime()>date2.getTime()){
+                return 1;
+            }else if(date1.getTime()>date2.getTime()){
+                return -1;
+            }else {
+                return 0;
+            }
+        } catch (ParseException e) {
+            e.printStackTrace();
+        }
+        return 0;
+    }
 }

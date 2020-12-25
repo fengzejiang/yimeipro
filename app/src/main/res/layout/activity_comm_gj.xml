@@ -102,6 +102,7 @@
                             android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
                             android:text="@string/yimei_lab_sid1"
+                            android:id="@+id/tv_sid1"
                             android:textSize="16sp"/>
 
                     <EditText

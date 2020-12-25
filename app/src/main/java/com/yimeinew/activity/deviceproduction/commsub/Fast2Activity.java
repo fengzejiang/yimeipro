@@ -125,12 +125,12 @@ public class Fast2Activity extends BaseActivity implements CommFastView {
             if (bindSid1.containsKey(sid1)) {
                 showMessage("该批次号【" + sid1 + "】已经扫描过");
                 CommonUtils.textViewGetFocus(edtSid1);
-        return true;
-    }
+                return true;
+            }
             if(!CommonUtils.isRepeat("ks2_saomao_sid1",sid1)) {
                 showLoading();
                 //校验批次号
-                commPresenter.checkQuickLot(sid1,zcno,1);
+                commPresenter.checkQuickLot(sid1,zcno,null,1);
              }
 }
         return false;
@@ -258,6 +258,7 @@ public class Fast2Activity extends BaseActivity implements CommFastView {
             hideLoading();
             CommonUtils.canDo(GBKEY);
             showMessage(error);
+            CommonUtils.textViewGetFocus(edtSid1);
         }
     }
 

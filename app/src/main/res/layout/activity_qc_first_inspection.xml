@@ -74,22 +74,50 @@
         <TableRow android:layout_width="348dp">
             <TextView
                     android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
+                    android:layout_height="40dp"
                     android:text="@string/yimei_lab_sid1"
-                    android:textSize="16sp"/>
+                    android:textSize="16sp"
+                    android:paddingBottom="2dp"
+            />
             <EditText
                     android:id="@+id/edt_sid1"
-                    android:layout_width="250dp"
+                    android:layout_width="80dp"
                     android:layout_height="40dp"
-                    android:layout_marginStart="5dp"
-                    android:layout_marginEnd="5dp"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
                     android:enabled="true"
                     android:imeOptions="actionDone"
                     android:inputType="text"
                     android:textSize="16sp"
                     android:textColor="@color/text_color"
+                    android:layout_weight="1"
                     android:hint="@string/yimei_lab_sid1"
-                    android:tag="@string/yimei_lab_sid1" android:layout_span="3"/>
+                    android:tag="@string/yimei_lab_sid1" />
+            <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="40dp"
+                    android:layout_marginLeft="5dp"
+                    android:layout_marginRight="5dp"
+                    android:paddingLeft="5dp"
+                    android:paddingRight="5dp"
+                    android:id="@+id/edt_gjj"
+                    android:text="@string/yimei_gule_no"
+                    android:textSize="16sp"
+
+            />
+            <EditText
+                    android:id="@+id/edt_gule"
+                    android:layout_width="120dp"
+                    android:layout_height="40dp"
+                    android:paddingStart="5dp"
+                    android:paddingEnd="5dp"
+                    android:enabled="true"
+                    android:imeOptions="actionDone"
+                    android:inputType="text"
+                    android:textSize="16sp"
+                    android:textColor="@color/text_color"
+                    android:hint="@string/yimei_gule_no"
+                    android:tag="@string/yimei_gule_no" />
         </TableRow>
         <TableRow android:layout_width="348dp">
             <TextView

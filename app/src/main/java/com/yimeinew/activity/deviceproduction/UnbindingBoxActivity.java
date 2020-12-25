@@ -60,6 +60,7 @@ public class UnbindingBoxActivity extends BaseActivity implements BaseStationBin
     private ZLoadingDialog zLoadingView;
 
     private UnBindingPresenter presenter;
+    private String dbSlkidKey=TAG_NAME+"_slkid_key";
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -271,6 +272,15 @@ public class UnbindingBoxActivity extends BaseActivity implements BaseStationBin
             String op = edtOp.getText().toString();
             if(currBox.equals(batchBox)){
                 unBindInfo = makeUnBindInfo(batchInfo, currBox, sid1, op);
+                String dbSlkid = SqliteUtil.getString(dbSlkidKey);
+                String slkid=unBindInfo.getSlkid();
+                if(!TextUtils.isEmpty(dbSlkid)&&!TextUtils.equals(dbSlkid,slkid)){
+                    CommonUtils.alert(this,"工单切换","原工单:【"+dbSlkid+"】,切换后工单:【"+slkid+"】",null,null);
+                    SqliteUtil.put(dbSlkidKey,slkid);
+                }
+                if(TextUtils.isEmpty(dbSlkid)){
+                    SqliteUtil.put(dbSlkidKey,slkid);
+                }
                 presenter.saveBean(unBindInfo);
             }else{
                 hideLoading();

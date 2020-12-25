@@ -211,19 +211,26 @@ public class OutReceiveActivity extends BaseActivity implements CommBaseView {
         if(bok) {
             switch (key) {
                 case 1://器件转出
-                        isWeiWai(info);
+
                         if(!hasWaiGuan(info)){
-                            showMessage("外观未入站");
-                            CommonUtils.textViewGetFocus(edtSid1);
                             hideLoading();
+                            CommonUtils.textViewGetFocus(edtSid1);
+                            showMessage("外观未入站");
+                            return;
+                        }
+                        if(!hasQC(info)){
+                            hideLoading();
+                            CommonUtils.textViewGetFocus(edtSid1);
+                            showMessage("外观品质未过检");
                             return;
                         }
                         if(hasZhuanChu(info)){
-                            showMessage("已经转出");
-                            CommonUtils.textViewGetFocus(edtSid1);
                             hideLoading();
+                            CommonUtils.textViewGetFocus(edtSid1);
+                            showMessage("已经转出");
                             return;
                         }
+                        isWeiWai(info);
                         if(checkStateBok(info)) {
                             //保存转出记录
                             JSONObject temp = createSaveDate(info, "D0030");
@@ -231,27 +238,33 @@ public class OutReceiveActivity extends BaseActivity implements CommBaseView {
                         }
                         break;
                 case 2://器件接收
-                        if(isWeiWai(info)){
-                            showMessage("委外加工单，现在还不能接收！");
+
+                        if(!hasWaiGuan(info)){
+                            hideLoading();
+                            CommonUtils.textViewGetFocus(edtSid1);
+                            showMessage("外观未入站");
                             return;
                         }
-                        if(!hasWaiGuan(info)){
-                            showMessage("外观未入站");
-                            CommonUtils.textViewGetFocus(edtSid1);
+                        if(!hasQC(info)){
                             hideLoading();
+                            CommonUtils.textViewGetFocus(edtSid1);
+                            showMessage("外观品质未过检");
                             return;
                         }
                         if(!hasZhuanChu(info)){
-                            showMessage("未转出");
-                            CommonUtils.textViewGetFocus(edtSid1);
                             hideLoading();
+                            CommonUtils.textViewGetFocus(edtSid1);
+                            showMessage("未转出");
                             return;
                         }
                         if(hasJieShou(info)){
-
-                            showMessage("已接收");
-                            CommonUtils.textViewGetFocus(edtSid1);
                             hideLoading();
+                            CommonUtils.textViewGetFocus(edtSid1);
+                            showMessage("已接收");
+                            return;
+                        }
+                        if(isWeiWai(info)){
+                            showMessage("委外加工单，现在还不能接收！");
                             return;
                         }
                         if(checkStateBok(info)){
@@ -263,8 +276,9 @@ public class OutReceiveActivity extends BaseActivity implements CommBaseView {
             }
         }else{
             CommonUtils.textViewGetFocus(edtSid1);
-            showMessage(error);
             hideLoading();
+            showMessage(error);
+
         }
     }
 
@@ -278,9 +292,9 @@ public class OutReceiveActivity extends BaseActivity implements CommBaseView {
             CommonUtils.textViewGetFocus(edtSid1);
             hideLoading();
         }else{
+            hideLoading();
             CommonUtils.textViewGetFocus(edtSid1);
             showMessage(error);
-            hideLoading();
         }
     }
 
@@ -376,6 +390,17 @@ public class OutReceiveActivity extends BaseActivity implements CommBaseView {
             JSONObject obj=array.getJSONObject(i);
             if(TextUtils.equals("D0050",obj.getString("sbuid"))){
                 return true;
+            }
+        }
+        return false;
+    }
+    public boolean hasQC(JSONArray array){
+        for(int i=0;i<array.size();i++){
+            JSONObject obj=array.getJSONObject(i);
+            if(TextUtils.equals("D0050",obj.getString("sbuid"))){
+                if(TextUtils.equals("1",obj.getString("nextbok"))){
+                    return true;
+                }
             }
         }
         return false;

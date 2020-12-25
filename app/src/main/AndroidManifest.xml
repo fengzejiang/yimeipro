@@ -1,28 +1,74 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-          xmlns:tools="http://schemas.android.com/tools" package="com.yimeinew.activity">
-    <uses-permission android:name="android.permission.SET_TIME"
-                     tools:ignore="ProtectedPermissions" />
-    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE" />
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-    <uses-permission android:name="android.permission.CHANGE_WIFI_MULTICAST_STATE" />
-    <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+          xmlns:tools="http://schemas.android.com/tools"
+          package="com.yimeinew.activity">
+
+    <uses-permission android:name="android.permission.INTERNET"/><!-- 网络权限 -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/><!-- 网络Wifi权限 -->
+    <uses-permission android:name="android.permission.SET_TIME" tools:ignore="ProtectedPermissions"></uses-permission>
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/><!-- 存储权限 -->
+    <uses-permission android:name="android.permission.VIBRATE" /> <!-- 震动权限 -->
+    <uses-permission android:name="android.permission.CAMERA" /> <!-- 摄像头权限 -->
+    <uses-feature android:name="android.hardware.camera.autofocus" /> <!-- 自动聚焦权限 -->
+    <uses-permission android:name="android.permission.REQUEST_INSTALL_PACKAGES"/><!-- 打包安装权限 -->
     <application
-            android:name="com.yimeinew.activity.base.BaseApplication"
+            android:name=".base.BaseApplication"
             android:allowBackup="true"
             android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
+            android:networkSecurityConfig="@xml/network_security_config"
+            android:largeHeap="true"
             android:roundIcon="@mipmap/ic_launcher_round"
             android:supportsRtl="true"
-            android:networkSecurityConfig="@xml/network_security_config"
             android:theme="@style/AppTheme">
-        <activity android:name="com.yimeinew.activity.login.LoginActivity">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN"/>
-                <category android:name="android.intent.category.LAUNCHER"/>
-            </intent-filter>
+        <activity
+                android:name=".deviceproduction.commsub.ScrappingCancellationActivity"
+                android:label="@string/title_activity_scrapping_cancellation">
+        </activity>
+        <activity android:name=".deviceproduction.commsub.UpMaterialMzActivity">
+        </activity>
+        <activity android:name=".deviceproduction.commsub.UpMaterialMzTyActivity">
+        </activity>
+        <activity android:name=".deviceproduction.commsub.UpPatchMzActivity">
+        </activity>
+        <activity android:name=".deviceproduction.commsub.FeedingMzActivity">
+        </activity>
+        <activity
+                android:name=".deviceproduction.commsub.CommMzActivity"
+                android:label="@string/title_activity_comm_mz">
+        </activity>
+
+        <meta-data
+                android:name="com.google.android.actions"
+                android:resource="@xml/provider_paths"/>
+
+        <activity
+                android:name=".qc.OutCheckQJActivity"
+                android:label="@string/title_activity_out_check_qj">
+        </activity>
+        <activity
+                android:name=".ck.CkChoiceActivity"
+                android:label="@string/title_activity_ck_choice">
+        </activity>
+        <activity
+                android:name=".ck.SellBoxActivity"
+                android:label="@string/title_activity_sell_box">
+        </activity>
+        <activity
+                android:name=".ck.SellBoxQJActivity"
+                android:label="@string/title_activity_sell_box">
+        </activity>
+        <activity
+                android:name=".ck.SellStationActivity"
+                android:label="@string/title_activity_sell_box">
+        </activity>
+        <activity
+                android:name=".deviceproduction.commsub.PrintMZCPActivity"
+                android:label="@string/title_activity_print_mzcp">
+        </activity>
+        <activity
+                android:name=".SystemSetActivity"
+                android:label="@string/title_activity_system_set">
         </activity>
         <activity
                 android:name=".deviceproduction.LookBeltNGActivity"
@@ -39,6 +85,13 @@
         <activity android:name=".deviceproduction.commsub.OutReceiveActivity">
         </activity>
         <activity android:name=".deviceproduction.commsub.BadRepairActivity">
+        </activity>
+        <activity android:name=".login.LoginActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
         </activity>
         <activity
                 android:name=".MainActivity"
@@ -77,12 +130,24 @@
                 android:label="首件检验">
         </activity>
         <activity
+                android:name=".qc.PatrolInspectionActivity"
+                android:label="巡检">
+        </activity>
+        <activity
                 android:name=".qc.OutCheckActivity"
                 android:label="出货检验">
         </activity>
         <activity
+                android:name=".qc.BakeReleaseActivity"
+                android:label="点胶烘烤放行">
+        </activity>
+        <activity
                 android:name=".deviceproduction.commsub.GlueAndWeldingActivity"
                 android:label="点胶工序">
+        </activity>
+        <activity
+                android:name=".deviceproduction.commsub.GlueAndWelding2Activity"
+                android:label="点胶工序无需倒料盒">
         </activity>
         <activity
                 android:name=".deviceproduction.AddGluingActivity"
@@ -111,6 +176,9 @@
                 android:name=".deviceproduction.commsub.FastActivity"
                 android:label="@string/title_activity_fast">
         </activity>
+        <activity android:name=".deviceproduction.commsub.FastMachineActivity">
+            android:label="@string/title_activity_fast">
+        </activity>
         <activity
                 android:name=".deviceproduction.commsub.Fast2Activity"
                 android:label="@string/title_activity_fast">
@@ -120,11 +188,31 @@
                 android:label="@string/title_activity_fast">
         </activity>
         <activity
+                android:name=".deviceproduction.CommonMzStationActivity"
+                android:label="@string/title_activity_comm_mz">
+        </activity>
+        <activity
                 android:name=".pack.PackStationActivity"
                 android:label="@string/title_activity_pack">
         </activity>
         <activity
+                android:name=".pack.PackTailActivity"
+                android:label="@string/title_activity_pack">
+        </activity>
+        <activity
                 android:name=".pack.PackActivity"
+                android:label="@string/title_activity_pack">
+        </activity>
+        <activity
+                android:name=".pack.PackABActivity"
+                android:label="@string/title_activity_pack">
+        </activity>
+        <activity
+                android:name=".pack.PackABTailActivity"
+                android:label="@string/title_activity_pack">
+        </activity>
+        <activity
+                android:name=".pack.PackSpareActivity"
                 android:label="@string/title_activity_pack">
         </activity>
         <activity
@@ -147,6 +235,26 @@
                 android:name=".qc.QCCommStationActivity"
                 android:label="@string/title_activity_repair_qc">
         </activity>
+        <activity
+                android:name=".qc.CheckRecordActivity"
+                android:label="@string/title_activity_repair_qc">
+        </activity>
+        <activity android:name=".qc.FQCCheckActivity"/>
+        <activity android:name=".pack.PackSideActivity"/>
+        <activity android:name=".qc.SpotCheckActivity"/>
+        <activity android:name=".deviceproduction.commsub.Fast2MachineActivity"/>
+        <activity android:name=".deviceproduction.LookBeltSpotActivity"/>
+        <activity android:name=".ck.OutHouseActivity"/>
+        <activity android:name=".ck.OutHouseStationActivity"/>
+        <provider
+                android:name="android.support.v4.content.FileProvider"
+                android:authorities="${applicationId}.fileprovider"
+                android:exported="false"
+                android:grantUriPermissions="true">
+            <meta-data
+                    android:name="android.support.FILE_PROVIDER_PATHS"
+                    android:resource="@xml/provider_paths"/>
+        </provider>
     </application>
 
 </manifest>

@@ -10,6 +10,7 @@ import com.yimeinew.activity.R;
 import com.yimeinew.activity.base.BaseApplication;
 import com.yimeinew.activity.databinding.MainCommStationItemBinding;
 import com.yimeinew.activity.deviceproduction.commsub.CommGJActivity;
+import com.yimeinew.activity.deviceproduction.commsub.GlueAndWelding2Activity;
 import com.yimeinew.activity.deviceproduction.commsub.GlueAndWeldingActivity;
 import com.yimeinew.data.Menu;
 import com.yimeinew.data.ZCInfo;
@@ -115,6 +116,23 @@ public class CommStationAdapter extends BaseAdapter {
         attr = gjzc.getAttr() | CommCL.ZC_ATTR_GLUING;
         gjzc.setAttr(attr);
         gjzc.setClazz(GlueAndWeldingActivity.class);
+        zCnoInfos.add(gjzc);
+
+        /*-------点胶无需倒料盒----*/
+        gjzc = new ZCInfo(CommonUtils.getZCInfoById("31"));
+//        gjzc.setStartNum(1);
+        gjzc.setImgIndex(R.drawable.qj_dianjiao_budaoliaohe);
+        attr = gjzc.getAttr() | CommCL.ZC_ATTR_GLUING;
+        gjzc.setAttr(attr);
+        gjzc.setClazz(GlueAndWelding2Activity.class);
+        zCnoInfos.add(gjzc);
+
+        gjzc = new ZCInfo(CommonUtils.getZCInfoById("32"));
+//        gjzc.setStartNum(1);
+        gjzc.setImgIndex(R.drawable.qj_dianjiao2_budaoliaohe);
+        attr = gjzc.getAttr() | CommCL.ZC_ATTR_GLUING;
+        gjzc.setAttr(attr);
+        gjzc.setClazz(GlueAndWelding2Activity.class);
         zCnoInfos.add(gjzc);
 
         gjzc = CommonUtils.getZCInfoById("41");

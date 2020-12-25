@@ -57,6 +57,12 @@ public class MESPRecord implements Serializable {
     private String sort;//生产确认：A;品质确认是：B;
     private String bokName;//判定结果名称
     private String spc_no;//不合格原因
+    private String ml_mbox;//批次绑定的料盒号
+    private String proc_id;
+    private String printid;
+    private String capacity;
+
+
 
     public String getSpc_no() {
         return spc_no;
@@ -416,5 +422,36 @@ public class MESPRecord implements Serializable {
 
     public void setBokName(String bokName) {
         this.bokName = bokName;
+    }
+
+    public String getMl_mbox() {
+        return ml_mbox;
+    }
+
+    public void setMl_mbox(String ml_mbox) {
+        this.ml_mbox = ml_mbox;
+    }
+
+    public String getProc_id() {
+        return proc_id;
+    }
+
+    public void setProc_id(String proc_id) {
+        this.proc_id = proc_id;
+    }
+
+    public String getPrintid() {
+        return printid;
+    }
+
+    public void setPrintid(String printid) {
+        this.printid = printid;
+    }
+    public String getCapacity() {
+        return capacity;
+    }
+
+    public void setCapacity(String capacity) {
+        this.capacity = capacity;
     }
 }

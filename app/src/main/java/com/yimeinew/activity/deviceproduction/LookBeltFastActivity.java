@@ -3,6 +3,8 @@ package com.yimeinew.activity.deviceproduction;
 import android.content.DialogInterface;
 import android.os.Bundle;
 import android.app.Activity;
+import android.text.Editable;
+import android.text.InputType;
 import android.text.TextUtils;
 import android.view.*;
 import android.widget.*;
@@ -19,6 +21,8 @@ import com.yimeinew.data.EquipmentInfo;
 import com.yimeinew.data.GJViewEntity;
 import com.yimeinew.data.MESPRecord;
 import com.yimeinew.data.ZCInfo;
+import com.yimeinew.listener.OnAlertListener;
+import com.yimeinew.listener.OnConfirmListener;
 import com.yimeinew.modelInterface.BaseView;
 import com.yimeinew.modelInterface.CommBaseView;
 import com.yimeinew.network.schedulers.SchedulerProvider;
@@ -27,10 +31,7 @@ import com.yimeinew.presenter.CommStationZCPresenter;
 import com.yimeinew.tableui.CommMultiChoiceModeCallBack;
 import com.yimeinew.tableui.TablePanelView;
 import com.yimeinew.tableui.entity.HeaderRowInfo;
-import com.yimeinew.utils.CommCL;
-import com.yimeinew.utils.CommonUtils;
-import com.yimeinew.utils.DateUtil;
-import com.yimeinew.utils.ICL;
+import com.yimeinew.utils.*;
 
 import java.io.Serializable;
 import java.util.ArrayList;
@@ -39,7 +40,7 @@ import java.util.List;
 
 public class LookBeltFastActivity extends BaseActivity implements CommBaseView {
 
-    private final String TAG_NAME = CommGJActivity.class.getSimpleName();
+    private final String TAG_NAME = LookBeltFastActivity.class.getSimpleName();
 
     private String currMONO = "";//当前工单号
     @BindView(R.id.edt_op)
@@ -59,21 +60,33 @@ public class LookBeltFastActivity extends BaseActivity implements CommBaseView {
     private CommMultiChoiceModeCallBack commChoice;
 
     private CommBasePresenter commPresenter;
-
+    private String fullCheckKEY=TAG_NAME+"fck_kandaiquanjian";
     private GJViewEntity entity;
     private ZCInfo zCnoInfo;
     public static final String Title = "快速过站-->";
-
+    HashMap<String,String> fullCheck=new HashMap<>();
+    HashMap<String,String> scqueren=new HashMap<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_look_belt_fast);
-        zCnoInfo = (ZCInfo) getIntent().getSerializableExtra(CommCL.COMM_ZC_INFO_FLD);
-        this.setTitle(Title + zCnoInfo.getName());
         ButterKnife.bind(this);
+        zCnoInfo = (ZCInfo) getIntent().getSerializableExtra(CommCL.COMM_ZC_INFO_FLD);
+        this.setTitle(Title +"全检"+ zCnoInfo.getName());
+        String op=(String) getIntent().getSerializableExtra("op");
+        if(!TextUtils.isEmpty(op)){
+            edtOP.setText(op);
+            CommonUtils.textViewGetFocus(edtSid1);
+        }
+
         commPresenter=new CommBasePresenter(this, SchedulerProvider.getInstance());
         initTableView();
+        //获取全检客户
+        showLoading();
+        commPresenter.getAssistInfo(CommCL.AID_V_KD_CT,"",20);
         //testTalbe();
+        String cont="~type=2 and zcno='81'";
+        commPresenter.getAssistInfo(CommCL.AID_WEIXIUOK_OP,cont,22);
 
     }
 
@@ -110,9 +123,10 @@ public class LookBeltFastActivity extends BaseActivity implements CommBaseView {
             }
             //showLoading();
             //查询看带lot信息key=1
-            String cont = "~lotno='" + sid1 + "' and zcno='"+zCnoInfo.getId()+"'";
-            commPresenter.getAssistInfo(CommCL.AID_TEST_LOT_WEB, cont, 1);
-
+            if(!CommonUtils.isRepeat(TAG_NAME+"kandaisid",sid1,8000)){
+                String cont = "~lotno='" + sid1 + "' and zcno='"+zCnoInfo.getId()+"'";
+                commPresenter.getAssistInfo(CommCL.AID_TEST_LOT_WEB, cont, 1);
+            }
         }
         return true;
     }
@@ -149,6 +163,26 @@ public class LookBeltFastActivity extends BaseActivity implements CommBaseView {
                 if(!TextUtils.equals(CommCL.BATCH_STATUS_DONE,state1)){
                     myShowSid1Error("该测试批号"+lotno+"在编带"+obj.getString("bdsbid")+"未出站,状态为"+state1);return;
                 }
+                ArrayList<String> slkidal= SqliteUtil.getList(fullCheckKEY);
+                if(!fullCheck.containsKey(obj.getString("cus_no"))&&!slkidal.contains(slkid)){//抽检页面遇到必须全检--跳转到全检页面
+                    CommonUtils.confirm(this, "跳转看带抽检", "该物料属于抽检，点确定自动跳转到抽检页面。点取消让领班确认是否需要全检", null, new OnConfirmListener() {
+                                @Override
+                                public void OnConfirm(DialogInterface dialog) {
+                                    HashMap<String,Serializable> tz=new HashMap<>();
+                                    tz.put("op",edtOP.getText().toString().toUpperCase());
+                                    tz.put(CommCL.COMM_ZC_INFO_FLD,zCnoInfo);
+                                    jumpNextActivity(LookBeltSpotActivity.class,tz);
+                                    finish();
+                                }
+
+                                @Override
+                                public void OnCancel(DialogInterface dialog) {
+                                    qiehuanQuanJian(slkid);
+                                }
+                            }
+                    );
+                    return;
+                }
                 //看带保存记录表--快速过站保存
                 String op=edtOP.getText().toString().toUpperCase();
                 MESPRecord mp=new MESPRecord(sid1,slkid,zcno,"");
@@ -176,7 +210,8 @@ public class LookBeltFastActivity extends BaseActivity implements CommBaseView {
     public void saveMESPRecordCallBack(Boolean bok, JSONArray info, JSONObject record, String error, int key){
         if(bok){
             if(info!=null&&info.size()>0){
-                //JSONObject obj=info.getJSONObject(0);
+                JSONObject obj=info.getJSONObject(0);
+                String sid=obj.getString("sid");
                 //更新[id:200,oldstate:04,newstate:04,sid:MOA19110313-0054;191201TS002004_2,slkid:MOA19110313,zcno:81] key=1
                 HashMap<String,String> jsonObject=new HashMap<>();
                 jsonObject.put(CommCL.COMM_OLD_STATE_FLD, record.getString("state1"));
@@ -185,6 +220,12 @@ public class LookBeltFastActivity extends BaseActivity implements CommBaseView {
                 jsonObject.put(CommCL.COMM_SLKID_FLD, record.getString("slkid"));
                 jsonObject.put(CommCL.COMM_ZC_NO_FLD, record.getString("zcno"));
                 commPresenter.changeLotStateOneByOne(jsonObject,CommCL.COMM_MES_UDP_CHANGE_STATE_QUICK_VALUE,1);//200更新key=1
+                //更新产能报表
+                JSONObject jsObj=new JSONObject();
+                jsObj.put("sid",sid);
+                jsObj.put("capacity",1);
+                jsObj.put("checktype","04");
+                commPresenter.saveData(CommCL.CELL_ID_D0071Z,jsObj,77);
                 adapter.addRecord(record);
             }else{
                 myShowSid1Error("保存失败");
@@ -249,12 +290,35 @@ public class LookBeltFastActivity extends BaseActivity implements CommBaseView {
     public void commCallBack(Boolean bok, JSONObject info, String error, String key) {
 
     }
+    private void getquanjianInfoBack(Boolean bok, JSONArray info, String error, int key) {
+        hideLoading();
+        if (bok) {
+            fullCheck=CommonUtils.JSONArrayToMap(info,"slkid","oper");
+        }else{
 
+            showMessage(error);
+        }
+    }
+    private void getSCQuerenInfoBack(Boolean bok, JSONArray info, String error, int key) {
+        hideLoading();
+        if (bok) {
+            scqueren=CommonUtils.JSONArrayToMap(info,"usrcode","pwd");
+        }else{
+
+            showMessage(error);
+        }
+    }
     @Override
     public void getAssistInfoBack(Boolean bok, JSONArray info, String error, int key) {
         switch (key) {
             case 1:
                 getLotNoCallBack(bok, info, error, key);
+                break;
+            case 20:
+                getquanjianInfoBack(bok, info, error, key);
+                break;
+            case 22:
+                getSCQuerenInfoBack(bok, info, error, key);
                 break;
             default:
                 hideLoading();
@@ -269,8 +333,12 @@ public class LookBeltFastActivity extends BaseActivity implements CommBaseView {
             case 1:
                 saveMESPRecordCallBack(bok, info,record, error, key);
                 break;
+            case 77:
+                break;
             default:
-                myShowSid1Error("key=" + key + " error=" + error);
+                if(!bok) {
+                    myShowSid1Error("key=" + key + " error=" + error);
+                }
                 break;
         }
     }
@@ -357,4 +425,44 @@ public class LookBeltFastActivity extends BaseActivity implements CommBaseView {
         adapter.notifyDataSetChanged();
     }
 
+    private void qiehuanQuanJian(String slkid){
+        LinearLayout lay=new LinearLayout(this);
+        TextView tishi=new TextView(this);
+        tishi.setText("确认将"+slkid+"工单，切换成全检");
+        EditText user=new EditText(this);
+        user.setHint("用户名");
+        EditText pass=new EditText(this);
+        pass.setInputType(InputType.TYPE_TEXT_VARIATION_PASSWORD);
+        pass.setHint("密码");
+        LinearLayout.LayoutParams params=new LinearLayout.LayoutParams(LinearLayout.LayoutParams.MATCH_PARENT, LinearLayout.LayoutParams.WRAP_CONTENT);
+        params.setMargins(10,10,10,10);
+        tishi.setLayoutParams(params);
+        user.setLayoutParams(params);
+        pass.setLayoutParams(params);
+        lay.addView(tishi);
+        lay.addView(user);
+        lay.addView(pass);
+        lay.setOrientation(LinearLayout.VERTICAL);
+        lay.setGravity(Gravity.CENTER);
+        CommonUtils.confirm(this, "全检设置", "", lay, new OnConfirmListener() {
+            @Override
+            public void OnConfirm(DialogInterface dialog) {
+                String username = user.getText().toString().toUpperCase();
+                String password=pass.getText().toString();
+                if(scqueren.containsKey(username)&&TextUtils.equals(scqueren.get(username),password)){
+                    ArrayList<String> slkidal= SqliteUtil.getList(fullCheckKEY);
+                    slkidal.add(slkid);
+                    SqliteUtil.put(fullCheckKEY,slkidal);
+                    showSuccess("正确");
+                }else{
+                    showMessage("用户名或密码错误!");
+                }
+            }
+
+            @Override
+            public void OnCancel(DialogInterface dialog) {
+                showMessage("取消操作");
+            }
+        });
+    }
 }

@@ -26,6 +26,10 @@ public class ZCInfo extends BaseObservable implements Serializable {
     private int attr = CommCL.ZC_ATTR_START|CommCL.ZC_ATTR_DONE;//属性，上料、开工、出站、加胶
     private int xdkAttr= CommCL.ZC_ATTR_DONE;
     private int imgIndex;
+    private int minwait;//最小等待时间（小时）
+    private int maxwait;//最大等待时间（小时）
+
+
 
     public ZCInfo(){}
 
@@ -37,7 +41,23 @@ public class ZCInfo extends BaseObservable implements Serializable {
         this.id = zno;
         this.name = zName;
     }
-
+    public ZCInfo(ZCInfo zcInfo){
+        this.id=zcInfo.getId();
+        this.name=zcInfo.getName();
+        this.ptime=zcInfo.getPtime();
+        this.startnum=zcInfo.getStartnum();
+        this.ctrlnode=zcInfo.getCtrlnode();
+        this.bfast=zcInfo.getBfast();
+        this.segid=zcInfo.getSegid();
+        this.clazz=zcInfo.getClazz();
+        this.bok=zcInfo.getBok();
+        this.bokName=zcInfo.getBokName();
+        this.sort=zcInfo.getSort();
+        this.sbuid=zcInfo.getSbuid();
+        this.attr=zcInfo.getAttr();
+        this.xdkAttr=zcInfo.getXdkAttr();
+        this.imgIndex=zcInfo.getImgIndex();
+    }
     public ZCInfo(String zno, String name, Class clazz) {
         this.id = zno;
         this.name = name;
@@ -180,5 +200,20 @@ public class ZCInfo extends BaseObservable implements Serializable {
 
     public void setSbuid(String sbuid) {
         this.sbuid = sbuid;
+    }
+    public int getMinwait() {
+        return minwait;
+    }
+
+    public void setMinwait(int minwait) {
+        this.minwait = minwait;
+    }
+
+    public int getMaxwait() {
+        return maxwait;
+    }
+
+    public void setMaxwait(int maxwait) {
+        this.maxwait = maxwait;
     }
 }

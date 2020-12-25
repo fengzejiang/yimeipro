@@ -19,6 +19,10 @@ public class EquipmentInfo implements Serializable {
     private String stents; //支架类别
     private String pzcno;//在产的制程
 
+
+
+    private String prd_mark;//在产的bincode
+
     public String getId() {
         return id;
     }
@@ -97,5 +101,12 @@ public class EquipmentInfo implements Serializable {
 
     public void setPzcno(String pzcno) {
         this.pzcno = pzcno;
+    }
+    public String getPrd_mark() {
+        return prd_mark;
+    }
+
+    public void setPrd_mark(String prd_mark) {
+        this.prd_mark = prd_mark;
     }
 }

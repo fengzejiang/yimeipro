@@ -37,6 +37,18 @@ public class MESQCRecord  implements Serializable {
     private String smake = BaseApplication.currUser.getUserCode();//制单人
     private String sorg = BaseApplication.currUser.getDeptCode();//部门
 
+
+    private String gule;//固晶胶水号
+
+
+    public String getGule() {
+        return gule;
+    }
+
+    public void setGule(String gule) {
+        this.gule = gule;
+    }
+
     public String getState1() {
         return state1;
     }

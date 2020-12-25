@@ -12,8 +12,7 @@ import com.yimeinew.activity.databinding.MainCommStationItemBinding;
 import com.yimeinew.activity.deviceproduction.commsub.FastActivity;
 import com.yimeinew.activity.deviceproduction.commsub.FastMzActivity;
 import com.yimeinew.activity.deviceproduction.commsub.RepairActivity;
-import com.yimeinew.activity.qc.FirstInspectionActivity;
-import com.yimeinew.activity.qc.OutCheckActivity;
+import com.yimeinew.activity.qc.*;
 import com.yimeinew.data.ZCInfo;
 import com.yimeinew.modelInterface.BaseView;
 import com.yimeinew.presenter.CommStationPresenter;
@@ -42,26 +41,79 @@ public class QCCommStationAdapter extends BaseAdapter {
 
     private void initZcInfo() {
         zCnoInfos = new ArrayList<>();
-        if(sorg.equals("05010000")||sorg.equals("0")){
+        //首件检验
+        ZCInfo gjzc = new ZCInfo();
+        gjzc.setName("首件检验");
+        gjzc.setImgIndex(R.drawable.shoujian);
+        gjzc.setClazz(FirstInspectionActivity.class);
+        //gjzc.setStartNum(2);
+        int attr = 0;
+        attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+        gjzc.setAttr(attr);
+        zCnoInfos.add(gjzc);
 
-        }
-        if(sorg.equals("05040000")||sorg.equals("0")){
-            //首件检验
-            ZCInfo gjzc = new ZCInfo();
-            gjzc.setName("首件检验");
-            gjzc.setImgIndex(R.drawable.shoujian);
-            gjzc.setClazz(FirstInspectionActivity.class);
+        //巡检
+        gjzc = new ZCInfo();
+        gjzc.setName("巡检");
+        gjzc.setImgIndex(R.drawable.xunjian);
+        gjzc.setClazz(PatrolInspectionActivity.class);
+        //gjzc.setStartNum(2);
+        attr = 0;
+        attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+        gjzc.setAttr(attr);
+        zCnoInfos.add(gjzc);
+
+        //抽检
+        gjzc = new ZCInfo();
+        gjzc.setName("抽检");
+        gjzc.setImgIndex(R.drawable.mz_pz_spot);
+        gjzc.setClazz(SpotCheckActivity.class);
+        //gjzc.setStartNum(2);
+        attr = 0;
+        attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+        gjzc.setAttr(attr);
+        zCnoInfos.add(gjzc);
+
+        if(sorg.equals("05010000")||sorg.equals("0")){//器件
+            //出货检验记录
+            gjzc = new ZCInfo();
+            gjzc.setName("出货检验");
+            gjzc.setImgIndex(R.drawable.qc_chuhuo_jianyan);
+            gjzc.setClazz(OutCheckQJActivity.class);
             //gjzc.setStartNum(2);
-            int attr = 0;
+            attr = 0;
+            attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+            gjzc.setAttr(attr);
+            zCnoInfos.add(gjzc);
+            //测试站检验记录
+            gjzc = new ZCInfo();
+            gjzc.setName("测试站检验记录");
+            gjzc.setImgIndex(R.drawable.qj_csjyjl);
+            gjzc.setClazz(CheckRecordActivity.class);
+            //gjzc.setStartNum(2);
+            attr = 0;
+            attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+            gjzc.setAttr(attr);
+            zCnoInfos.add(gjzc);
+            //点胶烘烤放行
+            gjzc = new ZCInfo();
+            gjzc.setName("点胶烘烤放行");
+            gjzc.setImgIndex(R.drawable.qj_pz_djhkfx);
+            gjzc.setClazz(BakeReleaseActivity.class);
+            //gjzc.setStartNum(2);
+            attr = 0;
             attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
             gjzc.setAttr(attr);
             zCnoInfos.add(gjzc);
 
-            //巡检
+        }
+        if(sorg.equals("05040000")||sorg.equals("0")){//模组
+
+            //FQC检验--入库检验
             gjzc = new ZCInfo();
-            gjzc.setName("巡检");
-            gjzc.setImgIndex(R.drawable.xunjian);
-            //gjzc.setClazz(xunjian.class);
+            gjzc.setName("入库检验");
+            gjzc.setImgIndex(R.drawable.mz_rkjy);
+            gjzc.setClazz(FQCCheckActivity.class);
             //gjzc.setStartNum(2);
             attr = 0;
             attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
@@ -109,7 +161,17 @@ public class QCCommStationAdapter extends BaseAdapter {
             gjzc.setAttr(attr);
             zCnoInfos.add(gjzc);
 
-
+            //直下式抽检
+            gjzc = new ZCInfo();
+            gjzc.setId("penma");
+            gjzc.setName("直下式抽检");
+            gjzc.setImgIndex(R.drawable.mz_pz_pm_spot);
+            gjzc.setClazz(SpotCheckActivity.class);
+            //gjzc.setStartNum(2);
+            attr = 0;
+            attr = gjzc.getAttr() | CommCL.ZC_ATTR_CHARGING;
+            gjzc.setAttr(attr);
+            zCnoInfos.add(gjzc);
 
         }
 

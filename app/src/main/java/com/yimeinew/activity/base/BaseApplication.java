@@ -2,14 +2,18 @@ package com.yimeinew.activity.base;
 
 import android.app.Activity;
 import android.app.Application;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.text.TextUtils;
+import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 import com.yimeinew.data.Menu;
 import com.yimeinew.data.User;
 import com.yimeinew.data.ZCInfo;
 import com.yimeinew.network.NetWorkManager;
-import com.yimeinew.utils.CommCL;
-import com.yimeinew.utils.ServicesTimeThread;
+import com.yimeinew.network.NetWorkPrintManager;
+import com.yimeinew.utils.*;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,13 +21,14 @@ import java.util.List;
 /**
  * @Auther: fengzejiang1987@163.com
  * @Date : 2018/12/7 16:31
+ * 这个启动是只会执行一次
  */
 public class BaseApplication extends Application {
 
     public static User currUser;
     private static ArrayList<Menu> menuList;
     public static ArrayList<ZCInfo> zcList;
-
+    IntentFilter intentFilter;
     @Override
     public void onCreate() {
         super.onCreate();
@@ -35,12 +40,27 @@ public class BaseApplication extends Application {
             CommCL.IP = "IP:" + CommCL.URi.substring(7, CommCL.URi.lastIndexOf(":"));
         }
         NetWorkManager.getInstance().init();
-        ServicesTimeThread thread = new ServicesTimeThread();
-        thread.setPriority(Thread.MIN_PRIORITY);
-        thread.start();
+        NetWorkPrintManager.getInstance().init();
 
+//        ServicesTimeThread thread = new ServicesTimeThread();
+//        thread.setPriority(Thread.MIN_PRIORITY);
+//        thread.start();
+        //时间监听器
+        intentFilter=new IntentFilter(Intent.ACTION_TIME_CHANGED);//时间监听器
+        intentFilter.addAction(Intent.ACTION_TIMEZONE_CHANGED);//时间监听器
+        registerReceiver(timebarcodeReceiver, intentFilter); // 注册广播
+        //初始化Sqlite
+        SqliteUtil.getInstance(this);
     }
-
+    //时间监听器
+    public BroadcastReceiver timebarcodeReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            if(Intent.ACTION_TIME_CHANGED.equals(intent.getAction())||Intent.ACTION_TIMEZONE_CHANGED.equals(intent.getAction())){
+                ServicesTimeThread.getServiceTimeOK();
+            }
+        }
+    };
     /***
      * 获取菜单信息
      * @return

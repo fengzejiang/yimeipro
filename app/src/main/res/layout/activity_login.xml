@@ -6,18 +6,18 @@
     </data>
     <RelativeLayout
             android:layout_width="match_parent"
-                    android:layout_height="fill_parent">
+            android:layout_height="fill_parent">
         <ImageView
                 android:id="@+id/logo"
-                android:layout_width="320dp"
-                android:layout_height="200dp"
-                android:src="@drawable/login_logo"
+                android:layout_width="192dp"
+                android:layout_height="120dp"
+                android:src="@drawable/login_logo_02"
                 android:layout_centerHorizontal="true"
                 android:layout_alignParentTop="true"/>
         <RelativeLayout android:layout_width="wrap_content"
                         android:layout_height="wrap_content"
                         android:layout_below="@id/logo" android:paddingStart="25dp"
-        android:paddingEnd="25dp">
+                        android:paddingEnd="25dp">
             <EditText
                     android:id="@+id/userName"
                     android:layout_width="match_parent"
@@ -25,11 +25,12 @@
                     android:drawableStart="@drawable/ym_user"
                     android:drawablePadding="15dp"
                     android:hint="@string/login_edit_account_text"
-                    android:imeOptions="actionNone"
+                    android:enabled="true"
+                    android:imeOptions="actionDone"
                     android:text="@={user.userCode}"
                     android:nextFocusDown="@id/userName"
                     android:inputType="text|textPersonName"/>
-        <!--登录密码-->
+            <!--登录密码-->
             <EditText
                     android:id="@+id/userPassword"
                     android:layout_width="match_parent"
@@ -37,27 +38,28 @@
                     android:layout_below="@+id/userName"
                     android:drawableStart="@drawable/ym_lock"
                     android:drawablePadding="15dp"
-                    android:ems="10"
+                    android:ems="1"
                     android:nextFocusDown="@id/userPassword"
                     android:hint="@string/login_edit_pwd_text"
                     android:text="@={user.userPassword}"
+                    android:enabled="true"
                     android:imeOptions="actionNone"
                     android:inputType="textPassword"/>
 
-        <!--登录按钮-->
-        <Button
-                android:id="@+id/login_btn_login"
-                android:layout_width="fill_parent"
-                android:layout_height="wrap_content"
-                android:layout_below="@+id/userPassword"
-                android:layout_marginTop="52dp"
-                android:background="#1f67c2"
-                android:text="@string/btn_login_lab"
-                android:textAllCaps="false"
-                android:textColor="#ffffff"
-                android:textSize="20sp"
-                android:onClick="@{(view) -> presenter.login(user)}"
-                />
+            <!--登录按钮-->
+            <Button
+                    android:id="@+id/login_btn_login"
+                    android:layout_width="fill_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_below="@+id/userPassword"
+                    android:layout_marginTop="52dp"
+                    android:background="#1f67c2"
+                    android:text="@string/btn_login_lab"
+                    android:textAllCaps="false"
+                    android:textColor="#ffffff"
+                    android:textSize="20sp"
+                    android:onClick="@{(view) -> presenter.login(user)}"
+            />
         </RelativeLayout>
         <LinearLayout
                 android:orientation="horizontal"

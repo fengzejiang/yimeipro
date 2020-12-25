@@ -4,8 +4,11 @@ import android.app.Activity;
 import android.app.AlertDialog;
 import android.content.*;
 import android.graphics.Color;
+import android.media.MediaPlayer;
+import android.media.PlaybackParams;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.speech.tts.TextToSpeech;
@@ -15,9 +18,7 @@ import android.util.Base64;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.widget.*;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONArray;
 import com.aliyun.openservices.shade.com.alibaba.rocketmq.shade.com.alibaba.fastjson.JSONObject;
 import com.sdsmdg.tastytoast.TastyToast;
@@ -30,6 +31,7 @@ import com.yimeinew.listener.OnConfirmListener;
 import com.yimeinew.listener.OnSendMessage;
 import com.yimeinew.network.NetWorkManager;
 import com.yimeinew.network.response.Response;
+import com.yimeinew.tableui.AbstractTableViewAdapter;
 import com.yimeinew.tableui.entity.HeaderRowInfo;
 import com.zyao89.view.zloading.ZLoadingDialog;
 import com.zyao89.view.zloading.Z_TYPE;
@@ -205,7 +207,12 @@ public class CommonUtils {
         httpMapKeyValue.put(CommCL.PARAMS_MES_UPD_ID_FLD, udpId);
         return httpMapKeyValue;
     }
-
+    public  static HashMap<String, String> commPrintDataMap(String assist){
+        HashMap<String, String> httpMapKeyValue=new HashMap<>();
+        httpMapKeyValue.put("assist",assist);
+        httpMapKeyValue.put("token","shineon_print");
+        return httpMapKeyValue;
+    }
     /***
      * 设置系统时间，PDA必须Root成功
      * @param cxt
@@ -337,8 +344,6 @@ public class CommonUtils {
         String json = JSONObject.toJSONString(bean);
         return JSONObject.parseObject(json);
     }
-
-
     public static Observable<Response<JSONObject>> getServerTime() {
         HashMap<String, String> bb = new HashMap<>();
         bb.put(CommCL.PARAMS_APIID, "systime");
@@ -406,6 +411,8 @@ public class CommonUtils {
 
         sidColumn = new HeaderRowInfo("remark", "备注", 400);
         rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("proc_id", "制程规划", 180);
+        rowList.add(sidColumn);
         return rowList;
     }
 
@@ -461,6 +468,32 @@ public class CommonUtils {
         sidColumn = new HeaderRowInfo("apqty", "已卡板数量", 150);
         rowList.add(sidColumn);
         sidColumn = new HeaderRowInfo("upqty", "未卡板数量", 150);
+        rowList.add(sidColumn);
+        return rowList;
+    }
+    /***
+     * 模组通用工站
+     * 初始化表格头数据，所有工站通用，配置列表
+     * @return 返回通用表格头
+     */
+    public static List<HeaderRowInfo> getRowDataListMzTongyong() {
+        List<HeaderRowInfo> rowList = new ArrayList<>();
+        HeaderRowInfo sidColumn = new HeaderRowInfo("sid1", "批号", 180);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("state1", "生产状态", 150);
+        sidColumn.setAttr(3);
+        sidColumn.setContrastMap(CommCL.STATEMap);
+        sidColumn.setContrastColors(CommCL.STATEColorMap);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("prd_name", "机型名称", 180);
+        rowList.add(sidColumn);
+//        sidColumn = new HeaderRowInfo("prd_mark", "BinCode", 120);
+//        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("qty", "投产数量", 150);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("slkid", "制令单号", 150);
+        rowList.add(sidColumn);
+        sidColumn = new HeaderRowInfo("remark", "备注", 150);
         rowList.add(sidColumn);
         return rowList;
     }
@@ -578,7 +611,7 @@ public class CommonUtils {
      * @param title
      * @param msg
      */
-    public static void showOK(Context context, String title, String msg) {
+    public static AlertDialog showOK(Context context, String title, String msg) {
         final AlertDialog.Builder normalDialog = new AlertDialog.Builder(context);
         normalDialog.setTitle(title);
         normalDialog.setMessage(Html.fromHtml("<font color='red'>" + msg+ "</font>"));
@@ -590,10 +623,10 @@ public class CommonUtils {
             }
         });
         // 显示
-        normalDialog.show();
+        return normalDialog.show();
     }
 
-    public static void showOKCancel(Context context, String title, String msg, DialogInterface.OnClickListener listener) {
+    public static AlertDialog showOKCancel(Context context, String title, String msg, DialogInterface.OnClickListener listener) {
         final AlertDialog.Builder dialog = new AlertDialog.Builder(context);
         dialog.setTitle(title);
         dialog.setMessage(Html.fromHtml("<font color='red'>" + msg + "</font>"));
@@ -607,10 +640,10 @@ public class CommonUtils {
             }
         });
         // 显示
-        dialog.show();
+        return dialog.show();
     }
 
-    public static void confirm(Context context, String title, String msg,View view, OnConfirmListener confirmListener) {
+    public static AlertDialog confirm(Context context, String title, String msg,View view, OnConfirmListener confirmListener) {
         final AlertDialog.Builder dialog = new AlertDialog.Builder(context);
         dialog.setTitle(title);
         if(!TextUtils.isEmpty(msg)) {
@@ -638,7 +671,7 @@ public class CommonUtils {
             }
         });
         // 显示
-        dialog.show();
+       return dialog.show();
     }
 
 
@@ -650,7 +683,7 @@ public class CommonUtils {
      * @param title 标题
      * @param msg   内容
      */
-    public static void alert(Context context, String title, String msg,View view, OnAlertListener alertListener) {
+    public static AlertDialog alert(Context context, String title, String msg,View view, OnAlertListener alertListener) {
         final AlertDialog.Builder dialog = new AlertDialog.Builder(context);
         dialog.setTitle(title);
         if(!TextUtils.isEmpty(msg)) {
@@ -669,7 +702,7 @@ public class CommonUtils {
             }
         });
         // 显示
-        dialog.show();
+        return dialog.show();
     }
 
     /**
@@ -723,12 +756,12 @@ public class CommonUtils {
 
 
     /**
-     * 防止重复扫描
+     * 防止重复扫描--
      * @param key
      * @param value
      * @return
      */
-    public static boolean isRepeat(String key,String value){
+    public synchronized static boolean isRepeat(String key,String value){
         boolean b=true;
         long now=DateUtil.getCurrDateTimeLong();
         if(repeat.containsKey(key)){
@@ -748,7 +781,7 @@ public class CommonUtils {
 
         return b;
     }
-    public static boolean isRepeat(String key,String value,long time){
+    public synchronized static boolean isRepeat(String key,String value,long time){
         boolean b=true;
         long now=DateUtil.getCurrDateTimeLong();
         if(repeat.containsKey(key)){
@@ -766,6 +799,16 @@ public class CommonUtils {
             repeat.put(key,new RepeatValue(now,value));
         }
 
+        return b;
+    }
+    public static long ctime=0;
+    public synchronized static boolean isRepeat(int time){
+        boolean b=true;
+        long now=new Date().getTime();
+        if(now-ctime>=time*1000){
+            b=false;
+            ctime=now;
+        }
         return b;
     }
     /**
@@ -833,30 +876,38 @@ public class CommonUtils {
         if(TextUtils.isEmpty(str)){
             return 0;
         }
-        return  Integer.parseInt(str);
+        return Integer.parseInt(str);
+    }
+    public static float parseFloat(String str){
+        if(TextUtils.isEmpty(str)){
+            return 0;
+        }
+        return  Float.parseFloat(str);
     }
     public static HashMap<String,String> JSONArrayToMap(JSONArray jsonArray,String key,String value){
         HashMap<String,String> hm=new HashMap<>();
+        if(jsonArray==null){return hm;}
         for(int i=0;i<jsonArray.size();i++){
             hm.put(jsonArray.getJSONObject(i).getString(key),jsonArray.getJSONObject(i).getString(value));
         }
         return hm;
     }
     /**
-     * 判断 分隔 字符串是否内容相等。用于烘烤判断胶水
+     * 判断 分隔 字符串是否内容相等。用于烘烤判断胶水 ，替代料判断
      * @param s1
      * @param s2
      * @param split
      * @return
      */
     public static boolean contentEquals(String s1,String s2,String split) {
+        if(TextUtils.isEmpty(s1)||TextUtils.isEmpty(s2)){
+            return false;
+        }
         String[] str1=s1.split(split);
         String[] str2=s2.split(split);
         for(String st1:str1) {
             for(String st2:str2) {
-                if(st1.contentEquals(st2)) {
-                    return true;
-                }else if(st2.contentEquals(st1)) {
+                if(TextUtils.equals(st1,st2)){
                     return true;
                 }
             }
@@ -906,7 +957,112 @@ public class CommonUtils {
         textSpeech.speak(text,TextToSpeech.QUEUE_FLUSH,null);
     }
 
+    /**
+     * 播放音乐文件
+     * @param context
+     * @param id  eg:R.raw.sound_di 通过减小音乐时长才能达到快速播放
+     */
+    public static void playSound(Context context,int id){
+        MediaPlayer mPlayer = MediaPlayer.create(context,id);
+        mPlayer.start();
+        mPlayer.setOnCompletionListener(new MediaPlayer.OnCompletionListener() {
+            @Override
+            public void onCompletion(MediaPlayer mp) {
+                //结束后释放设备资源
+                mPlayer.release();
+            }
+        });
+    }
 
+    /**
+     * 在onItemClick调用这个之后子列表就可以选择了。【可以单选多选，再表格初始化里面设置】
+     * @param view
+     * @param position
+     * @param id
+     * @param dataListViewContent
+     */
+    public static void OnItemClick(View view, int position, long id,ListView dataListViewContent){
+        switch (dataListViewContent.getChoiceMode()) {
+            case ListView.CHOICE_MODE_NONE://不能选
+                return;
+            case ListView.CHOICE_MODE_SINGLE://单选
+                dataListViewContent.clearChoices();
+                dataListViewContent.setItemChecked(position, true);
+                return;
+            case ListView.CHOICE_MODE_MULTIPLE_MODAL://多选用这个不然会卡的选不动
+            case ListView.CHOICE_MODE_MULTIPLE:
+                boolean bSelect = view.isSelected();
+                dataListViewContent.setItemChecked(position, !bSelect);
+        }
+        boolean bSelect = view.isSelected();
+        dataListViewContent.setItemChecked(position, !bSelect);
+    }
 
-
+    /**
+     * 禁用按钮几秒，自动恢复
+     * @param btn
+     * @param second
+     */
+    public static void disableBtn(Button btn,int second){
+        btn.setEnabled(false);
+        CharSequence text = btn.getText();
+        long slp=1000;
+        int[] ss=new int[]{second};
+        Handler mHandler = new Handler() { //使用handler刷新
+            public void handleMessage(Message msg) {
+                if(msg.what==20200605){
+                    btn.setText(msg.obj.toString());
+                }
+                if(msg.what==202006051){
+                    btn.setText(msg.obj.toString());
+                    btn.setEnabled(true);
+                }
+            }
+        };
+        Thread thread=new Thread(new Runnable() {
+            @Override
+            public void run() {
+                while (ss[0]>=0) {
+                    try {
+                        if(ss[0]>0) {
+                            Message msg = Message.obtain();
+                            msg.what = 20200605;
+                            msg.obj = text + " " + ss[0];
+                            mHandler.sendMessage(msg);
+                        }else{
+                            Message msg = Message.obtain();
+                            msg.what = 202006051;
+                            msg.obj = text ;
+                            mHandler.sendMessage(msg);
+                        }
+                        ss[0]--;
+                        Thread.sleep(slp);
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+        thread.start();
+    }
+    public static void onItemClick(ListView dataListViewContent, AbstractTableViewAdapter adapter, AdapterView<?> parent, View view, int position, long id){
+        switch (dataListViewContent.getChoiceMode()) {
+            case ListView.CHOICE_MODE_NONE:
+                return;
+            case ListView.CHOICE_MODE_SINGLE:
+                //单选
+                boolean bSelect = view.isSelected();
+                if (!bSelect) {
+                    dataListViewContent.setItemChecked(position, !bSelect);
+                    adapter.notifyDataSetChanged();
+                }
+                return;
+            case ListView.CHOICE_MODE_MULTIPLE_MODAL:
+            case ListView.CHOICE_MODE_MULTIPLE:
+                bSelect = view.isSelected();
+                dataListViewContent.setItemChecked(position, !bSelect);
+        }
+        boolean bSelect = view.isSelected();
+        dataListViewContent.setItemChecked(position, !bSelect);
+    }
 }

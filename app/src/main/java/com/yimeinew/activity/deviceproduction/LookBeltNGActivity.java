@@ -186,14 +186,18 @@ public class LookBeltNGActivity extends BaseActivity implements CommBaseView {
         switch (id){
             case R.id.bn_save_new:
                 if(checkData()){
-                    commPresenter.saveData(CommCL.CELL_ID_D0071A,ngInfo,1);
+                    if(!CommonUtils.isRepeat(TAG_NAME+"KDBUDj",lot_no1,2000)) {
+                        commPresenter.saveData(CommCL.CELL_ID_D0071A, ngInfo, 1);
+                    }
                 }else{
                     showMessage(error1);
                 }
                 break;
             case R.id.bn_save_back:
                 if(checkData()){
-                    commPresenter.saveData(CommCL.CELL_ID_D0071A,ngInfo,2);
+                    if(!CommonUtils.isRepeat(TAG_NAME+"KDBUDj",lot_no1,2000)) {
+                        commPresenter.saveData(CommCL.CELL_ID_D0071A, ngInfo, 2);
+                    }
                 }else{
                     //showMessage(error1);
                     CommonUtils.confirm(this, "是否返回看带快速过站", error1+";数据不完善，无法保存，点确定跳转页面，取消可以继续编辑", null, new OnConfirmListener() {

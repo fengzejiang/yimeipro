@@ -133,7 +133,7 @@ public class FastActivity extends BaseActivity implements CommFastView {
             if(!CommonUtils.isRepeat("ks_saomao_sid1",sid1)) {
                 showLoading();
                 //校验批次号
-                commPresenter.checkQuickLot(sid1,zcno,1);
+                commPresenter.checkQuickLot(sid1,zcno,null,1);
              }
 }
         return false;
@@ -261,6 +261,7 @@ public class FastActivity extends BaseActivity implements CommFastView {
             hideLoading();
             CommonUtils.canDo(GBKEY);
             showMessage(error);
+            CommonUtils.textViewGetFocus(edtSid1);
         }
     }
 

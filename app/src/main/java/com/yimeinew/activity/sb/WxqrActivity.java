@@ -63,6 +63,7 @@ public class WxqrActivity extends BaseActivity implements CommBaseView {
     String error1;
     JSONObject ngInfo = new JSONObject();
     JSONArray reasons;
+    String opv;
     int num=0;//计算有几次结束维修
     private JSONArray jar;
     private HashMap<String, String> bh = new HashMap<>();//维修设备的编号，不是设备号
@@ -154,11 +155,17 @@ public class WxqrActivity extends BaseActivity implements CommBaseView {
             CommonUtils.textViewGetFocus(edtOP);
             return true;
         }
-        String opv = CommCL.sharedPreferences.getString(operationUser, "");
+        opv = CommCL.sharedPreferences.getString(operationUser, "");
         if (TextUtils.isEmpty(opv)) {
             showMessage("操作员【" + operationUser + "】不存在!");
             CommonUtils.textViewGetFocus(edtOP);
             return true;
+        }else{
+            String department=BaseApplication.currUser.getDeptCode();//获取部门编号
+            if(TextUtils.equals(department,"05010000")){//只有是器件才需进行人员校验
+                commPresenter.getAssistInfo(CommCL.AID_BMSELECT, "", 0);
+            }
+
         }
         if (id == R.id.edt_op) {
             CommonUtils.textViewGetFocus(edtSbid);
@@ -338,6 +345,17 @@ public class WxqrActivity extends BaseActivity implements CommBaseView {
                 String cont="~wxstate<'"+ws+"' and  mkdate>'"+time+"'"+sorgCont;
                 commPresenter.getAssistInfo(CommCL.AID_SBWXQR2, cont, GETZCKEY);
                 return;
+            }else if(key==0){
+                for(int i=0;i<info.size();i++){
+                    JSONObject rea = info.getJSONObject(i);
+                    if(TextUtils.equals(rea.getString("usrcode"),"opv")){
+                        return;
+
+                    }
+                }
+                showError("请输入设备工号");
+                CommonUtils.textViewGetFocus(edtOP);
+
             }
             //放到扫描的列表中
             for (int i = 0; i < info.size(); i++) {
